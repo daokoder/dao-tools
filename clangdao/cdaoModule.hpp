@@ -63,6 +63,7 @@ struct CDaoInclusionInfo
 struct CDaoModule
 {
 	bool  finalGenerating;
+	bool  writeStringListConversion;
 
 	CompilerInstance  *compiler;
 	CDaoModuleInfo     moduleInfo;
@@ -75,6 +76,8 @@ struct CDaoModule
 	map<const RecordDecl*,CDaoUserType*>         allUsertypes;
 	map<const NamespaceDecl*,CDaoNamespace*>     allNamespaces;
 	map<const FunctionProtoType*,CDaoFunction*>  allCallbacks;
+
+	map<string,string> numericConsts;
 
 	map<TypedefDecl*,int>  cxxTypedefs;
 	map<string,string>     daoTypedefs;
@@ -117,6 +120,7 @@ struct CDaoModule
 	void HandleModuleDeclaration( const MacroInfo *macro );
 	void HandleHeaderInclusion( SourceLocation loc, const string & name, const FileEntry *file );
 	void HandleHintDefinition( const string & name, const MacroInfo *macro );
+	void HandleNumericConstant( const string & name, const Token token );
 
 	void HandleVariable( VarDecl *var );
 	void HandleEnum( EnumDecl *decl );

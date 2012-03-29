@@ -95,9 +95,9 @@ class DaoQtObject : public QObjectUserData\n\
 	\n\
 	QList<DaoQtSlot*>  daoSlots;\n\
 	\n\
-	DaoCdata  *cdata;\n\
+	DaoCdata  *_cdata;\n\
 	\n\
-	void Init( DaoCdata *d ){ cdata = d; }\n\
+	void Init( DaoCdata *d ){ _cdata = d; }\n\
 	static unsigned int RotatingHash( const QByteArray & key ){\n\
 		int i, n = key.size();\n\
 		unsigned long long hash = n;\n\
@@ -121,12 +121,12 @@ class DaoQtObject : public QObjectUserData\n\
 		return NULL;\n\
 	}\n\
 	DaoQtSlot* Add( void *sender, const QString & signal, DaoRoutine *slot ){\n\
-		DaoQtSlot *daoslot = new DaoQtSlot( sender, cdata, signal, slot );\n\
+		DaoQtSlot *daoslot = new DaoQtSlot( sender, _cdata, signal, slot );\n\
 		daoSlots.append( daoslot );\n\
 		return daoslot;\n\
 	}\n\
 	DaoQtSlot* Add( void *sender, void *signal, DaoRoutine *slot ){\n\
-		DaoQtSlot *daoslot = new DaoQtSlot( sender, cdata, signal, slot );\n\
+		DaoQtSlot *daoslot = new DaoQtSlot( sender, _cdata, signal, slot );\n\
 		daoSlots.append( daoslot );\n\
 		return daoslot;\n\
 	}\n\
@@ -162,7 +162,7 @@ const string qt_init = "";
 const string qt_make_linker =
 "   DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
    setUserData( 0, linker );\n\
-   linker->Init( cdata );\n";
+   linker->Init( _cdata );\n";
 
 const string qt_make_linker3 =
 "  DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
@@ -331,7 +331,7 @@ const string qt_application_func =
   DString_SetMBS( str, argv );\n\
   argv = DString_GetMBS( str );\n\
   DaoCxx_QApplication *_self = DaoCxx_QApplication_New( argc, & argv, QT_VERSION );\n\
-  DaoProcess_PutValue( _proc, (DaoValue*) _self->cdata );\n\
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n\
 }\n";
 
 const string qt_qstream_decl =
@@ -418,7 +418,7 @@ struct DAO_DLL_$(module) Dao_$(idname)\n\
 {\n\
 	$(qname)  nested;\n\
 	$(qname) *object;\n\
-	DaoCdata *cdata;\n\
+	DaoCdata *_cdata;\n\
 };\n\
 Dao_$(idname)* DAO_DLL_$(module) Dao_$(idname)_New();\n";
 
@@ -427,7 +427,7 @@ const string tpl_struct_daoc_alloc =
 {\n\
 	Dao_$(idname) *wrap = calloc( 1, sizeof(Dao_$(idname)) );\n\
 	$(name) *self = ($(name)*) wrap;\n\
-	wrap->cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
+	wrap->_cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
 	wrap->object = self;\n\
 $(callbacks)$(selfields)\treturn wrap;\n\
 }\n";
@@ -445,13 +445,13 @@ const string c_wrap_new =
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	Dao_$(host_idname) *self = Dao_$(host_idname)_New();\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) self->cdata );\n\
+	DaoProcess_PutValue( _proc, (DaoValue*) self->_cdata );\n\
 }\n";
 const string cxx_wrap_new = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	DaoCxx_$(host_idname) *self = DaoCxx_$(host_idname)_New();\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) self->cdata );\n\
+	DaoProcess_PutValue( _proc, (DaoValue*) self->_cdata );\n\
 }\n";
 const string cxx_wrap_alloc2 = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
@@ -463,9 +463,9 @@ const string cxx_wrap_alloc2 =
 const string tpl_class_def = 
 "class DAO_DLL_$(module) DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
 	public:\n\
-	DaoCxxVirt_$(idname)(){ cdata = 0; }\n\
+	DaoCxxVirt_$(idname)(){ _cdata = 0; }\n\
 	void DaoInitWrapper( DaoCdata *d );\n\n\
-	DaoCdata *cdata;\n\
+	DaoCdata *_cdata;\n\
 \n$(virtuals)\n\
 $(qt_virt_emit)\n\
 };\n\
@@ -484,22 +484,22 @@ tpl_class_def + "$(qname)* Dao_$(idname)_Copy( const $(qname) &p );\n";
 const string tpl_class_init =
 "void DaoCxxVirt_$(idname)::DaoInitWrapper( DaoCdata *d )\n\
 {\n\
-	cdata = d;\n\
+	_cdata = d;\n\
 $(init_supers)\
 $(qt_init)\
 }\n\
 DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 {\n\
-	if( cdata ){\n\
-		DaoCdata_SetData( cdata, NULL );\n\
-		DaoGC_DecRC( (DaoValue*) cdata );\n\
+	if( _cdata ){\n\
+		DaoCdata_SetData( _cdata, NULL );\n\
+		DaoGC_DecRC( (DaoValue*) _cdata );\n\
 	} \n\
 }\n\
 void DaoCxx_$(idname)::DaoInitWrapper()\n\
 {\n\
-	cdata = DaoCdata_New( dao_type_$(idname), this );\n\
-	DaoGC_IncRC( (DaoValue*)cdata );\n\
-	DaoCxxVirt_$(idname)::DaoInitWrapper( cdata );\n\
+	_cdata = DaoCdata_New( dao_type_$(idname), this );\n\
+	DaoGC_IncRC( (DaoValue*)_cdata );\n\
+	DaoCxxVirt_$(idname)::DaoInitWrapper( _cdata );\n\
 $(qt_make_linker)\
 }\n";
 const string tpl_class_init_qtss = 
@@ -615,10 +615,10 @@ const string get_gcfields =
 "static void Dao_$(typer)_GetGCFields( void *P, DArray *VS, DArray *AS, DArray *MS, int RM )\n\
 {\n\
 	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) P;\n\
-	if( self->cdata ) DArray_Append( VS, (void*) self->cdata );\n\
+	if( self->_cdata ) DArray_Append( VS, (void*) self->_cdata );\n\
 	if( RM ){\n\
 $(breakref)\
-		self->cdata = NULL;\n\
+		self->_cdata = NULL;\n\
 	}\n\
 }\n";
 
@@ -664,6 +664,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 {
 	module = mod;
 	used = false;
+	typedefed = false;
 	unsupported = false;
 	isRedundant = true;
 	isRedundant2 = false;
@@ -746,9 +747,37 @@ int CDaoUserType::Generate()
 	RecordDecl *cc = (RecordDecl*) decl->getCanonicalDecl();
 	RecordDecl *dd = decl->getDefinition();
 
+	if( dyn_cast<CXXRecordDecl>(decl) == NULL ){
+		if( typedefed == false ){
+			if( decl->isStruct() ){
+				if( qname.find( "struct " ) != 0 ){
+					qname = "struct " + qname;
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}else if( decl->isUnion() ){
+				if( qname.find( "union " ) != 0 ){
+					qname = "union " + qname;
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}
+		}else{
+			if( decl->isStruct() ){
+				if( qname.find( "struct " ) == 0 ){
+					qname.erase( 0, 7 );
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}else if( decl->isUnion() ){
+				if( qname.find( "union " ) == 0 ){
+					qname.erase( 0, 6 );
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}
+		}
+	}
+
 	size_t pos = name.find( '<' );
 	if( pos != string::npos ) name.erase( pos );
-	if( qname.find( "<anonymous>" ) != string::npos ){
+	if( qname.find( "<anonymous" ) != string::npos ){
 		//outs() << module->GetFileName( decl->getLocation() ) << "============\n";
 		//decl->getLocation().print( outs(), module->compiler->getSourceManager() );
 		//outs() << "\n" << decl->isAnonymousStructOrUnion() << "\n\n";
@@ -758,9 +787,7 @@ int CDaoUserType::Generate()
 	isRedundant = isRedundant2;
 	if( isRedundant ) return 0;
 	if( name.find( '_' ) == 0 || qname.find( '_' ) == 0 ){
-		//unsupported = true;
-		//isRedundant = true;
-		//return 0;
+		forceOpaque = true;
 	}
 	if( name == "reverse_iterator" && idname.find( "std_0_reverse_iterator" ) == 0 ){
 		// There is a problem to wrap std::reverse_iterator
@@ -779,6 +806,7 @@ int CDaoUserType::Generate()
 	}
 	wrapCount = 0;
 	Clear();
+
 	// simplest wrapping for types declared or defined outsided of the modules:
 	if( not module->IsFromModules( location ) ) return GenerateSimpleTyper();
 
@@ -845,6 +873,37 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 	kvmap["delete"] = "Dao_" + idname + "_Delete";
 
 }
+void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,string> kvmap )
+{
+	CDaoVariable field( module );
+	field.SetQualType( fit->getTypeSourceInfo()->getType(), location );
+	field.name = fit->getNameAsString();
+	if( field.name == "" ) return;
+
+	size_t pos;
+	map<string,vector<string> >::iterator it = module->functionHints.find( qname + "::" + field.name );
+	if( it == module->functionHints.end() ){
+		string qname2 = qname;
+		if( (pos = qname2.find( '<' )) != string::npos ) qname2.erase( pos );
+		it = module->functionHints.find( qname2 + "::" + field.name );
+	}
+	if( it != module->functionHints.end() ) field.SetHints( it->second[0] );
+
+	field.Generate( VAR_INDEX_FIELD );
+	if( field.unsupported ) return;
+	kvmap[ "name" ] = field.name;
+	kvmap[ "ftype" ] = field.daotype;
+	kvmap[ "itype" ] = field.dao_itemtype;
+	string cxxproto = cdao_string_fill( cxx_getter_proto, kvmap );
+	dao_meths += cdao_string_fill( dao_getter_proto, kvmap );
+	meth_decls += cxxproto + ";\n";
+	meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + field.getter + "}\n";
+	if( field.setter == "" ) return;
+	cxxproto = cdao_string_fill( cxx_setter_proto, kvmap );
+	dao_meths += cdao_string_fill( dao_setter_proto, kvmap );
+	meth_decls += cxxproto + ";\n";
+	meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + field.setter + "}\n";
+}
 int CDaoUserType::Generate( RecordDecl *decl )
 {
 	int i, j, n, m;
@@ -860,6 +919,7 @@ int CDaoUserType::Generate( RecordDecl *decl )
 	for(fit=decl->field_begin(),fend=decl->field_end(); fit!=fend; fit++){
 		const Type *type = fit->getTypeSourceInfo()->getType().getTypePtr();
 		const PointerType *pt = dyn_cast<PointerType>( type );
+		WrapField( fit, kvmap );
 		if( pt == NULL ) continue;
 		const Type *pt2 = pt->getPointeeType().getTypePtr();
 		const ParenType *pt3 = dyn_cast<ParenType>( pt2 );
@@ -922,7 +982,7 @@ int CDaoUserType::Generate( RecordDecl *decl )
 		return usertype_code_class2.expand( kvmap );
 	}
 #endif
-	typer_codes = cdao_string_fill( usertype_code_class, kvmap );
+	typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
 	return 0;
 }
 
@@ -1017,24 +1077,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	CXXRecordDecl::field_iterator fit, fend;
 	for(fit=decl->field_begin(),fend=decl->field_end(); fit!=fend; fit++){
 		if( fit->getAccess() != AS_public ) continue;
-		CDaoVariable field( module );
-		field.SetQualType( fit->getTypeSourceInfo()->getType(), location );
-		field.name = fit->getNameAsString();
-		if( field.name == "" ) continue;
-		field.Generate( VAR_INDEX_FIELD );
-		if( field.unsupported ) continue;
-		kvmap[ "name" ] = field.name;
-		kvmap[ "ftype" ] = field.daotype;
-		kvmap[ "itype" ] = field.dao_itemtype;
-		string cxxproto = cdao_string_fill( cxx_getter_proto, kvmap );
-		dao_meths += cdao_string_fill( dao_getter_proto, kvmap );
-		meth_decls += cxxproto + ";\n";
-		meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + field.getter + "}\n";
-		if( field.setter == "" ) continue;
-		cxxproto = cdao_string_fill( cxx_setter_proto, kvmap );
-		dao_meths += cdao_string_fill( dao_setter_proto, kvmap );
-		meth_decls += cxxproto + ";\n";
-		meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + field.setter + "}\n";
+		WrapField( fit, kvmap );
 	}
 	CXXRecordDecl::method_iterator methit, methend = decl->method_end();
 	for(methit=decl->method_begin(); methit!=methend; methit++){

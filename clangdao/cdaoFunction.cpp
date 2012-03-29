@@ -158,7 +158,7 @@ const string cxx_call_new =
 	DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n";
 const string cxx_call_new2 = 
 "	DaoCxx_$(host_idname) *_self = DaoCxx_$(host_idname)_New( $(parlist) );\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) _self->cdata );\n";
+	DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
 
 const string dao_proto =
 "  { dao_$(func_idname)$(overload), \"$(daoname)( $(parlist) )$(retype)\" },\n";
@@ -173,9 +173,9 @@ const string cxx_virt_proto =
 const string cxx_virt_struct =
 "static $(retype) Dao_$(host_idname)_$(cxxname)( $(parlist) )\n\
 {\n\
-  Dao_$(host_idname) *self = (Dao_$(host_idname)*) userdata;\n\
-  $(host_qname) *self2 = self->object;\n\
-  DaoCdata *cdata = self->cdata;\n\
+  Dao_$(host_idname) *_self = (Dao_$(host_idname)*) $(userdata);\n\
+  $(host_qname) *_self2 = _self->object;\n\
+  DaoCdata *_cdata = _self->_cdata;\n\
   DaoProcess *vmproc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n";
 
 const string c_callback_proto =
@@ -227,13 +227,13 @@ const string qt_get_wrapper2 =
   DaoValue *dbase = NULL;\n\
   // no need to map to DaoObject, because it will always be mapped back to\n\
   // DaoCdata when passed to Dao codes.\n\
-  if( user_data ) dbase = (DaoValue*) user_data->cdata;\n\
+  if( user_data ) dbase = (DaoValue*) user_data->_cdata;\n\
   return dbase;\n\
 }\n";
 
 const string cxx_virt_call_00 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _obj, NULL, 0 );\n\
   if( DaoRoutine_IsWrapper( _ro ) ) return;\n\
@@ -244,14 +244,14 @@ const string cxx_virt_call_00 =
 
 const string cxx_virt_call_01 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
   $(proxy_name)( & _cs, _ro, _obj, $(parcall) );\n\
 }\n";
 
 const string cxx_virt_call_10 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   $(vareturn)\n\
   if( _ro == NULL || _obj == NULL ) return $(return);\n\
   return ($(retype))$(proxy_name)( & _cs, _ro, _obj );\n\
@@ -259,7 +259,7 @@ const string cxx_virt_call_10 =
 
 const string cxx_virt_call_11 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   $(vareturn)\n\
   if( _ro == NULL || _obj == NULL ) return $(return);\n\
   return ($(retype))$(proxy_name)( & _cs, _ro, _obj, $(parcall) );\n\
@@ -338,7 +338,7 @@ const string cxx_virt_class3 =
 "$(retype) DaoCxx_$(host_idname)::$(cxxname)( $(parlist) )$(const)\n{\n\
   int _cs = 1;\n\
   DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro && _obj ){\n\
     ((DaoCxxVirt_$(host_idname)*)this)->DaoCxxVirt_$(host_idname)::$(cxxname)( _cs$(comma) $(parcall) );\n\
     if( _cs == 0 ) return;\n\
@@ -350,7 +350,7 @@ const string cxx_virt_class4 =
 "$(retype) DaoCxx_$(host_idname)::$(cxxname)( $(parlist) )$(const)\n{\n\
   int _cs = 1;\n\
   DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro && _obj ){\n\
     $(vareturn) = ((DaoCxxVirt_$(host_idname)*)this)->DaoCxxVirt_$(host_idname)::$(cxxname)( _cs$(comma) $(parcall) );\n\
     if( _cs == 0 ) return $(vareturn2);\n\
@@ -522,7 +522,7 @@ void CDaoFunction::SetHints( const vector<string> & hints, const string & sig )
 		errs() << "Warning: ignoring hints with unmatched number of parameters for \"" << sig << "\"!\n";
 		return;
 	}
-	//outs() << "hints found for: " << sig << "\n";
+	outs() << "hints found for: " << sig << "\n";
 	for(i=0, n=parlist.size(); i<n; i++) parlist[i].SetHints( hints[i+1] );
 }
 bool CDaoFunction::IsFromMainModule()
@@ -672,6 +672,8 @@ int CDaoFunction::Generate()
 	signature = cxxName + "("; // exclude return type from signature
 	signature2 = retype.cxxtype + "(";
 
+	string userdata = "";
+
 	vector<IntString> unusedDefaults;
 	vector<CDaoVariable*> pps;
 	for(i=0; i<n; i++){
@@ -701,10 +703,15 @@ int CDaoFunction::Generate()
 		cxxcallpars += vo.cxxcall;
 		cxxProtoParamVirt += vo.cxxpar;
 		if( retype.isUserData && retype.callback == vo.name ){
-			signature2 += "DaoValue";
+			userdata = vo.cxxpar;
+			signature2 += "DaoValue*";
 			cxxprotpars += "DaoValue *" + vo.name;
 			cxx2daocodes += "  DaoFactory_CacheValue( _fac, " + vo.name + " );\n";
-			cxxCallParamV += "DaoTuple_GetItem( _dao_cbd, 1 )";
+			if( fieldDecl ){
+				cxxCallParamV += "(DaoValue*)_cdata";
+			}else{
+				cxxCallParamV += "DaoTuple_GetItem( _dao_cbd, 1 )";
+			}
 		}else{
 			signature2 += vo.cxxtype;
 			cxxprotpars += vo.cxxpar;
@@ -965,6 +972,12 @@ int CDaoFunction::Generate()
 		kvmap3[ "comma" ] = cxxProtoParamVirt.size() ? "," : "";
 		cxxWrapperVirt = cdao_string_fill( cxx_virt_class, kvmap3 );
 	}else if( fieldDecl ){ // callback field of a struct:
+		string cxxProtoParam2 = cxxProtoParam;
+		string from = "DaoValue *" + retype.callback;
+		size_t pos = cxxProtoParam2.find( from );
+		assert( pos != string::npos );
+		if( pos != string::npos ) cxxProtoParam2.replace( pos, from.size(), userdata );
+		kvmap3[ "parlist" ] = cxxProtoParam2;
 		cxxWrapperVirtProto = cdao_string_fill( cxx_virt_proto, kvmap3 );
 		cxxWrapperVirt = cdao_string_fill( cxx_virt_struct, kvmap3 );
 		cxxWrapperVirt += "  int _cs = 1;\n";

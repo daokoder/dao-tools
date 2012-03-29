@@ -38,6 +38,7 @@ struct CDaoVariable
 	bool    unsupported;
 	bool    useDefault;
 	bool    useDaoString;
+	bool    argvLike;
 	string  name;
 	string  cxxdefault;
 	string  daodefault;

@@ -23,6 +23,23 @@ const string cxx_get_object_method =
   if( DaoRoutine_IsWrapper( meth ) ) return NULL; /*do not call C function*/\n\
   return meth;\n\
 }\n";
+const string cxx_stringlist_conversion_decl = 
+"extern char** DaoStringList_ToStaticCStringArray( DaoList *slist );\n";
+
+const string cxx_stringlist_conversion = 
+"char** DaoStringList_ToStaticCStringArray( DaoList *slist )\n\
+{\n\
+  daoint i, size = DaoList_Size( slist );\n\
+  char **argv = (char**)calloc( size + 1, sizeof(char*) );\n\
+  for(i=0; i<size; i++){\n\
+    DString *ds = DaoValue_TryGetString( DaoList_GetItem( slist, i ) );\n\
+    daoint len = DString_Size( ds );\n\
+    argv[i] = (char*)malloc( (len+1) * sizeof(char) );\n\
+    strncpy( argv[i], DString_GetMBS( ds ), len );\n\
+	argv[i][len] = '\\0';\n\
+  }\n\
+  return argv;\n\
+}\n";
 
 const string add_number = "  { \"$(name)\", $(type), $(namespace)$(value) },\n";
 const string tpl_typedef = "\tDaoNamespace_TypeDefine( ns, \"$(old)\", \"$(new)\" );\n";
@@ -83,6 +100,7 @@ extern string cdao_substitute_typenames( const string & qname );
 CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelScope( this )
 {
 	finalGenerating = false;
+	writeStringListConversion = false;
 	compiler = com;
 	moduleInfo.path = path;
 	for(int i=CDAO_FILE_H; i<=CDAO_FILE_MM; i++)
@@ -345,6 +363,23 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 			UT->location = UT2->location;
 		}
 	}
+	string canoname = canotype.getAsString();
+	string qualname = qualtype.getAsString();
+	if( UT->qname == "<anonymous>" && canoname.find( "<anonymous" ) == string::npos ){
+		UT->qname = canoname;
+		UT->name = qualname;
+		UT->name2 = UT->name;
+		UT->idname = UT->name;
+		UT->wrapType = CDAO_WRAP_TYPE_NONE;
+		UT->typedefed = true;
+	}
+	if( canoname.find( "struct " ) == 0 && canoname.find( qualname ) == 7 ){
+		if( canoname.size() == qualname.size() + 7 ) UT->typedefed = true;
+	}else if( canoname.find( "union " ) == 0 && canoname.find( qualname ) == 6 ){
+		if( canoname.size() == qualname.size() + 6 ) UT->typedefed = true;
+		//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+	}
+	if( UT->qname.find( "<anonymous" ) != string::npos ) UT->unsupported = true;
 	if( TD && UT->isRedundant == false ){
 		if( cxxTypedefs.find( TD ) != cxxTypedefs.end() ) return UT;
 
@@ -601,6 +636,11 @@ void CDaoModule::HandleHintDefinition( const string & name, const MacroInfo *mac
 	}
 	functionHints[ proto ] = hints;
 	outs() << "function hint is defined for \"" << proto << "\"\n";
+}
+void CDaoModule::HandleNumericConstant( const string & name, const Token token )
+{
+	string type = "DAO_DOUBLE";
+	numericConsts[name] = type;
 }
 void CDaoModule::HandleVariable( VarDecl *var )
 {
@@ -917,6 +957,9 @@ string CDaoModule::MakeConstantStruct( vector<EnumDecl*> & enums, vector<VarDecl
 {
 	string idname = cdao_qname_to_idname( qname );
 	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
+	map<string,string>::iterator it, end = numericConsts.end();
+	for(it=numericConsts.begin(); it!=end; it++ )
+		codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
 	return codes + MakeConstantItems( enums, vars, qname ) + "  { NULL, 0, 0 }\n};\n";
 }
 
@@ -944,7 +987,7 @@ int CDaoModule::Generate( const string & output )
 	fout_source << "#include\"" << fname_header << "\"\n";
 	fout_source2 << "#include\"" << fname_header << "\"\n";
 	fout_source3 << "#include\"" << fname_header << "\"\n";
-	fout_source << "DAO_INIT_MODULE;\nDaoVmSpace *__daoVmSpace = NULL;\n";
+	fout_source << "\nDaoVmSpace *__daoVmSpace = NULL;\n";
 
 	vector<CDaoUserType*>  sorted;
 	map<CDaoUserType*,int> check;
@@ -995,6 +1038,11 @@ int CDaoModule::Generate( const string & output )
 	fout_header << MakeHeaderCodes( sorted );
 
 	fout_source3 << cxx_get_object_method;
+	if( writeStringListConversion ){
+		fout_source3 << cxx_stringlist_conversion;
+		fout_source2 << cxx_stringlist_conversion_decl;
+		fout_source << cxx_stringlist_conversion_decl;
+	}
 	map<string,CDaoProxyFunction> & proxy_functions = CDaoProxyFunction::proxy_functions;
 	map<string,CDaoProxyFunction>::iterator pit, pend = proxy_functions.end();
 	for(pit=proxy_functions.begin(); pit!=pend; pit++){

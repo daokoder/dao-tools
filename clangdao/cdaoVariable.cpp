@@ -595,6 +595,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isObjectType = false;
 	isPointerType = false;
 	useDaoString = false;
+	argvLike = false;
 	SetDeclaration( decl );
 }
 void CDaoVariable::SetQualType( QualType qtype, SourceLocation loc )
@@ -631,6 +632,8 @@ void CDaoVariable::SetHints( const string & hints )
 			unsupported = true;
 		}if( hint == "string" ){
 			useDaoString = true;
+		}if( hint == "argv" ){
+			argvLike = true;
 		}if( hint == "callbackdata" ){
 			isUserData = true;
 			size_t pos2 = hints2.find( "_hint_", pos );
@@ -645,24 +648,24 @@ void CDaoVariable::SetHints( const string & hints )
 			vector<string> *parts = & sizes;
 			if( hint == "qname" ) parts = & scopes;
 			hint = "";
-			if( pos2 != pos ){
-				if( pos2 == string::npos ){
-					hint = hints2.substr( pos+1 );
-				}else if( pos2 > pos ){
-					hint = hints2.substr( pos+1, pos2 - pos - 1 );
-				}
-			}
-			size_t from = 0;
-			while( (pos = hint.find( '_', from )) < pos2 ){
-				parts->push_back( hint.substr( from, pos - from ) );
-				from = pos + 1;
-			}
-			if( from < pos2 ){
-				if( pos2 == string::npos ){
-					parts->push_back( hint.substr( from ) );
+			if( pos2 == string::npos ) pos2 = hints2.size();
+			if( pos2 != pos ) hint = hints2.substr( pos+1, pos2 - pos - 1 );
+			size_t underscore = 0, from = 0;
+			while( from < hint.size() ){
+				pos = hint.find( '_', from );
+				if( pos > hint.size() ) pos = hint.size();
+				string s = hint.substr( from, pos - from );
+				if( s == "UNDERSCORE" ){
+					parts->back() += "_";
+					underscore = 1;
+				}else if( underscore ){
+					parts->back() += s;
+					underscore = 1;
 				}else{
-					parts->push_back( hint.substr( from, pos2 - from ) );
+					parts->push_back( s );
+					underscore = 1;
 				}
+				from = pos + 1;
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";
 			pos = pos2;
@@ -735,8 +738,8 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 	}
 #endif
 	QualType canotype = qualtype.getCanonicalType();
-	string ctypename = normalize_type_name( canotype.getAsString() );
-	cxxtype2 = normalize_type_name( GetStrippedTypeName( canotype ) );
+	string ctypename = cdao_substitute_typenames( canotype.getAsString() );
+	cxxtype2 = cdao_substitute_typenames( GetStrippedTypeName( canotype ) );
 	cxxtype = ctypename;
 	cxxcall = name;
 	//outs() << cxxtype << " " << cxxdefault << "  " << type->getTypeClassName() << "\n";
@@ -851,6 +854,22 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 	QualType canotype = qualtype.getCanonicalType();
 	QualType qtype1 = qualtype->getPointeeType();
 	QualType qtype2 = canotype->getPointeeType();
+
+	if( argvLike ){
+		char sindex[50];
+		sprintf( sindex, "(DaoList*)_p[%i]", daopar_index );
+		daotype = "list<string>";
+		cxxcall = name;
+		cxxtype = "char**";
+		cxxpar = "char **" + name;
+		daopar = name + ":list<string>";
+		dao2cxx = "  static char **__" + name + " = NULL;\n";
+		dao2cxx += "  " + cxxpar + " = __" + name + " ? __" + name + " : (__" + name;
+		dao2cxx = dao2cxx + " = DaoStringList_ToStaticCStringArray( " + sindex + " ));\n";
+		//XXX cxx2dao = 
+		module->writeStringListConversion = true;
+		return 0;
+	}
 
 	if( sizes.size() == 1 ) return GenerateForArray( qtype2, sizes[0], daopar_index, cxxpar_index );
 	if( sizes.size() == 2 && qtype2->isPointerType() ){
@@ -1011,6 +1030,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		return 1;
 	}
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() ) daopar = "&" + daopar;
 	return 0;
 }
 int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
@@ -1216,6 +1236,28 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			break;
 		default : break;
 		}
+	}else if( elemtype->isPointerType() ){
+		QualType ptype = elemtype->getPointeeType();
+		if( CDaoUserType *UT = module->HandleUserType( ptype, location ) ){
+			if( UT->unsupported ) return 1;
+			UT->used = true;
+			daotype = cdao_make_dao_template_type_name( UT->qname );
+			cxxtype = UT->qname + "**";
+			cxxtype2 = UT->qname + "**";
+			cxxtyper = UT->idname;
+			daotype = "list<" + daotype + ">";
+			daopar = name + ":" + daotype;
+			getter = "  DaoFactory *fac = DaoProcess_GetFactory( _proc );\n";
+			getter += "  DaoList *list = DaoProcess_PutList( _proc );\n";
+			getter += "  daoint i, n = self->" + size + ";\n"; //XXX constant
+			getter += "  for(i=0; i<n; i++){\n";
+			getter += "    DaoCdata *it = DaoFactory_NewCdata( fac, dao_type_" + UT->idname;
+			getter += ", self->" + name + "[i], 0 );\n";
+			getter += "    DaoList_PushBack( list, (DaoValue*) it );\n";
+			getter += "  }\n";
+			return 0;
+		}
+		return 1;
 	}else{
 		return 1;
 	}
@@ -1523,10 +1565,10 @@ void CDaoVariable::MakeCxxParameter( QualType qtype, string & prefix, string & s
 		const EnumDecl *edec = type2->getDecl();
 		const DeclContext *parent = edec ? edec->getParent() : NULL;
 		if( parent && parent->isRecord() && edec->getAccess() != AS_public ) unsupported = true;
-		prefix = normalize_type_name( qtype.getUnqualifiedType().getAsString() ) + prefix;
+		prefix = cdao_substitute_typenames( qtype.getUnqualifiedType().getAsString() ) + prefix;
 	}else if( decl ){
 		// const C & other: const is part of the name, not a qualifier.
-		prefix = normalize_type_name(qtype.getUnqualifiedType().getAsString()) + prefix;
+		prefix = cdao_substitute_typenames(qtype.getUnqualifiedType().getAsString()) + prefix;
 	}
 	if( qtype.getCVRQualifiers() & Qualifiers::Const ) prefix = "const " + prefix;
 }

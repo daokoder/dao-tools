@@ -39,6 +39,7 @@ struct CDaoUserType
 	short  wrapType;
 	short  wrapCount;
 	bool   forceOpaque;
+	bool   typedefed;
 	bool   dummyTemplate;
 	bool   unsupported;
 	bool   isRedundant;
@@ -90,6 +91,7 @@ struct CDaoUserType
 	int Generate( RecordDecl *decl );
 	int Generate( CXXRecordDecl *decl );
 	int GenerateSimpleTyper();
+	void WrapField( CXXRecordDecl::field_iterator fit, map<string,string> kvmap );
 	void SetupDefaultMapping( map<string,string> & kvmap );
 };
 

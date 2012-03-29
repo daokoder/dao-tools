@@ -44,9 +44,14 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 	if( MI->getNumTokens() < 1 ) return; // number of expansion tokens;
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
-		return;
+	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
+		Token tok = *MI->tokens_begin();
+		if( tok.getKind() == tok::numeric_constant ){
+			if( name[0] != '_' ) module->HandleNumericConstant( name, tok );
+		}
+	}else if( MI->isFunctionLike() ){
+		module->HandleHintDefinition( name, MI );
 	}
-	if( MI->isFunctionLike() ) module->HandleHintDefinition( name, MI );
 }
 void CDaoPPCallbacks::InclusionDirective(SourceLocation Loc, const Token &Tok, 
 		StringRef Name, bool Angled, const FileEntry *File, SourceLocation End,
@@ -149,6 +154,7 @@ string normalize_type_name( const string & name0 )
 	}
 	remove_type_prefix( name, "class" );
 	remove_type_prefix( name, "struct" );
+	remove_type_prefix( name, "union" );
 	remove_type_prefix( name, "enum" );
 	remove_type_prefix( name, "typename" );
 	return name;
@@ -240,7 +246,7 @@ string cdao_make_dao_template_type_name( const string & name0 )
 string cdao_substitute_typenames( const string & name0 )
 {
 	map<string,string>::const_iterator it;
-	string name = normalize_type_name( name0 );
+	string name = name0;//normalize_type_name( name0 );
 	string result, part;
 	int i, n;
 	for(i=0, n = name.size(); i<n; i++){
