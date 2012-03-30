@@ -572,6 +572,12 @@ const string cxx_get_item_proto =
 const string cxx_set_item_proto = 
 "static void dao_$(host_idname)_SETI_$(name)( DaoProcess *_proc, DaoValue *_p[], int _n )";
 
+const string cxx_get_pixel_proto = 
+"static void dao_$(host_idname)_GETI_Pixel( DaoProcess *_proc, DaoValue *_p[], int _n )";
+
+const string cxx_set_pixel_proto = 
+"static void dao_$(host_idname)_SETI_Pixel( DaoProcess *_proc, DaoValue *_p[], int _n )";
+
 const string cxx_gs_user =
 "  $(host_qname) *self = ($(host_qname)*)DaoValue_TryCastCdata(_p[0],dao_type_$(typer));\n";
 
@@ -586,6 +592,12 @@ const string dao_get_item_proto =
 
 const string dao_set_item_proto = 
 "  { dao_$(host_idname)_SETI_$(name), \"[]=( self :$(daoname), i :int, value :$(itype) )\" },\n";
+
+const string dao_get_pixel_proto = 
+"  { dao_$(host_idname)_GETI_Pixel, \"[]( self :$(daoname), i :int, j :int, pixel :enum<uint8,uint16,uint32>=$uint8 )=>int\" },\n";
+
+const string dao_set_pixel_proto = 
+"  { dao_$(host_idname)_SETI_Pixel, \"[]=( self :$(daoname), value :int, i :int, j :int, pixel :enum<uint8,uint16,uint32>=$uint8 )\" },\n";
 
 const string numlist_code = 
 "\n\nstatic DaoNumItem dao_$(typer)_Nums[] = \n\
@@ -647,6 +659,62 @@ const string usertype_code_none =
 { \"$(daotypename)\", NULL, NULL, NULL, { NULL }, { NULL }, NULL, NULL };\n\
 DaoTypeBase DAO_DLL_$(module) *dao_$(typer)_Typer = & $(typer)_Typer;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
+
+const string cxx_get_pixel_codes =
+"  daoint i = DaoValue_TryGetInteger( _p[1] );\n\
+  daoint j = DaoValue_TryGetInteger( _p[2] );\n\
+  daoint pixel = 0;\n\
+  switch( DaoValue_TryGetEnum( _p[3] ) ){\n\
+  case 0:\n\
+  {\n\
+    unsigned char *pixels = (unsigned char*) self->$(name);\n\
+    pixel = pixels[i*self->$(pitch) + j];\n\
+    break;\n\
+  }\n\
+  case 1:\n\
+  {\n\
+    unsigned short *pixels = (unsigned short*) self->$(name);\n\
+    pixel = pixels[i*self->$(pitch) + j];\n\
+    break;\n\
+  }\n\
+  case 2:\n\
+  {\n\
+    unsigned int *pixels = (unsigned int*) self->$(name);\n\
+    pixel = pixels[i*self->$(pitch) + j];\n\
+    break;\n\
+  }\n\
+  default: break;\n\
+  }\n\
+  DaoProcess_PutInteger( _proc, pixel );\n\
+";
+
+const string cxx_set_pixel_codes =
+"  daoint i = DaoValue_TryGetInteger( _p[1] );\n\
+  daoint j = DaoValue_TryGetInteger( _p[2] );\n\
+  daoint pixel = DaoValue_TryGetInteger( _p[0] );\n\
+  switch( DaoValue_TryGetEnum( _p[3] ) ){\n\
+  case 0:\n\
+  {\n\
+    unsigned char *pixels = (unsigned char*) self->$(name);\n\
+    pixels[i*self->$(pitch) + j] = pixel;\n\
+    break;\n\
+  }\n\
+  case 1:\n\
+  {\n\
+    unsigned short *pixels = (unsigned short*) self->$(name);\n\
+    pixels[i*self->$(pitch) + j] = pixel;\n\
+    break;\n\
+  }\n\
+  case 2:\n\
+  {\n\
+    unsigned int *pixels = (unsigned int*) self->$(name);\n\
+    pixels[i*self->$(pitch) + j] = pixel;\n\
+    break;\n\
+  }\n\
+  default: break;\n\
+  }\n\
+  DaoProcess_PutInteger( _proc, pixel );\n\
+";
 
 
 //const string usertype_code_none = methlist_code + usertype_code;
@@ -875,6 +943,7 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 }
 void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,string> kvmap )
 {
+	string codes;
 	CDaoVariable field( module );
 	field.SetQualType( fit->getTypeSourceInfo()->getType(), location );
 	field.name = fit->getNameAsString();
@@ -898,6 +967,23 @@ void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,stri
 	dao_meths += cdao_string_fill( dao_getter_proto, kvmap );
 	meth_decls += cxxproto + ";\n";
 	meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + field.getter + "}\n";
+	if( field.ispixels && field.names.size() == 3 ){
+		kvmap[ "pitch" ] = field.names[0];
+		kvmap[ "width" ] = field.names[1];
+		kvmap[ "height" ] = field.names[2];
+		cxxproto = cdao_string_fill( cxx_get_pixel_proto, kvmap );
+		dao_meths += cdao_string_fill( dao_get_pixel_proto, kvmap );
+		codes = cdao_string_fill( cxx_get_pixel_codes, kvmap );
+		meth_decls += cxxproto + ";\n";
+		meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + codes + "}\n";
+		if( field.readonly ) return;
+		cxxproto = cdao_string_fill( cxx_set_pixel_proto, kvmap );
+		dao_meths += cdao_string_fill( dao_set_pixel_proto, kvmap );
+		codes = cdao_string_fill( cxx_set_pixel_codes, kvmap );
+		meth_decls += cxxproto + ";\n";
+		meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + codes + "}\n";
+	}
+	if( field.readonly ) return;
 	if( field.setter == "" ) return;
 	cxxproto = cdao_string_fill( cxx_setter_proto, kvmap );
 	dao_meths += cdao_string_fill( dao_setter_proto, kvmap );

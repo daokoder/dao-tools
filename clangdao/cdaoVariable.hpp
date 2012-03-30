@@ -39,6 +39,8 @@ struct CDaoVariable
 	bool    useDefault;
 	bool    useDaoString;
 	bool    argvLike;
+	bool    readonly; // readonly field;
+	bool    ispixels; // field for image pixels
 	string  name;
 	string  cxxdefault;
 	string  daodefault;
@@ -63,6 +65,7 @@ struct CDaoVariable
 
 	string          callback;
 	vector<string>  sizes;
+	vector<string>  names;
 	vector<string>  scopes;
 
 	CDaoVariable( CDaoModule *mod = NULL, const VarDecl *decl = NULL );

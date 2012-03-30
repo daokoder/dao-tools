@@ -596,6 +596,8 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isPointerType = false;
 	useDaoString = false;
 	argvLike = false;
+	readonly = false;
+	ispixels = false;
 	SetDeclaration( decl );
 }
 void CDaoVariable::SetQualType( QualType qtype, SourceLocation loc )
@@ -634,6 +636,8 @@ void CDaoVariable::SetHints( const string & hints )
 			useDaoString = true;
 		}if( hint == "argv" ){
 			argvLike = true;
+		}if( hint == "readonly" ){
+			readonly = true;
 		}if( hint == "callbackdata" ){
 			isUserData = true;
 			size_t pos2 = hints2.find( "_hint_", pos );
@@ -643,10 +647,14 @@ void CDaoVariable::SetHints( const string & hints )
 				callback = hints2.substr( pos+1, pos2 - pos - 1 );
 			}
 			if( callback == "" ) errs() << "Warning: need callback name for \"callbackdata\" hint!\n";
-		}else if( hint == "array" || hint == "qname" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & sizes;
 			if( hint == "qname" ) parts = & scopes;
+			if( hint == "pixels" ){
+				parts = & names;
+				ispixels = true;
+			}
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
 			if( pos2 != pos ) hint = hints2.substr( pos+1, pos2 - pos - 1 );
@@ -660,10 +668,10 @@ void CDaoVariable::SetHints( const string & hints )
 					underscore = 1;
 				}else if( underscore ){
 					parts->back() += s;
-					underscore = 1;
+					underscore = 0;
 				}else{
 					parts->push_back( s );
-					underscore = 1;
+					underscore = 0;
 				}
 				from = pos + 1;
 			}
