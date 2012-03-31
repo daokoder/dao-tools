@@ -384,34 +384,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 		if( cxxTypedefs.find( TD ) != cxxTypedefs.end() ) return UT;
 
 		CDaoUserTypeDef *UTD = MakeTypeDefine( TD, UT->qname );
-#if 0
-		 new CDaoUserTypeDef();
-		cxxTypedefs[ TD ] = 1;
 
-		DeclContext *DC = TD->getDeclContext();
-		string tdname = TD->getNameAsString();
-		if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
-			CDaoNamespace *NS = GetNamespace2( ND );
-			tdname = ND->getQualifiedNameAsString() + "::" + tdname;
-			UTD->nspace = NS->varname;
-		}else if( RecordDecl *RD = dyn_cast<RecordDecl>( DC ) ){
-			CDaoUserType *host = GetUserType( RD );
-			assert( host != NULL );
-			tdname = host->qname + "::" + tdname;
-			DC = RD->getParent();
-			if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
-				// specialization of scoped template class:
-				CDaoNamespace *NS = GetNamespace2( ND );
-				UTD->nspace = NS->varname;
-			}else{ // unscoped canonical type (unscoped template class):
-				UTD->nspace = topLevelScope.varname;
-			}
-		}else{ // unscoped typedef
-			UTD->nspace = topLevelScope.varname;
-		}
-		UTD->name = UT->qname;
-		UTD->alias = tdname;
-#endif
 		//if( UT->decl->getDeclContext() == TD->getDeclContext() )
 		//	UT->qname = UT->name = UT->name2 = UT->qname = tdname;
 		if( IsFromMainModule( TD->getLocation() ) ){
@@ -718,7 +691,7 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 	if( const ElaboratedType *ET = dyn_cast<ElaboratedType>( qtype2.getTypePtr() ) )
 		qtype2 = ET->desugar();
 	while( qtype2->isPointerType() ) qtype2 = qtype2->getPointeeType();
-	outs() << "typedef: " << TD->getQualifiedNameAsString() << " " << qtype2.getAsString() << "\n";
+	//outs() << "typedef: " << TD->getQualifiedNameAsString() << " " << qtype2.getAsString() << "\n";
 
 	if( HandleUserType( qtype2, TD->getLocation(), TD ) ) return;
 
@@ -955,6 +928,11 @@ string CDaoModule::MakeConstantItems( vector<EnumDecl*> & enums, vector<VarDecl*
 	int i, n;
 	string qname2 = qname.size() ? qname + "::" : "";
 	string codes;
+	if( qname2.find( "struct " ) == 0 ){
+		qname2.erase( 0, 7 );
+	}else if( qname2.find( "union " ) == 0 ){
+		qname2.erase( 0, 6 );
+	}
 	for(i=0, n=enums.size(); i<n; i++){
 		EnumDecl *decl = enums[i];
 		EnumDecl *dd = (EnumDecl*) decl->getDefinition();

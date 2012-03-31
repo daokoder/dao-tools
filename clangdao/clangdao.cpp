@@ -227,7 +227,7 @@ string cdao_make_dao_template_type_name( const string & name0 )
 	map<string,string>::const_iterator it;
 	string name = normalize_type_name( name0 );
 	string result, part;
-	int i, n;
+	int i, n, istemplate = name.find( '<' ) != string::npos;
 	for(i=0, n = name.size(); i<n; i++){
 		char ch = name[i];
 		if( ch == '<' || ch == '>' || ch == ',' ){
@@ -237,6 +237,7 @@ string cdao_make_dao_template_type_name( const string & name0 )
 				if( it != type_substitutions.end() ) part = it->second;
 				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
 				if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
+				if( istemplate == 0 ) quote = "";
 				result += quote + part + quote;
 			}
 			//if( ch == '>' && result[result.size()-1] == '>' ) result += ' ';
@@ -252,6 +253,7 @@ string cdao_make_dao_template_type_name( const string & name0 )
 	if( it != type_substitutions.end() ) part = it->second;
 	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
 	if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
+	if( istemplate == 0 ) quote = "";
 	return result + quote + part + quote;
 }
 string cdao_substitute_typenames( const string & name0 )

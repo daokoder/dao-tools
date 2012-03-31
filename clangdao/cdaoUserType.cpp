@@ -815,29 +815,33 @@ int CDaoUserType::Generate()
 	RecordDecl *cc = (RecordDecl*) decl->getCanonicalDecl();
 	RecordDecl *dd = decl->getDefinition();
 
-	if( dyn_cast<CXXRecordDecl>(decl) == NULL ){
-		if( typedefed == false ){
-			if( decl->isStruct() ){
-				if( qname.find( "struct " ) != 0 ){
-					qname = "struct " + qname;
-					wrapType = CDAO_WRAP_TYPE_NONE;
+	if( decl->isStruct() || decl->isUnion() ){
+		CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(decl);
+		if( CRD == NULL || (CRD->hasDefinition() && CRD->isPOD()) ){
+			//outs() << qname << " --------------- " << CRD << " " << CRD->isAggregate() << "\n";
+			if( typedefed == false ){
+				if( decl->isStruct() ){
+					if( qname.find( "struct " ) != 0 ){
+						qname = "struct " + qname;
+						wrapType = CDAO_WRAP_TYPE_NONE;
+					}
+				}else if( decl->isUnion() ){
+					if( qname.find( "union " ) != 0 ){
+						qname = "union " + qname;
+						wrapType = CDAO_WRAP_TYPE_NONE;
+					}
 				}
-			}else if( decl->isUnion() ){
-				if( qname.find( "union " ) != 0 ){
-					qname = "union " + qname;
-					wrapType = CDAO_WRAP_TYPE_NONE;
-				}
-			}
-		}else{
-			if( decl->isStruct() ){
-				if( qname.find( "struct " ) == 0 ){
-					qname.erase( 0, 7 );
-					wrapType = CDAO_WRAP_TYPE_NONE;
-				}
-			}else if( decl->isUnion() ){
-				if( qname.find( "union " ) == 0 ){
-					qname.erase( 0, 6 );
-					wrapType = CDAO_WRAP_TYPE_NONE;
+			}else{
+				if( decl->isStruct() ){
+					if( qname.find( "struct " ) == 0 ){
+						qname.erase( 0, 7 );
+						wrapType = CDAO_WRAP_TYPE_NONE;
+					}
+				}else if( decl->isUnion() ){
+					if( qname.find( "union " ) == 0 ){
+						qname.erase( 0, 6 );
+						wrapType = CDAO_WRAP_TYPE_NONE;
+					}
 				}
 			}
 		}
