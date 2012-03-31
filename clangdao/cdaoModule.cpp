@@ -383,7 +383,9 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 	if( TD && UT->isRedundant == false ){
 		if( cxxTypedefs.find( TD ) != cxxTypedefs.end() ) return UT;
 
-		CDaoUserTypeDef *UTD = new CDaoUserTypeDef();
+		CDaoUserTypeDef *UTD = MakeTypeDefine( TD, UT->qname );
+#if 0
+		 new CDaoUserTypeDef();
 		cxxTypedefs[ TD ] = 1;
 
 		DeclContext *DC = TD->getDeclContext();
@@ -409,6 +411,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 		}
 		UTD->name = UT->qname;
 		UTD->alias = tdname;
+#endif
 		//if( UT->decl->getDeclContext() == TD->getDeclContext() )
 		//	UT->qname = UT->name = UT->name2 = UT->qname = tdname;
 		if( IsFromMainModule( TD->getLocation() ) ){
@@ -715,7 +718,7 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 	if( const ElaboratedType *ET = dyn_cast<ElaboratedType>( qtype2.getTypePtr() ) )
 		qtype2 = ET->desugar();
 	while( qtype2->isPointerType() ) qtype2 = qtype2->getPointeeType();
-	//outs() << "typedef: " << TD->getQualifiedNameAsString() << " " << qtype2.getAsString() << "\n";
+	outs() << "typedef: " << TD->getQualifiedNameAsString() << " " << qtype2.getAsString() << "\n";
 
 	if( HandleUserType( qtype2, TD->getLocation(), TD ) ) return;
 
@@ -736,7 +739,40 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 			}
 			//if( func->excluded == false ) func->Generate();
 		}
+	}else{
+		CDaoUserTypeDef *UTD = MakeTypeDefine( TD, qtype2.getAsString() );
+		typedefs.push_back( UTD );
 	}
+}
+CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name )
+{
+	CDaoUserTypeDef *UTD = new CDaoUserTypeDef();
+	cxxTypedefs[ TD ] = 1;
+
+	DeclContext *DC = TD->getDeclContext();
+	string tdname = TD->getNameAsString();
+	if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
+		CDaoNamespace *NS = GetNamespace2( ND );
+		tdname = ND->getQualifiedNameAsString() + "::" + tdname;
+		UTD->nspace = NS->varname;
+	}else if( RecordDecl *RD = dyn_cast<RecordDecl>( DC ) ){
+		CDaoUserType *host = GetUserType( RD );
+		assert( host != NULL );
+		tdname = host->qname + "::" + tdname;
+		DC = RD->getParent();
+		if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
+			// specialization of scoped template class:
+			CDaoNamespace *NS = GetNamespace2( ND );
+			UTD->nspace = NS->varname;
+		}else{ // unscoped canonical type (unscoped template class):
+			UTD->nspace = topLevelScope.varname;
+		}
+	}else{ // unscoped typedef
+		UTD->nspace = topLevelScope.varname;
+	}
+	UTD->name = name;
+	UTD->alias = tdname;
+	return UTD;
 }
 const char *ifdef_cpp_open = "#ifdef __cplusplus\nextern \"C\"{\n#endif\n";
 const char *ifdef_cpp_close = "#ifdef __cplusplus\n}\n#endif\n";

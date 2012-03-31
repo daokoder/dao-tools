@@ -82,13 +82,13 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 			onload += "\tDaoNamespace *" + this_name + " = DaoNamespace_GetNamespace( ";
 			onload += outer_name + ", \"" + name + "\" );\n";
 		}
-		if( enums.size() ){
+		if( enums.size() || variables.size() ){
 			source += module->MakeConstantStruct( enums, variables, qname );
 			onload2 += "\tDaoNamespace_AddConstNumbers( " + this_name;
 			onload2 += ", dao_" + this_name + "_Nums );\n";
 		}
 	}else{
-		if( enums.size() ){
+		if( enums.size() || variables.size() ){
 			source += module->MakeConstantStruct( enums, variables );
 			onload2 += "\tDaoNamespace_AddConstNumbers( ns, dao__Nums );\n";
 		}

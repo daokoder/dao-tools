@@ -72,24 +72,35 @@ struct CDaoASTConsumer : public ASTConsumer
 		module = mod;
 	}
 	void HandleTopLevelDecl(DeclGroupRef group);
+	void HandleDeclaration( Decl *D );
 };
 
 void CDaoASTConsumer::HandleTopLevelDecl(DeclGroupRef group)
 {
 	for (DeclGroupRef::iterator it = group.begin(); it != group.end(); ++it) {
-		if (VarDecl *var = dyn_cast<VarDecl>(*it)) {
-			module->HandleVariable( var );
-		}else if (EnumDecl *e = dyn_cast<EnumDecl>(*it)) {
-			module->HandleEnum( e );
-		}else if (FunctionDecl *func = dyn_cast<FunctionDecl>(*it)) {
-			module->HandleFunction( func );
-		}else if (RecordDecl *record = dyn_cast<RecordDecl>(*it)) {
-			module->HandleUserType( record );
-		}else if (NamespaceDecl *nsdecl = dyn_cast<NamespaceDecl>(*it)) {
-			module->HandleNamespace( nsdecl );
-		}else if( TypedefDecl *decl = dyn_cast<TypedefDecl>(*it) ){
-			module->HandleTypeDefine( decl );
+		HandleDeclaration( *it );
+	}
+}
+void CDaoASTConsumer::HandleDeclaration( Decl *D )
+{
+	if( LinkageSpecDecl *TUD = dyn_cast<LinkageSpecDecl>(D) ){
+		DeclContext::decl_iterator it, end;
+		for(it=TUD->decls_begin(),end=TUD->decls_end(); it!=end; it++){
+			HandleDeclaration( *it );
 		}
+	}
+	if (VarDecl *var = dyn_cast<VarDecl>(D)) {
+		module->HandleVariable( var );
+	}else if (EnumDecl *e = dyn_cast<EnumDecl>(D)) {
+		module->HandleEnum( e );
+	}else if (FunctionDecl *func = dyn_cast<FunctionDecl>(D)) {
+		module->HandleFunction( func );
+	}else if (RecordDecl *record = dyn_cast<RecordDecl>(D)) {
+		module->HandleUserType( record );
+	}else if (NamespaceDecl *nsdecl = dyn_cast<NamespaceDecl>(D)) {
+		module->HandleNamespace( nsdecl );
+	}else if( TypedefDecl *decl = dyn_cast<TypedefDecl>(D) ){
+		module->HandleTypeDefine( decl );
 	}
 }
 

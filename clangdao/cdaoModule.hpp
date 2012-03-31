@@ -131,6 +131,8 @@ struct CDaoModule
 
 	void WriteHeaderIncludes( std::ostream & stream );
 
+	CDaoUserTypeDef* MakeTypeDefine( TypedefDecl *TD, const string &name );
+
 	string MakeHeaderCodes( vector<CDaoUserType*> & usertypes );
 	string MakeSourceCodes( vector<CDaoUserType*> & usertypes, CDaoNamespace *ns = NULL );
 	string MakeSource2Codes( vector<CDaoUserType*> & usertypes );
