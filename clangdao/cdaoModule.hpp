@@ -142,8 +142,9 @@ struct CDaoModule
 
 	string MakeSourceCodes( vector<CDaoFunction*> & functions, CDaoNamespace *ns = NULL );
 	string MakeOnLoadCodes( vector<CDaoFunction*> & functions, CDaoNamespace *ns = NULL );
-	string MakeConstantItems( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & name = "", bool nested = false );
-	string MakeConstantStruct( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & name = "" );
+	string MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & name = "", bool nested = false );
+	string MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & name = "", bool isCpp = false );
+	string MakeConstStruct( vector<VarDecl*> & vars, const string & ns, const string & name = "" );
 
 	string ExtractSource( SourceLocation & start, SourceLocation & end, bool original = true );
 	string ExtractSource( const SourceRange & range, bool original = true );

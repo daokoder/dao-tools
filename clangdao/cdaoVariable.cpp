@@ -658,20 +658,23 @@ void CDaoVariable::SetHints( const string & hints )
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
 			if( pos2 != pos ) hint = hints2.substr( pos+1, pos2 - pos - 1 );
-			size_t underscore = 0, from = 0;
+			size_t concat = 0, from = 0;
 			while( from < hint.size() ){
 				pos = hint.find( '_', from );
 				if( pos > hint.size() ) pos = hint.size();
 				string s = hint.substr( from, pos - from );
 				if( s == "UNDERSCORE" ){
 					parts->back() += "_";
-					underscore = 1;
-				}else if( underscore ){
+					concat = 1;
+				}else if( s == "TIMES" ){
+					parts->back() += "*";
+					concat = 1;
+				}else if( concat ){
 					parts->back() += s;
-					underscore = 0;
+					concat = 0;
 				}else{
 					parts->push_back( s );
-					underscore = 0;
+					concat = 0;
 				}
 				from = pos + 1;
 			}
@@ -1038,7 +1041,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		return 1;
 	}
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
-	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() ) daopar = "&" + daopar;
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() and daotype != "string" ){
+		if( !(qualtype.getCVRQualifiers() & Qualifiers::Const) ) daopar = "&" + daopar;
+	}
 	return 0;
 }
 int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
@@ -1119,20 +1125,26 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 	}
 	map<string,string> kvmap;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() and daotype != "string" ){
+		if( !(qualtype.getCVRQualifiers() & Qualifiers::Const) ) daopar = "&" + daopar;
+	}
 	return 0;
 }
 int CDaoVariable::GenerateForArray( int daopar_index, int cxxpar_index )
 {
+	bool constsize = false;
 	string size;
 	QualType canotype = qualtype.getCanonicalType();
 	const ArrayType *type = (ArrayType*)canotype.getTypePtr();
 	if( canotype->isConstantArrayType() ){
 		const ConstantArrayType *at = (ConstantArrayType*)canotype.getTypePtr();
 		size = at->getSize().toString( 10, false );
+		constsize = true;
 	}
-	return GenerateForArray( type->getElementType(), size, daopar_index, cxxpar_index );
+	return GenerateForArray( type->getElementType(), size, daopar_index, cxxpar_index, constsize );
 }
-int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_index, int cxxpar_index )
+int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_index, int cxxpar_index, bool constsize )
 {
 	const Type *type2 = elemtype.getTypePtr();
 	string ctypename2 = elemtype.getAsString();
@@ -1257,7 +1269,11 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			daopar = name + ":" + daotype;
 			getter = "  DaoFactory *fac = DaoProcess_GetFactory( _proc );\n";
 			getter += "  DaoList *list = DaoProcess_PutList( _proc );\n";
-			getter += "  daoint i, n = self->" + size + ";\n"; //XXX constant
+			if( constsize ){
+				getter += "  daoint i, n = " + size + ";\n";
+			}else{
+				getter += "  daoint i, n = self->" + size + ";\n";
+			}
 			getter += "  for(i=0; i<n; i++){\n";
 			getter += "    DaoCdata *it = DaoFactory_NewCdata( fac, dao_type_" + UT->idname;
 			getter += ", self->" + name + "[i], 0 );\n";
@@ -1272,6 +1288,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 	if( size.size() == 0 ) size = "0";
 	kvmap[ "size" ] = size;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
 	return 0;
 }
 int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2, int dpid, int cpid )
@@ -1385,6 +1402,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 	kvmap[ "size" ] = size;
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
 	return 0;
 }
 int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size2, int dpid, int cpid )
@@ -1498,6 +1516,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 	kvmap[ "size" ] = size;
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
 	return 0;
 }
 void CDaoVariable::MakeCxxParameter( string & prefix, string & suffix )

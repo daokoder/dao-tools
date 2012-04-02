@@ -923,7 +923,7 @@ string CDaoModule::MakeOnLoadCodes( vector<CDaoFunction*> & functions, CDaoNames
 	codes += "\tDaoNamespace_WrapFunctions( " + nsname + ", dao_" + tname + "_Funcs );\n";
 	return codes;
 }
-string CDaoModule::MakeConstantItems( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & qname, bool nested )
+string CDaoModule::MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & qname, bool nested )
 {
 	int i, n;
 	string qname2 = qname.size() ? qname + "::" : "";
@@ -967,14 +967,60 @@ string CDaoModule::MakeConstantItems( vector<EnumDecl*> & enums, vector<VarDecl*
 	}
 	return codes;
 }
-string CDaoModule::MakeConstantStruct( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & qname )
+string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & qname, bool isCpp )
 {
 	string idname = cdao_qname_to_idname( qname );
 	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
 	map<string,string>::iterator it, end = numericConsts.end();
+	if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
+	if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
 	for(it=numericConsts.begin(); it!=end; it++ )
 		codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
-	return codes + MakeConstantItems( enums, vars, qname ) + "  { NULL, 0, 0 }\n};\n";
+	return codes + MakeConstNumItems( enums, vars, qname ) + "  { NULL, 0, 0 }\n};\n";
+}
+string CDaoModule::MakeConstStruct( vector<VarDecl*> & vars, const string & ns, const string & qname )
+{
+	int i, n;
+	string qname2 = qname.size() ? qname + "::" : "";
+	string codes;
+	if( qname2.find( "struct " ) == 0 ){
+		qname2.erase( 0, 7 );
+	}else if( qname2.find( "union " ) == 0 ){
+		qname2.erase( 0, 6 );
+	}
+	for(i=0, n=vars.size(); i<n; i++){
+		VarDecl *decl = vars[i];
+		QualType qtype = decl->getType().getCanonicalType();
+		string item = decl->getNameAsString();
+		bool isconst = (qtype.getCVRQualifiers() & Qualifiers::Const) != 0;
+		bool ispointer = false;
+		if( not IsFromMainModule( decl->getLocation() ) ) continue;
+
+
+		CDaoUserType *UT = HandleUserType( qtype, decl->getLocation() );
+		if( UT == NULL && qtype->isPointerType() ){
+			qtype = qtype->getPointeeType();
+			UT = HandleUserType( qtype, decl->getLocation() );
+			ispointer = true;
+		}
+		//outs() << "------------------- " << item << " " << UT << "!!!!!!!!!!!!!!!\n";
+		if( UT == NULL ) continue;
+
+		if( qtype.getCVRQualifiers() & Qualifiers::Const ){
+			codes += "  DaoNamespace_AddConstValue( " + ns + ", \"" + item;
+			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
+			codes += "(" + UT->qname + "*) ";
+			if( not ispointer ) codes += "& ";
+			codes += qname2 + item + " ) );\n";
+		}else{
+			codes += "  DaoNamespace_AddValue( " + ns + ", \"" + item;
+			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
+			codes += "(" + UT->qname + "*) ";
+			if( not ispointer ) codes += "& ";
+			codes += qname2 + item + " ), NULL );\n";
+		}
+	}
+	return codes;
 }
 
 int CDaoModule::Generate( const string & output )

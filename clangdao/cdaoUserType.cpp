@@ -403,7 +403,7 @@ const string tpl_struct = "$(qname)* DAO_DLL_$(module) Dao_$(idname)_New();\n";
 
 const string tpl_struct_alloc =
 "$(qname)* Dao_$(idname)_New()\n{\n\
-	$(qname) *self = ($(qname)*) calloc( 1, sizeof($(idname)) );\n\
+	$(qname) *self = ($(qname)*) calloc( 1, sizeof($(qname)) );\n\
 	return self;\n\
 }\n";
 const string tpl_struct_alloc2 =
@@ -426,7 +426,7 @@ const string tpl_struct_daoc_alloc =
 "Dao_$(idname)* Dao_$(idname)_New()\n\
 {\n\
 	Dao_$(idname) *wrap = calloc( 1, sizeof(Dao_$(idname)) );\n\
-	$(name) *self = ($(name)*) wrap;\n\
+	$(qname) *self = ($(qname)*) wrap;\n\
 	wrap->_cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
 	wrap->object = self;\n\
 $(callbacks)$(selfields)\treturn wrap;\n\
@@ -858,7 +858,7 @@ int CDaoUserType::Generate()
 	}
 	isRedundant = isRedundant2;
 	if( isRedundant ) return 0;
-	if( name.find( '_' ) == 0 || qname.find( '_' ) == 0 ){
+	if( name.find( "__" ) == 0 || qname.find( "__" ) == 0 ){
 		forceOpaque = true;
 	}
 	if( name == "reverse_iterator" && idname.find( "std_0_reverse_iterator" ) == 0 ){
@@ -988,6 +988,7 @@ void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,stri
 		meth_codes += cxxproto + "\n{\n" + cdao_string_fill( cxx_gs_user, kvmap ) + codes + "}\n";
 	}
 	if( field.readonly ) return;
+	if( field.isUserData ) set_fields += "\tself->" + field.name + " = self;\n";
 	if( field.setter == "" ) return;
 	cxxproto = cdao_string_fill( cxx_setter_proto, kvmap );
 	dao_meths += cdao_string_fill( dao_setter_proto, kvmap );
@@ -1001,8 +1002,9 @@ int CDaoUserType::Generate( RecordDecl *decl )
 	map<string,string> kvmap;
 
 	wrapType = CDAO_WRAP_TYPE_PROXY;
-	outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
+	//outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
 
+	set_fields = "";
 	SetupDefaultMapping( kvmap );
 
 	RecordDecl::field_iterator fit, fend;
@@ -1035,12 +1037,11 @@ int CDaoUserType::Generate( RecordDecl *decl )
 		meth_codes += cdao_string_fill( c_wrap_new, kvmap );
 
 		string set_callbacks;
-		string set_fields;
 		kvmap[ "callback" ] = "";
 		for(i=0,n=callbacks.size(); i<n; i++){
 			CDaoFunction & meth = callbacks[i];
 			meth.Generate();
-			if( not meth.generated ) continue;
+			if( meth.excluded or not meth.generated ) continue;
 			wrapCount += 1;
 			kvmap[ "callback" ] = meth.cxxName;
 			set_callbacks += cdao_string_fill( tpl_set_callback, kvmap );
@@ -1383,7 +1384,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			type_codes += cdao_string_fill( tpl_class_init2, kvmap );
 		}
 	}
-	kvmap[ "nums" ] = module->MakeConstantItems( enums, vars, qname, true );
+	kvmap[ "nums" ] = module->MakeConstNumItems( enums, vars, qname, true );
 	kvmap[ "decls" ] = meth_decls;
 	kvmap[ "meths" ] = dao_meths;
 	kvmap["constructors"] = "";

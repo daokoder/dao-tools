@@ -80,7 +80,7 @@ struct CDaoVariable
 	int GenerateForPointer( int daopar_index = 0, int cxxpar_index = 0 );
 	int GenerateForReference( int daopar_index = 0, int cxxpar_index = 0 );
 	int GenerateForArray( int daopar_index = 0, int cxxpar_index = 0 );
-	int GenerateForArray( QualType elemtype, string size, int daopar_index = 0, int cxxpar_index = 0 );
+	int GenerateForArray( QualType elemtype, string size, int daopar_index = 0, int cxxpar_index = 0, bool constsize = false );
 	int GenerateForArray( QualType elemtype, string size, string size2, int dpid = 0, int cpid = 0 );
 	int GenerateForArray2( QualType elemtype, string size, string size2, int dpid = 0, int cpid = 0 );
 

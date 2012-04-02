@@ -175,8 +175,7 @@ const string cxx_virt_struct =
 {\n\
   Dao_$(host_idname) *_self = (Dao_$(host_idname)*) $(userdata);\n\
   $(host_qname) *_self2 = _self->object;\n\
-  DaoCdata *_cdata = _self->_cdata;\n\
-  DaoProcess *vmproc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n";
+  DaoCdata *_cdata = _self->_cdata;\n";
 
 const string c_callback_proto =
 "$(retype) Dao_$(cxxname)( $(parlist) );\n";
@@ -236,7 +235,7 @@ const string cxx_virt_call_00 =
   DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _obj, NULL, 0 );\n\
-  if( DaoRoutine_IsWrapper( _ro ) ) return;\n\
+  if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) return;\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
   DaoProcess_Call( _proc, _ro, (DaoValue*)_obj, NULL, 0 );\n\
   DaoVmSpace_ReleaseProcess( __daoVmSpace, _proc );\n\
@@ -269,7 +268,7 @@ const string cxx_proxy_body00 =
 "static void $(proxy_name)( int *_cs, DaoRoutine *_ro, DaoObject *_ob )\n{\n\
   if( _ro == NULL ) return;\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, NULL, 0 );\n\
-  if( DaoRoutine_IsWrapper( _ro ) ) return;\n\
+  if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) return;\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
   *_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, NULL, 0 );\n\
   DaoVmSpace_ReleaseProcess( __daoVmSpace, _proc );\n\
@@ -284,7 +283,7 @@ const string cxx_proxy_body01 =
 $(cxx2dao)\
   _dp = DaoFactory_GetLastValues( _fac, $(count) );\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
-  if( DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
+  if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   *_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) );\n\
 EndCall:\n\
   DaoVmSpace_ReleaseProcess( __daoVmSpace, _proc );\n\
@@ -298,7 +297,7 @@ const string cxx_proxy_body10 =
   $(vareturn)\n\
   if( _ro == NULL ) goto EndCall;\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, NULL, 0 );\n\
-  if( DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
+  if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   if( (*_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, NULL, 0 )) ) goto EndCall;\n\
   _res = DaoProcess_GetReturned( _proc );\n\
 $(getreturn)\
@@ -318,7 +317,7 @@ const string cxx_proxy_body11 =
 $(cxx2dao)\
   _dp = DaoFactory_GetLastValues( _fac, $(count) );\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
-  if( DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
+  if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   if( (*_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) )) ) goto EndCall;\n\
   _res = DaoProcess_GetReturned( _proc );\n\
 $(getreturn)\
@@ -468,6 +467,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 	}
 	sig = fname + proto;
 	it = module->functionHints.find( sig );
+	//outs() << "search hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
 	if( it != module->functionHints.end() ) SetHints( it->second, sig );
 }
 void CDaoFunction::SetCallback( FunctionProtoType *func, FieldDecl *decl, const string & name )
@@ -481,9 +481,20 @@ void CDaoFunction::SetCallback( FunctionProtoType *func, FieldDecl *decl, const 
 	string idname = name;
 	string sig;
 	if( decl ){
-		qname = decl->getQualifiedNameAsString();
-		idname = cdao_qname_to_idname( decl->getNameAsString() );
 		location = decl->getLocation();
+
+		const RecordDecl *RD = decl->getParent();
+		QualType qtype( RD->getTypeForDecl(), 0 );
+		CDaoUserType *UT = module->HandleUserType( qtype, location );
+		if( UT ){
+			qname = decl->getQualifiedNameAsString();
+			size_t pos = qname.rfind( "::" );
+			qname.replace( 0, pos, UT->qname );
+			idname = cdao_qname_to_idname( qname );
+		}else{
+			qname = decl->getQualifiedNameAsString();
+			idname = cdao_qname_to_idname( decl->getNameAsString() );
+		}
 	}
 	sig = qname + "(";
 	for(i=0, n=func->getNumArgs(); i<n; i++){
@@ -972,6 +983,10 @@ int CDaoFunction::Generate()
 		kvmap3[ "comma" ] = cxxProtoParamVirt.size() ? "," : "";
 		cxxWrapperVirt = cdao_string_fill( cxx_virt_class, kvmap3 );
 	}else if( fieldDecl ){ // callback field of a struct:
+		if( retype.callback.size() == 0 ){
+			excluded = true;
+			return 1;
+		}
 		string cxxProtoParam2 = cxxProtoParam;
 		string from = "DaoValue *" + retype.callback;
 		size_t pos = cxxProtoParam2.find( from );

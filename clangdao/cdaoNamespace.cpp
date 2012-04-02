@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <clang/Lex/Preprocessor.h>
 #include <clang/AST/DeclTemplate.h>
 #include "cdaoModule.hpp"
 #include "cdaoNamespace.hpp"
@@ -43,6 +44,7 @@ void CDaoNamespace::HandleExtension( NamespaceDecl *nsdecl )
 }
 int CDaoNamespace::Generate( CDaoNamespace *outer )
 {
+	bool isCpp = module->compiler->getPreprocessor().getLangOptions().CPlusPlus;
 	int i, n, retcode = 0;
 	for(i=0, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
 	for(i=0, n=functions.size(); i<n; i++){
@@ -83,15 +85,20 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 			onload += outer_name + ", \"" + name + "\" );\n";
 		}
 		if( enums.size() || variables.size() ){
-			source += module->MakeConstantStruct( enums, variables, qname );
+			source += module->MakeConstNumber( enums, variables, qname, isCpp );
 			onload2 += "\tDaoNamespace_AddConstNumbers( " + this_name;
 			onload2 += ", dao_" + this_name + "_Nums );\n";
 		}
+		onload3 += module->MakeConstStruct( variables, this_name, qname );
 	}else{
 		if( enums.size() || variables.size() ){
-			source += module->MakeConstantStruct( enums, variables );
+			source += module->MakeConstNumber( enums, variables, "", isCpp );
+			onload2 += "\tDaoNamespace_AddConstNumbers( ns, dao__Nums );\n";
+		}else if( this == & module->topLevelScope && module->numericConsts.size() ){
+			source += module->MakeConstNumber( enums, variables, "", isCpp );
 			onload2 += "\tDaoNamespace_AddConstNumbers( ns, dao__Nums );\n";
 		}
+		onload3 += module->MakeConstStruct( variables, "ns", "" );
 	}
 
 	onload3 += module->MakeOnLoadCodes( functions, this );

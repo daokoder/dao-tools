@@ -55,6 +55,7 @@ struct CDaoUserType
 
 	string  gcfields;
 
+	string  set_fields;
 	string  type_decls;
 	string  type_codes;
 	string  meth_decls;
