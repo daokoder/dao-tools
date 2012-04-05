@@ -407,6 +407,7 @@ const string daoqt_sig_slot_emit =
 extern string cdao_string_fill( const string & tpl, const map<string,string> & subs );
 extern string normalize_type_name( const string & name );
 extern string cdao_make_dao_template_type_name( const string & name );
+extern string cdao_substitute_typenames( const string & qname );
 
 
 CDaoFunction::CDaoFunction( CDaoModule *mod, FunctionDecl *decl, int idx )
@@ -433,13 +434,20 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 		excluded = true;
 		return;
 	}
-	
+
+	const Type *type = decl->getTypeSourceInfo()->getType().getTypePtr();
+	const FunctionProtoType *ft = type->getAs<FunctionProtoType>();
+	if( ft->hasDynamicExceptionSpec() ){
+		excluded = true;
+		return;
+	}
+
 	string proto = "(";
 	for(i=0, n=decl->param_size(); i<n; i++){
 		ParmVarDecl *pardecl = decl->getParamDecl( i );
 		parlist.push_back( CDaoVariable( module, pardecl ) );
 		if( i ) proto += ",";
-		proto += pardecl->getTypeSourceInfo()->getType().getAsString();
+		proto += cdao_substitute_typenames( pardecl->getTypeSourceInfo()->getType().getAsString() );
 	}
 	retype.name = "_" + cdao_qname_to_idname( decl->getNameAsString() );
 	retype.SetQualType( funcDecl->getResultType(), funcDecl->getLocation() );

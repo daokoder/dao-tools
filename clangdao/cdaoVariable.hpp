@@ -37,13 +37,16 @@ struct CDaoVariable
 	bool    hasArrayHint;
 	bool    unsupported;
 	bool    useDefault;
+	bool    useTypeTag;
 	bool    useDaoString;
 	bool    argvLike;
 	bool    readonly; // readonly field;
 	bool    ispixels; // field for image pixels
+	bool    hasDaoTypeHint;
 	string  name;
 	string  cxxdefault;
 	string  daodefault;
+	string  hintDaoType;
 
 	string  daotype;
 	string  cxxtype; // original

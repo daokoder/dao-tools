@@ -44,5 +44,8 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(LFLAGS) $(OBJECTS) -o $(TARGET)
 
+test:
+	./clangdao -Iexample example/mod_second.cpp
+
 clean:
 	rm *.o

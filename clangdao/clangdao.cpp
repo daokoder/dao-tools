@@ -265,6 +265,8 @@ string cdao_substitute_typenames( const string & name0 )
 	for(i=0, n = name.size(); i<n; i++){
 		char ch = name[i];
 		if( ch == '<' || ch == '>' || ch == ',' ){
+			while( part.size() && isspace( part[0] ) ) part.erase( 0, 1 );
+			while( part.size() && isspace( part[part.size()-1] ) ) part.erase( part.size()-1, 1 );
 			if( part != "" && part != " " ){
 				it = type_substitutions.find( part );
 				if( it != type_substitutions.end() ) part = it->second;

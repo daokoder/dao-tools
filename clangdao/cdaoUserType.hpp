@@ -28,6 +28,9 @@ struct CDaoUserTypeDef
 	string  nspace;
 	string  name;
 	string  alias;
+	TypedefDecl *td;
+
+	CDaoUserTypeDef(){ td = NULL; }
 };
 
 struct CDaoUserType
@@ -46,6 +49,7 @@ struct CDaoUserType
 	bool   isRedundant2;
 	bool   isQObject;
 	bool   isQObjectBase;
+	bool   useTypeTag;
 	bool   used;
 
 	string  name;  // just name: vector, SomeClass;

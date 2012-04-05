@@ -30,15 +30,18 @@ struct CDaoModuleInfo
 	string      name;
 	string      path;
 	FileEntry  *entry;
+	CDaoModuleInfo(){ entry = NULL; }
 };
 struct CDaoHeaderInfo
 {
+	string      module;
 	string      path;
 	FileEntry  *entry;
 
-	CDaoHeaderInfo( const string & p="", FileEntry *f = NULL ){
+	CDaoHeaderInfo( const string & p="", FileEntry *f = NULL, const string &mod="" ){
 		path = p;
 		entry = f;
+		module = mod;
 	}
 };
 struct CDaoInclusionInfo
@@ -80,6 +83,7 @@ struct CDaoModule
 	map<string,string> numericConsts;
 
 	map<TypedefDecl*,int>  cxxTypedefs;
+	map<string,int>        cxxTypedefs2;
 	map<string,string>     daoTypedefs;
 
 	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required modules;
@@ -103,6 +107,8 @@ struct CDaoModule
 	CDaoNamespace* GetNamespace2( const NamespaceDecl *decl );
 	CDaoNamespace* NewNamespace( const NamespaceDecl *decl );
 	CDaoNamespace* AddNamespace( const NamespaceDecl *decl );
+
+	CDaoHeaderInfo FindModuleInfo( SourceLocation loc );
 
 	int Generate( const string & output = "" );
 

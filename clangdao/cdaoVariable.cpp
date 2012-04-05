@@ -47,6 +47,7 @@ const string dao2cxx_floats = dao2cxx2 + "DaoArray_ToFloat( (DaoArray*)_p[$(inde
 const string dao2cxx_doubles = dao2cxx2 + "DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
 const string dao2cxx_complexs8 = dao2cxx2 + "(complex8*) DaoArray_ToFloat( (DaoArray*)_p[$(index)] );\n";
 const string dao2cxx_complexs16 = dao2cxx2 + "(complex16*) DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_array_buffer = dao2cxx2 + "DaoArray_GetBuffer( (DaoArray*)_p[$(index)] );\n";
 
 const string dao2cxx_bmat = dao2cxx3 + "DaoArray_GetMatrixB( (DaoArray*)_p[$(index)], $(size) );\n";
 const string dao2cxx_smat = dao2cxx3 + "DaoArray_GetMatrixS( (DaoArray*)_p[$(index)], $(size) );\n";
@@ -590,7 +591,9 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isUserData = false;
 	hasArrayHint = false;
 	unsupported = false;
+	useTypeTag = false;
 	useDefault = true;
+	hasDaoTypeHint = false;
 	isArithmeticType = false;
 	isObjectType = false;
 	isPointerType = false;
@@ -625,6 +628,7 @@ void CDaoVariable::SetHints( const string & hints )
 		pos = hints2.find( '_', 6 );
 		if( pos == string::npos ){
 			hint = hints2.substr( 6 );
+			pos = hints2.size();
 		}else{
 			hint = hints2.substr( 6, pos - 6 );
 		}
@@ -632,6 +636,8 @@ void CDaoVariable::SetHints( const string & hints )
 			isNullable = true;
 		}if( hint == "unsupported" ){
 			unsupported = true;
+		}if( hint == "usetag" ){
+			useTypeTag = true;
 		}if( hint == "string" ){
 			useDaoString = true;
 		}if( hint == "argv" ){
@@ -647,13 +653,15 @@ void CDaoVariable::SetHints( const string & hints )
 				callback = hints2.substr( pos+1, pos2 - pos - 1 );
 			}
 			if( callback == "" ) errs() << "Warning: need callback name for \"callbackdata\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & sizes;
 			if( hint == "qname" ) parts = & scopes;
 			if( hint == "pixels" ){
 				parts = & names;
 				ispixels = true;
+			}else if( hint == "daotype" ){
+				hasDaoTypeHint = true;
 			}
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
@@ -669,6 +677,15 @@ void CDaoVariable::SetHints( const string & hints )
 				}else if( s == "TIMES" ){
 					parts->back() += "*";
 					concat = 1;
+				}else if( s == "LT" ){
+					parts->back() += "<";
+					concat = 1;
+				}else if( s == "GT" ){
+					parts->back() += ">";
+					concat = 1;
+				}else if( s == "OR" ){
+					parts->back() += "|";
+					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
 					concat = 0;
@@ -677,6 +694,10 @@ void CDaoVariable::SetHints( const string & hints )
 					concat = 0;
 				}
 				from = pos + 1;
+			}
+			if( hasDaoTypeHint ){
+				hintDaoType = sizes[0];
+				sizes.clear();
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";
 			pos = pos2;
@@ -1010,6 +1031,11 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.dao2cxx = dao2cxx_void;
 			tpl.cxx2dao = cxx2dao_voidp;
 			tpl.ctxput = ctxput_voidp;
+			if( hasDaoTypeHint && hintDaoType.find( "array" ) == 0 ){
+				daotype = hintDaoType;
+				tpl.daopar = "$(name) :" + daotype + "$(default)";
+				tpl.dao2cxx = dao2cxx_array_buffer;
+			}
 		}
 		if( daodefault == "0" || daodefault == "NULL" ){
 			daodefault = "none";
@@ -1260,13 +1286,14 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 		QualType ptype = elemtype->getPointeeType();
 		if( CDaoUserType *UT = module->HandleUserType( ptype, location ) ){
 			if( UT->unsupported ) return 1;
+			if( cxxpar_index != VAR_INDEX_FIELD ) return 1;
 			UT->used = true;
 			daotype = cdao_make_dao_template_type_name( UT->qname );
 			cxxtype = UT->qname + "**";
 			cxxtype2 = UT->qname + "**";
 			cxxtyper = UT->idname;
 			daotype = "list<" + daotype + ">";
-			daopar = name + ":" + daotype;
+			daopar = name + " :" + daotype;
 			getter = "  DaoFactory *fac = DaoProcess_GetFactory( _proc );\n";
 			getter += "  DaoList *list = DaoProcess_PutList( _proc );\n";
 			if( constsize ){

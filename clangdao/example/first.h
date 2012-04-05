@@ -10,6 +10,10 @@ typedef float Matrix[4][4];
 typedef unsigned int Fl_Shortcut;
 Fl_Shortcut fl_old_shortcut(const char*);
 
+class SecondClass;
+
+void Testing( SecondClass *obj );
+
 class FirstClass
 {
 	public:

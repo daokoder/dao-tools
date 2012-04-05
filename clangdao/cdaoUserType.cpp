@@ -726,12 +726,14 @@ extern string cdao_string_fill( const string & tpl, const map<string,string> & s
 extern string normalize_type_name( const string & name );
 extern string cdao_make_dao_template_type_name( const string & name );
 extern string cdao_remove_type_scopes( const string & qname );
+extern string cdao_substitute_typenames( const string & qname );
 
 
 CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 {
 	module = mod;
 	used = false;
+	useTypeTag = false;
 	typedefed = false;
 	unsupported = false;
 	isRedundant = true;
@@ -747,6 +749,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 }
 void CDaoUserType::SetDeclaration( RecordDecl *decl )
 {
+	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
 	this->decl = decl;
 	location = decl->getLocation();
 	if( decl->getDefinition() ) location = decl->getDefinition()->getLocation();
@@ -767,6 +770,12 @@ void CDaoUserType::SetDeclaration( RecordDecl *decl )
 		CDaoVariable var;
 		var.SetHints( it->second[0] );
 		if( var.unsupported ) forceOpaque = true;
+		useTypeTag = var.useTypeTag;
+	}
+	if( isC && decl->isStruct() ){
+		if( qname.find( "struct " ) != 0 ) qname = "struct " + qname;
+	}else if( isC && decl->isUnion() ){
+		if( qname.find( "union " ) != 0 ) qname = "union " + qname;
 	}
 }
 void CDaoUserType::SetNamespace( const CDaoNamespace *ns )
@@ -812,36 +821,62 @@ int CDaoUserType::GenerateSimpleTyper()
 }
 int CDaoUserType::Generate()
 {
-	RecordDecl *cc = (RecordDecl*) decl->getCanonicalDecl();
+	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
 	RecordDecl *dd = decl->getDefinition();
 
-	if( decl->isStruct() || decl->isUnion() ){
-		CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(decl);
-		if( CRD == NULL || (CRD->hasDefinition() && CRD->isPOD()) ){
-			//outs() << qname << " --------------- " << CRD << " " << CRD->isAggregate() << "\n";
-			if( typedefed == false ){
-				if( decl->isStruct() ){
-					if( qname.find( "struct " ) != 0 ){
-						qname = "struct " + qname;
-						wrapType = CDAO_WRAP_TYPE_NONE;
-					}
-				}else if( decl->isUnion() ){
-					if( qname.find( "union " ) != 0 ){
-						qname = "union " + qname;
-						wrapType = CDAO_WRAP_TYPE_NONE;
-					}
+#if 0
+	if( dd != NULL && dd != decl ){
+		outs()<<"-------------------- " << qname << " " << typedefed << " " << this << "\n";
+		CDaoUserType *UT = module->GetUserType( dd );
+		if( UT && UT->typedefed == false && UT->qname != qname ){
+			UT->qname = qname;
+			UT->wrapType = CDAO_WRAP_TYPE_NONE;
+			if( typedefed ) UT->typedefed = true;
+			UT->Generate();
+		}
+	}
+#endif
+
+	if( useTypeTag ){
+		// In /usr/include/sys/stat.h, a struct and a function are both named as "stat",
+		// to use the struct, the "struct" needs to be explicitly written in order to
+		// use the struct. For ClangDao, a type can have hint "usetag", so that the
+		// struct or union tag will be explicitly prefixed to the type name even in C++.
+		// See DaoFLTK/fltk.cpp.
+		if( decl->isStruct() ){
+			if( qname.find( "struct " ) != 0 ){
+				qname = "struct " + qname;
+				wrapType = CDAO_WRAP_TYPE_NONE;
+			}
+		}else if( decl->isUnion() ){
+			if( qname.find( "union " ) != 0 ){
+				qname = "union " + qname;
+				wrapType = CDAO_WRAP_TYPE_NONE;
+			}
+		}
+	}else if( isC && (decl->isStruct() || decl->isUnion()) ){
+		if( typedefed == false ){
+			if( decl->isStruct() ){
+				if( qname.find( "struct " ) != 0 ){
+					qname = "struct " + qname;
+					wrapType = CDAO_WRAP_TYPE_NONE;
 				}
-			}else{
-				if( decl->isStruct() ){
-					if( qname.find( "struct " ) == 0 ){
-						qname.erase( 0, 7 );
-						wrapType = CDAO_WRAP_TYPE_NONE;
-					}
-				}else if( decl->isUnion() ){
-					if( qname.find( "union " ) == 0 ){
-						qname.erase( 0, 6 );
-						wrapType = CDAO_WRAP_TYPE_NONE;
-					}
+			}else if( decl->isUnion() ){
+				if( qname.find( "union " ) != 0 ){
+					qname = "union " + qname;
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}
+		}else{
+			if( decl->isStruct() ){
+				if( qname.find( "struct " ) == 0 ){
+					qname.erase( 0, 7 );
+					wrapType = CDAO_WRAP_TYPE_NONE;
+				}
+			}else if( decl->isUnion() ){
+				if( qname.find( "union " ) == 0 ){
+					qname.erase( 0, 6 );
+					wrapType = CDAO_WRAP_TYPE_NONE;
 				}
 			}
 		}
@@ -1002,7 +1037,7 @@ int CDaoUserType::Generate( RecordDecl *decl )
 	map<string,string> kvmap;
 
 	wrapType = CDAO_WRAP_TYPE_PROXY;
-	//outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
+	outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
 
 	set_fields = "";
 	SetupDefaultMapping( kvmap );
@@ -1228,6 +1263,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		has_public_destructor = false;
 		has_private_destructor = destr->getAccess() == AS_private;
 	}
+	if( destr ){
+		const Type *type = destr->getTypeSourceInfo()->getType().getTypePtr();
+		const FunctionProtoType *ft = type->getAs<FunctionProtoType>();
+		if( ft->hasDynamicExceptionSpec() ) has_private_destructor = true;
+	}
 	if( has_public_ctor || has_protected_ctor ) has_private_ctor_only = false;
 	if( has_implicit_default_ctor ) has_public_ctor = true;
 
@@ -1426,7 +1466,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
 			string source2 = module->ExtractSource( ftypeloc.getResultLoc().getLocalSourceRange(), true );
 
-			string proto = mdec->getResultType().getAsString();
+			string proto = cdao_substitute_typenames( mdec->getResultType().getAsString() );
 			proto += " " + func.signature;
 			//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
 			if( isconst ) proto += "const";

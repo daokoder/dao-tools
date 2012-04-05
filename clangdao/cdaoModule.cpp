@@ -108,9 +108,20 @@ CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelS
 }
 CDaoUserType* CDaoModule::GetUserType( const RecordDecl *decl )
 {
-	if( decl && decl->getDefinition() ) decl = decl->getDefinition();
-	map<const RecordDecl*,CDaoUserType*>::iterator it = allUsertypes.find( decl );
+	if( decl == NULL ) return NULL;
+	if( decl->getDefinition() ) decl = decl->getDefinition();
+
+	map<const RecordDecl*,CDaoUserType*>::iterator end, it = allUsertypes.find( decl );
 	if( it != allUsertypes.end() ) return it->second;
+#if 0
+	for(it=allUsertypes.begin(), end=allUsertypes.end(); it!=end; it++){
+		if( it->first->getDefinition() == decl ){
+			allUsertypes[decl] = it->second;
+			it->second->decl = (RecordDecl*) decl;
+			return it->second;
+		}
+	}
+#endif
 	return NULL;
 }
 CDaoNamespace* CDaoModule::GetNamespace( const NamespaceDecl *decl )
@@ -373,12 +384,36 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 		UT->wrapType = CDAO_WRAP_TYPE_NONE;
 		UT->typedefed = true;
 	}
-	if( canoname.find( "struct " ) == 0 && canoname.find( qualname ) == 7 ){
-		if( canoname.size() == qualname.size() + 7 ) UT->typedefed = true;
-	}else if( canoname.find( "union " ) == 0 && canoname.find( qualname ) == 6 ){
-		if( canoname.size() == qualname.size() + 6 ) UT->typedefed = true;
-		//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+#if 0
+	if( TD && qualname == TD->getNameAsString() ){
+		if( canoname.find( "struct " ) == 0 && canoname.find( qualname ) == 7 ){
+			if( canoname.size() == qualname.size() + 7 ){
+				UT->wrapType = CDAO_WRAP_TYPE_NONE;
+				UT->typedefed = true;
+			}
+			//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+		}else if( canoname.find( "union " ) == 0 && canoname.find( qualname ) == 6 ){
+			if( canoname.size() == qualname.size() + 6 ){
+				UT->wrapType = CDAO_WRAP_TYPE_NONE;
+				UT->typedefed = true;
+			}
+			//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+		}
 	}
+#elif 0
+	if( TD && compiler->getPreprocessor().getLangOptions().C99 ){
+		if( canoname.find( "struct " ) == 0 || canoname.find( "union " ) == 0 ){
+		UT->typedefed = true;
+		if( TD->getNameAsString() != UT->qname ){
+		outs()<<"2>>>>>>>> "<<UT->qname<<" "<<TD->getNameAsString()<<" "<<UT<< "\n";
+			CDaoUserTypeDef *UTD = MakeTypeDefine( TD, UT->qname );
+			if( UTD ) typedefs.push_back( UTD );
+			UT->qname = TD->getNameAsString();
+			UT->wrapType = CDAO_WRAP_TYPE_NONE;
+		}
+		}
+	}
+#endif
 	if( UT->qname.find( "<anonymous" ) != string::npos ) UT->unsupported = true;
 	if( TD && UT->isRedundant == false ){
 		if( cxxTypedefs.find( TD ) != cxxTypedefs.end() ) return UT;
@@ -389,9 +424,9 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 		//	UT->qname = UT->name = UT->name2 = UT->qname = tdname;
 		if( IsFromMainModule( TD->getLocation() ) ){
 			UT->used = true;
-			typedefs.push_back( UTD );
+			if( UTD ) typedefs.push_back( UTD );
 		}else{
-			delete UTD;
+			if( UTD ) delete UTD;
 		}
 	}
 	return UT;
@@ -462,6 +497,16 @@ bool CDaoModule::IsFromRequiredModules( SourceLocation loc )
 	//return IsFromModules( loc ) && not IsFromMainModule( loc );
 	//return e == moduleInfo.entry or headers.find( e ) != headers.end();
 }
+CDaoHeaderInfo CDaoModule::FindModuleInfo( SourceLocation loc )
+{
+	SourceManager & sourceman = compiler->getSourceManager();
+	//FileID fid = sourceman.getFileID( sourceman.getSpellingLoc( loc ) );
+	FileID fid = sourceman.getFileID( loc );
+	FileEntry *e = (FileEntry*) sourceman.getFileEntryForID( fid );
+	map<FileEntry*,CDaoHeaderInfo>::iterator it = extHeaders2.find( e );
+	if( it != extHeaders2.end() ) return it->second;
+	return CDaoHeaderInfo();
+}
 bool CDaoModule::CheckHeaderDependency()
 {
 	map<CDaoInclusionInfo,int>::iterator it, it2, end = inclusions.end();
@@ -475,7 +520,8 @@ bool CDaoModule::CheckHeaderDependency()
 			if( extHeaders2.find( includer ) != extHeaders2.end()
 					&& extHeaders2.find( includee ) == extHeaders2.end() ){
 				if( headers.find( includee ) == headers.end() ){
-					extHeaders2[ includee ] = CDaoHeaderInfo( "", includee );
+					CDaoHeaderInfo HI = extHeaders2[includer];
+					extHeaders2[ includee ] = CDaoHeaderInfo( "", includee, HI.module );
 					updated = true;
 				}
 			}
@@ -485,6 +531,7 @@ bool CDaoModule::CheckHeaderDependency()
 	for(it=inclusions.begin(); it!=end; it++){
 		FileEntry *includer = it->first.includer;
 		FileEntry *includee = it->first.includee;
+		outs() << includer->getName() <<" "<<includee<<"\n";
 		//outs()<<includer->getName() <<" "<<includee->getName()<<"\n";
 		if( includee == moduleInfo.entry ){
 			errs() << "Error: main module file is included by other files!\n";
@@ -494,6 +541,8 @@ bool CDaoModule::CheckHeaderDependency()
 			string name = includer->getName();
 			string path = includer->getDir()->getName();
 			name.erase( 0, path.size() );
+			if( moduleInfo.entry == NULL || includer == NULL )
+				outs()<< "=================================1 " << moduleInfo.entry << " " << includer << "\n";
 			it2 = inclusions.find( CDaoInclusionInfo( moduleInfo.entry, includer ) );
 			if( CheckFileExtension( name ) == CDAO_FILE_HEADER && it2 != end ){
 				if( headers.find( includee ) == headers.end() ){
@@ -548,6 +597,13 @@ void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name,
 	FileEntry *entryHeader = (FileEntry*) file;
 	FileEntry *entryInclude = (FileEntry*) sourceman.getFileEntryForID( fidInclude );
 
+#warning"=========================="
+	if( entryHeader == NULL ) return; // XXX
+
+	assert( entryHeader != NULL && entryInclude != NULL );
+	if( entryHeader == NULL || entryInclude == NULL )
+		outs()<< "=================================2 " << entryHeader << " " << entryInclude << "\n";
+
 	inclusions[ CDaoInclusionInfo( entryInclude, entryHeader ) ] = 1;
 	if( IsSourceFile( name ) ){
 		if( requiredModules2.find( entryHeader ) != requiredModules2.end() ) return;
@@ -577,11 +633,13 @@ void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name,
 	}else if( requiredModules2.find( entryInclude ) != requiredModules2.end() ){
 		if( headers.find( entryHeader ) != headers.end() ) return;
 		if( extHeaders.find( entryHeader ) != extHeaders.end() ) return;
+		CDaoModuleInfo MI = requiredModules2[entryInclude];
 		extHeaders[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
-		extHeaders2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
+		extHeaders2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader, MI.name );
 	}else if( extHeaders2.find( entryInclude ) != extHeaders2.end() ){
 		if( headers.find( entryHeader ) == headers.end() ){
-			extHeaders2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
+			CDaoHeaderInfo HI = extHeaders2[entryInclude];
+			extHeaders2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader, HI.module );
 		}
 	}else if( headers2.find( entryInclude ) != headers2.end() ){
 		headers2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
@@ -690,10 +748,53 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 	// class template specialization in typedef is an ElaboratedType!
 	if( const ElaboratedType *ET = dyn_cast<ElaboratedType>( qtype2.getTypePtr() ) )
 		qtype2 = ET->desugar();
+
+	bool ispointer = qtype2->isPointerType();
 	while( qtype2->isPointerType() ) qtype2 = qtype2->getPointeeType();
 	//outs() << "typedef: " << TD->getQualifiedNameAsString() << " " << qtype2.getAsString() << "\n";
 
-	if( HandleUserType( qtype2, TD->getLocation(), TD ) ) return;
+	if( CDaoUserType *UT = HandleUserType( qtype2, TD->getLocation(), TD ) ){
+		string name = qtype2.getAsString();
+#if 0
+		return;
+		if( TD && qualname == TD->getNameAsString() ){
+			if( canoname.find( "struct " ) == 0 && canoname.find( qualname ) == 7 ){
+				if( canoname.size() == qualname.size() + 7 ){
+					UT->wrapType = CDAO_WRAP_TYPE_NONE;
+					UT->typedefed = true;
+					UT->Generate();
+				}
+				//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+			}else if( canoname.find( "union " ) == 0 && canoname.find( qualname ) == 6 ){
+				if( canoname.size() == qualname.size() + 6 ){
+					UT->wrapType = CDAO_WRAP_TYPE_NONE;
+					UT->typedefed = true;
+					UT->Generate();
+				}
+				//outs()<<">>>>>>>> "<<qualtype.getAsString()<<" "<<canotype.getAsString()<< "\n";
+			}
+		}
+#else
+		if( TD && compiler->getPreprocessor().getLangOptions().C99 ){
+			if( name.find( "struct " ) == 0 || name.find( "union " ) == 0 ){
+				string tdname = TD->getNameAsString();
+				size_t pos = name.find( " " + tdname );
+				if( tdname != UT->qname ){
+					//outs()<<"2>>>>>>>> "<<UT->qname<<" "<<TD->getNameAsString()<<" "<<UT<< "\n";
+					CDaoUserTypeDef *UTD = MakeTypeDefine( TD, UT->qname );
+					if( UTD ) typedefs.push_back( UTD );
+					/* only for typedef struct name name; or typedef union name name; */
+					if( ispointer == false && pos == name.size() - (tdname.size()+1) ){
+						UT->typedefed = true;
+						UT->qname = TD->getNameAsString();
+						UT->wrapType = CDAO_WRAP_TYPE_NONE;
+					}
+				}
+			}
+		}
+#endif
+		return;
+	}
 
 	qtype2 = qtype2.IgnoreParens();
 	if( const FunctionProtoType *ft = dyn_cast<FunctionProtoType>( qtype2.getTypePtr() ) ){
@@ -712,18 +813,37 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 			}
 			//if( func->excluded == false ) func->Generate();
 		}
-	}else{
-		CDaoUserTypeDef *UTD = MakeTypeDefine( TD, qtype2.getAsString() );
-		typedefs.push_back( UTD );
+	}else if( ispointer == false ){
+		if( not qtype2->isArithmeticType() ) return;
+		string daotype = "int";
+		if( qtype2->isBuiltinType() ){
+			switch( qtype2->getAs<BuiltinType>()->getKind() ){
+			case BuiltinType::Float :
+				daotype = "float";
+				break;
+			case BuiltinType::Double :
+			case BuiltinType::LongDouble : // FIXME
+				daotype = "double";
+				break;
+			default : break;
+			}
+		}
+		CDaoUserTypeDef *UTD = MakeTypeDefine( TD, daotype );
+		if( UTD ) typedefs.push_back( UTD );
 	}
 }
 CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name )
 {
+	string tdname = TD->getNameAsString();
+	if( name == tdname ) return NULL;
+
+	if( cxxTypedefs2.find( name + "@$" + tdname ) != cxxTypedefs2.end() ) return NULL;
+
 	CDaoUserTypeDef *UTD = new CDaoUserTypeDef();
+	UTD->td = TD;
 	cxxTypedefs[ TD ] = 1;
 
 	DeclContext *DC = TD->getDeclContext();
-	string tdname = TD->getNameAsString();
 	if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
 		CDaoNamespace *NS = GetNamespace2( ND );
 		tdname = ND->getQualifiedNameAsString() + "::" + tdname;
@@ -745,6 +865,7 @@ CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name
 	}
 	UTD->name = name;
 	UTD->alias = tdname;
+	cxxTypedefs2[ name + "@$" + tdname ] = 1;
 	return UTD;
 }
 const char *ifdef_cpp_open = "#ifdef __cplusplus\nextern \"C\"{\n#endif\n";
@@ -873,6 +994,15 @@ string CDaoModule::MakeOnLoadCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 	for(i=0, n=usertypes.size(); i<n; i++){
 		CDaoUserType & utp = *usertypes[i];
 		//outs() << utp.GetQName() << " " << utp.IsFromMainModule() << "\n";
+		if( utp.isRedundant && utp.IsFromRequiredModules() ){
+			RecordDecl *dd = utp.decl->getDefinition();
+			CDaoUserType *UT2 = GetUserType( dd );
+			if( UT2 && UT2->IsFromMainModule() ){
+				CDaoHeaderInfo HI = FindModuleInfo( utp.location );
+				if( HI.entry == NULL ) continue;
+				outs() << "~~~~~~~~~~~~~~~~~~~~~~~~ " << HI.module << " " << HI.path << "\n";
+			}
+		}
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
 		kvmap[ "idname" ] = utp.idname;
@@ -1083,8 +1213,12 @@ int CDaoModule::Generate( const string & output )
 		string source = "static const char *dao__Aliases[] = \n{\n";
 		for(i=0, n=typedefs.size(); i<n; i++){
 			CDaoUserTypeDef *td = typedefs[i];
-			source += "\t\"" + cdao_make_dao_template_type_name( td->name );
-			source += "\", \"" + cdao_make_dao_template_type_name( td->alias ) + "\",\n";
+			if( td->td && not IsFromMainModule( td->td->getLocation() ) ) continue;
+			string name = cdao_make_dao_template_type_name( td->name );
+			string alias = cdao_make_dao_template_type_name( td->alias );
+			if( name == alias ) continue;
+			source += "\t\"" + name + "\", \"" + alias + "\",\n";
+			//source += "//" + td->name + ";" + td->alias;
 		}
 		topLevelScope.source += source + "\tNULL\n};\n";
 		topLevelScope.onload2 += "\tDaoNamespace_TypeDefines( ns, dao__Aliases );\n";
