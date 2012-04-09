@@ -517,7 +517,7 @@ void CDaoFunction::SetCallback( FunctionProtoType *func, FieldDecl *decl, const 
 
 	sig += ")";
 	sig = normalize_type_name( sig );
-	//outs() << "search hints for: " << sig << "\n";
+	outs() << "search hints for callback: " << sig << "\n";
 
 	map<string,vector<string> >::iterator it = module->functionHints.find( sig );
 	if( it == module->functionHints.end() ){
@@ -655,23 +655,24 @@ int CDaoFunction::Generate()
 	//outs() << cxxName << " " << hostype << " " << (hostype ? hostype->qname:"") <<"\n";
 
 	int retcode = 0;
+	retype.hostype = hostype;
+	retype.location = location;
+	retcode |= retype.Generate( VAR_INDEX_RETURN );
+	if( retype.unsupported and (retype.useUserWrapper == false) ){
+		excluded = true;
+		return 1;
+	}
+
 	int i, n = parlist.size();
 	for(i=0; i<n; i++){
 		CDaoVariable & var = parlist[i];
 		var.location = location;
 		var.hostype = hostype;
 		retcode |= var.Generate( i, i-autoself );
-		if( var.unsupported ){
+		if( var.unsupported and (retype.useUserWrapper == false) ){
 			excluded = true;
 			return 1;
 		}
-	}
-	retype.hostype = hostype;
-	retype.location = location;
-	retcode |= retype.Generate( VAR_INDEX_RETURN );
-	if( retype.unsupported ){
-		excluded = true;
-		return 1;
 	}
 
 #if 0
@@ -700,8 +701,10 @@ int CDaoFunction::Generate()
 		string sindex = utostr(i-autoself);
 		pps.push_back( & vo );
 		//outs() << vo.name << vo.unsupported << "-----------------\n";
-		if( i ) daoprotpars += ", ";
-		daoprotpars += vo.daopar;
+		if( vo.ignore == false ){
+			if( i ) daoprotpars += ", ";
+			daoprotpars += vo.daopar;
+		}
 		parsetcodes += vo.parset;
 		if( vo.useDefault == false ) unusedDefaults.push_back( IntString(i, cxxcallpars) );
 		if( i < autoself ) continue;
@@ -788,11 +791,15 @@ int CDaoFunction::Generate()
 			}
 		}
 	}
+	string pre_calls;
+	string post_calls;
 	for(i=0; i<n; i++){
 		CDaoVariable *vo = pps[i];
 		dao2cxxcodes += vo->dao2cxx;
+		pre_calls += vo->pre_call;
+		post_calls += vo->post_call;
 	}
-	dao2cxxcodes += checkCallback;
+	dao2cxxcodes += checkCallback + pre_calls;
 #if 0
 	if( hasCallback and not hasUserData ) excluded = 1;
 	nowrap = excluded;
@@ -844,6 +851,10 @@ int CDaoFunction::Generate()
 
 	daoProtoCodes = cdao_string_fill( dao_proto, kvmap );
 	cxxProtoCodes = cdao_string_fill( cxx_wrap_proto, kvmap );
+	if( retype.useUserWrapper ){
+		cxxProtoCodes.erase( 0, 6 ); // erase "static";
+		cxxProtoCodes = "extern" + cxxProtoCodes;
+	}
 
 	kvmap[ "retype" ] = retype.cxxtype;
 	kvmap[ "name" ] = retype.name;
@@ -917,13 +928,15 @@ int CDaoFunction::Generate()
 	kvmap2[ "proto" ] = cxxProtoCodes;
 	kvmap2[ "dao2cxx" ] = dao2cxxcodes;
 	kvmap2[ "cxxcall" ] = cxxCallCodes;
-	kvmap2[ "parset" ] = parsetcodes;
+	kvmap2[ "parset" ] = parsetcodes + post_calls;
 	kvmap2[ "return" ] = retype.ctxput;
 	kvmap2[ "file" ] = decl == NULL ? "" : module->GetFileName( decl->getLocation() );
 	
 	if( retype.daotype.size() ==0 || host_name == cxxName ) kvmap2[ "return" ] = "";
 	//if( hostType == cxxName ) kvmap2[ 'dao2cxx' ] =''; # XXX 
 	cxxWrapper = cdao_string_fill( cxx_wrap, kvmap2 );
+	if( retype.useUserWrapper ) cxxWrapper = "";
+
 #if 0
 	if( cxxWrapper.find( 'self->' + hostType + '::' ) >=0 ){
 		daoProtoCodes.change( ', (%s*) \"(%w+%b())', '__' + hostType + ',%1\"' + hostType + '::%2' );

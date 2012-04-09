@@ -586,6 +586,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	module = mod;
 	hostype = NULL;
 	initor = NULL;
+	ignore = false;
 	isNullable = false;
 	isCallback = false;
 	isUserData = false;
@@ -598,9 +599,11 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isObjectType = false;
 	isPointerType = false;
 	useDaoString = false;
+	useUserWrapper = false;
 	argvLike = false;
 	readonly = false;
 	ispixels = false;
+	isbuffer = false;
 	SetDeclaration( decl );
 }
 void CDaoVariable::SetQualType( QualType qtype, SourceLocation loc )
@@ -634,26 +637,33 @@ void CDaoVariable::SetHints( const string & hints )
 		}
 		if( hint == "nullable" ){
 			isNullable = true;
-		}if( hint == "unsupported" ){
+		}else if( hint == "unsupported" ){
 			unsupported = true;
-		}if( hint == "usetag" ){
+		}else if( hint == "usetag" ){
 			useTypeTag = true;
-		}if( hint == "string" ){
+		}else if( hint == "string" ){
 			useDaoString = true;
-		}if( hint == "argv" ){
+		}else if( hint == "argv" ){
 			argvLike = true;
-		}if( hint == "readonly" ){
+		}else if( hint == "readonly" ){
 			readonly = true;
-		}if( hint == "callbackdata" ){
+		}else if( hint == "ignore" ){
+			ignore = true;
+		}else if( hint == "callbackdata" ){
 			isUserData = true;
 			size_t pos2 = hints2.find( "_hint_", pos );
-			if( pos2 == string::npos ){
-				callback = hints2.substr( pos+1 );
-			}else if( pos2 > pos ){
-				callback = hints2.substr( pos+1, pos2 - pos - 1 );
-			}
+			if( pos2 == string::npos ) pos2 = hints2.size();
+			if( pos2 > pos ) callback = hints2.substr( pos+1, pos2 - pos - 1 );
+			pos = pos2;
 			if( callback == "" ) errs() << "Warning: need callback name for \"callbackdata\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" ){
+		}else if( hint == "userwrapper" ){
+			useUserWrapper = true;
+			size_t pos2 = hints2.find( "_hint_", pos );
+			if( pos2 == string::npos ) pos2 = hints2.size();
+			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
+			pos = pos2;
+			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & sizes;
 			if( hint == "qname" ) parts = & scopes;
@@ -662,6 +672,9 @@ void CDaoVariable::SetHints( const string & hints )
 				ispixels = true;
 			}else if( hint == "daotype" ){
 				hasDaoTypeHint = true;
+			}else if( hint == "buffer" ){
+				parts = & names;
+				isbuffer = true;
 			}
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
@@ -671,7 +684,7 @@ void CDaoVariable::SetHints( const string & hints )
 				pos = hint.find( '_', from );
 				if( pos > hint.size() ) pos = hint.size();
 				string s = hint.substr( from, pos - from );
-				if( s == "UNDERSCORE" ){
+				if( s == "UNDERSCORE" || s == "" ){
 					parts->back() += "_";
 					concat = 1;
 				}else if( s == "TIMES" ){
@@ -686,6 +699,9 @@ void CDaoVariable::SetHints( const string & hints )
 				}else if( s == "OR" ){
 					parts->back() += "|";
 					concat = 1;
+				}else if( s == "COMMA" ){
+					parts->back() += ",";
+					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
 					concat = 0;
@@ -698,6 +714,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( hasDaoTypeHint ){
 				hintDaoType = sizes[0];
 				sizes.clear();
+				outs() << hintDaoType << "---------------------\n";
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";
 			pos = pos2;
@@ -720,6 +737,12 @@ int CDaoVariable::Generate( int daopar_index, int cxxpar_index )
 		cxxtype = prefix + suffix;
 	}
 	if( unsupported ) outs()<<"unsupported: "<<cxxtype<<" "<<name<<"\n";
+	if( hasDaoTypeHint ){
+		bool refpar = daopar[0] == '&';
+		daotype = hintDaoType;
+		daopar = name + " :" + daotype;
+		if( refpar ) daopar = "&" + daopar;
+	}
 	return retcode || unsupported;
 }
 int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
@@ -883,13 +906,14 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 }
 int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 {
+	char sindex[50];
+	sprintf( sindex, "_p[%i]", daopar_index );
 	QualType canotype = qualtype.getCanonicalType();
 	QualType qtype1 = qualtype->getPointeeType();
 	QualType qtype2 = canotype->getPointeeType();
 
 	if( argvLike ){
-		char sindex[50];
-		sprintf( sindex, "(DaoList*)_p[%i]", daopar_index );
+		string lpar = string("(DaoList*)") + sindex;
 		daotype = "list<string>";
 		cxxcall = name;
 		cxxtype = "char**";
@@ -897,7 +921,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		daopar = name + ":list<string>";
 		dao2cxx = "  static char **__" + name + " = NULL;\n";
 		dao2cxx += "  " + cxxpar + " = __" + name + " ? __" + name + " : (__" + name;
-		dao2cxx = dao2cxx + " = DaoStringList_ToStaticCStringArray( " + sindex + " ));\n";
+		dao2cxx = dao2cxx + " = DaoStringList_ToStaticCStringArray( " + lpar + " ));\n";
 		//XXX cxx2dao = 
 		module->writeStringListConversion = true;
 		return 0;
@@ -907,6 +931,74 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 	if( sizes.size() == 2 && qtype2->isPointerType() ){
 		QualType qtype3 = qtype2->getAs<PointerType>()->getPointeeType();
 		return GenerateForArray( qtype3, sizes[0], sizes[1], daopar_index, cxxpar_index );
+	}else if( isbuffer && qtype2->isPointerType() ){
+		QualType qtype3 = qtype2->getPointeeType();
+		CDaoVariable var( module );
+		string lpar = string("(DaoList*)") + sindex;
+
+		var.SetQualType( qtype2 );
+		var.Generate();
+		outs() << var.daotype << " " << var.unsupported << " ---------------------\n";
+		if( var.unsupported ) return 1;
+		if( CDaoUserType *UT = module->HandleUserType( qtype3, location ) ){
+			string typer = "dao_type_" + UT->idname;
+			if( UT->unsupported ) return 1;
+			pre_call += "    name[_i] = DaoValue_TryCastCdata( value );\n";
+			daotype = "list<" + var.daotype + ">";
+			cxxcall = name;
+			cxxtype = var.cxxtype + "*";
+			cxxpar = cxxtype + name;
+			daopar = name + " :" + daotype;
+			dao2cxx = "  " + cxxpar + " = (" + cxxtype + ") calloc( ";
+			dao2cxx += names[0] + ", sizeof(" + var.cxxtype + ") );\n";
+			pre_call = string("  int _i, _num = DaoList_Size( ") + lpar + " );\n";
+			pre_call += "  for(_i=0; _i<_num; _i++){\n";
+			pre_call += string("    DaoValue *value = DaoList_GetItem( ") + lpar + ", _i );\n";
+			pre_call += "    " + name + "[_i] = DaoValue_TryCastCdata( value, " + typer + " );\n  }\n";
+
+			if( names.size() > 1 && names[1] != "" ){
+				post_call = string("  DaoList_Clear( ") + lpar + " );\n";
+				post_call += "  for(_i=0; _i<" + names[1] + "; _i++){\n";
+				post_call += "    DaoCdata *cdata = DaoCdata_Wrap( " + typer + ", " + name + "[_i] );\n";
+				post_call += string("    DaoList_Append( ") + lpar + ", (DaoValue*) cdata );\n  }\n";
+			}
+			post_call += "  free( " + name + " );\n";
+		}else if( qtype2->isVoidPointerType() ){
+			daotype = "list<" + var.daotype + ">";
+			cxxcall = name;
+			cxxtype = "void**";
+			cxxpar = "void **" + name;
+			daopar = name + " :" + daotype;
+			dao2cxx = "  " + cxxpar + " = (void**) calloc( " + names[0] + ", sizeof(void*) );\n";
+			pre_call = string("  int _i, _num = DaoList_Size( ") + lpar + " );\n";
+			pre_call += "  for(_i=0; _i<_num; _i++){\n";
+			pre_call += string("    DaoValue *value = DaoList_GetItem( ") + lpar + ", _i );\n";
+			pre_call += "    " + name + "[_i] = DaoValue_TryCastCdata( value, NULL );\n  }\n";
+			if( names.size() > 1 && names[1] != "" ){
+				post_call = string("  DaoList_Clear( ") + lpar + " );\n";
+				post_call += "  for(_i=0; _i<" + names[1] + "; _i++){\n";
+				post_call += "    DaoCdata *cdata = DaoCdata_Wrap( NULL, " + name + "[_i] );\n";
+				post_call += string("    DaoList_Append( ") + lpar + ", (DaoValue*) cdata );\n  }\n";
+			}
+			post_call += "  free( " + name + " );\n";
+		}else{
+			return 1;
+		}
+		return 0;
+	}else if( isbuffer && canotype->isVoidPointerType() ){
+		daotype = "string";
+		cxxcall = name;
+		cxxtype = "void*";
+		cxxpar = "void *" + name;
+		daopar = "&" + name + " :" + daotype;
+		dao2cxx = "  " + cxxpar + " = (void*) DaoValue_TryGetMBString( " + sindex + " );\n";
+		pre_call = string("  DString *_str = DaoValue_TryGetString( ") + sindex + " );\n";
+		pre_call += "  if( DString_Size( _str ) < " + names[0] + " ){\n";
+		pre_call += string("    DString_Resize( _str, ") + names[0] + " );\n";
+		pre_call += "    " + name + " = DString_GetMBS( _str );\n  }\n";
+		if( names.size() > 1 && names[1] != "" )
+			post_call = string("    DString_Resize( _str, ") + names[1] + " );\n";
+		return 0;
 	}
 
 	CDaoVarTemplates tpl;

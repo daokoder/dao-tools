@@ -531,7 +531,7 @@ bool CDaoModule::CheckHeaderDependency()
 	for(it=inclusions.begin(); it!=end; it++){
 		FileEntry *includer = it->first.includer;
 		FileEntry *includee = it->first.includee;
-		outs() << includer->getName() <<" "<<includee<<"\n";
+		//outs() << includer->getName() <<" "<<includee<<"\n";
 		//outs()<<includer->getName() <<" "<<includee->getName()<<"\n";
 		if( includee == moduleInfo.entry ){
 			errs() << "Error: main module file is included by other files!\n";
@@ -541,6 +541,7 @@ bool CDaoModule::CheckHeaderDependency()
 			string name = includer->getName();
 			string path = includer->getDir()->getName();
 			name.erase( 0, path.size() );
+#warning"------------------------------"
 			if( moduleInfo.entry == NULL || includer == NULL )
 				outs()<< "=================================1 " << moduleInfo.entry << " " << includer << "\n";
 			it2 = inclusions.find( CDaoInclusionInfo( moduleInfo.entry, includer ) );
@@ -673,6 +674,7 @@ void CDaoModule::HandleHintDefinition( const string & name, const MacroInfo *mac
 }
 void CDaoModule::HandleNumericConstant( const string & name, const Token token )
 {
+#warning"HandleNumericConstant double"
 	string type = "DAO_DOUBLE";
 	numericConsts[name] = type;
 }

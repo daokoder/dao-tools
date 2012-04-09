@@ -39,9 +39,12 @@ struct CDaoVariable
 	bool    useDefault;
 	bool    useTypeTag;
 	bool    useDaoString;
+	bool    useUserWrapper;
 	bool    argvLike;
+	bool    ignore;
 	bool    readonly; // readonly field;
 	bool    ispixels; // field for image pixels
+	bool    isbuffer;
 	bool    hasDaoTypeHint;
 	string  name;
 	string  cxxdefault;
@@ -65,8 +68,11 @@ struct CDaoVariable
 	string  dao_itemtype;
 	string  get_item;
 	string  set_item;
+	string  pre_call;
+	string  post_call;
 
 	string          callback;
+	string          userWrapper;
 	vector<string>  sizes;
 	vector<string>  names;
 	vector<string>  scopes;
