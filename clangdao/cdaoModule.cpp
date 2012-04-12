@@ -778,6 +778,17 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 		}
 #else
 		if( TD && compiler->getPreprocessor().getLangOptions().C99 ){
+			string qname = UT->qname;
+			if( qname.find( "struct " ) == 0 || qname.find( "union " ) == 0 ){
+				// typedef struct{...}name:
+				// isAnonymousStructOrUnion() is false!?
+				//if( UT->decl->isAnonymousStructOrUnion() ) UT->qname = TD->getNameAsString();
+				if( qname.find( "<anonymous>" ) != string::npos ){
+					UT->qname = UT->name = UT->idname = UT->name2 = TD->getNameAsString();
+					UT->typedefed = true;
+					UT->unsupported = false;
+				}
+			}
 			if( name.find( "struct " ) == 0 || name.find( "union " ) == 0 ){
 				string tdname = TD->getNameAsString();
 				size_t pos = name.find( " " + tdname );
@@ -1139,13 +1150,13 @@ string CDaoModule::MakeConstStruct( vector<VarDecl*> & vars, const string & ns, 
 		if( UT == NULL ) continue;
 
 		if( qtype.getCVRQualifiers() & Qualifiers::Const ){
-			codes += "  DaoNamespace_AddConstValue( " + ns + ", \"" + item;
+			codes += "\tDaoNamespace_AddConstValue( " + ns + ", \"" + item;
 			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
 			codes += "(" + UT->qname + "*) ";
 			if( not ispointer ) codes += "& ";
 			codes += qname2 + item + " ) );\n";
 		}else{
-			codes += "  DaoNamespace_AddValue( " + ns + ", \"" + item;
+			codes += "\tDaoNamespace_AddValue( " + ns + ", \"" + item;
 			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
 			codes += "(" + UT->qname + "*) ";
 			if( not ispointer ) codes += "& ";

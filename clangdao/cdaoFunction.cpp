@@ -277,11 +277,10 @@ const string cxx_proxy_body00 =
 const string cxx_proxy_body01 =
 "static void $(proxy_name)( int *_cs, DaoRoutine *_ro, DaoObject *_ob, $(parlist) )\n{\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
-  DaoFactory *_fac = DaoProcess_GetFactory( _proc );\n\
   DaoValue **_dp;\n\
   if( _ro == NULL ) goto EndCall;\n\
 $(cxx2dao)\
-  _dp = DaoFactory_GetLastValues( _fac, $(count) );\n\
+  _dp = DaoProcess_GetLastValues( _proc, $(count) );\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   *_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) );\n\
@@ -309,13 +308,12 @@ EndCall:\n\
 const string cxx_proxy_body11 =
 "static $(retype) $(proxy_name)( int *_cs, DaoRoutine *_ro, DaoObject *_ob, $(parlist) )\n{\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
-  DaoFactory *_fac = DaoProcess_GetFactory( _proc );\n\
   DaoValue *_res, **_dp;\n\
   DaoCdata *_cd;\n\
   $(vareturn)\n\
   if( _ro == NULL ) goto EndCall;\n\
 $(cxx2dao)\
-  _dp = DaoFactory_GetLastValues( _fac, $(count) );\n\
+  _dp = DaoProcess_GetLastValues( _proc, $(count) );\n\
   _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   if( (*_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) )) ) goto EndCall;\n\
@@ -699,6 +697,7 @@ int CDaoFunction::Generate()
 	for(i=0; i<n; i++){
 		CDaoVariable & vo = parlist[i];
 		string sindex = utostr(i-autoself);
+		if( retype.ignore ) continue;
 		pps.push_back( & vo );
 		//outs() << vo.name << vo.unsupported << "-----------------\n";
 		if( vo.ignore == false ){
@@ -728,7 +727,7 @@ int CDaoFunction::Generate()
 			userdata = vo.cxxpar;
 			signature2 += "DaoValue*";
 			cxxprotpars += "DaoValue *" + vo.name;
-			cxx2daocodes += "  DaoFactory_CacheValue( _fac, " + vo.name + " );\n";
+			cxx2daocodes += "  DaoProcess_CacheValue( _proc, " + vo.name + " );\n";
 			if( fieldDecl ){
 				cxxCallParamV += "(DaoValue*)_cdata";
 			}else{

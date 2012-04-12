@@ -101,33 +101,33 @@ const string dao2cxx_callback =
 const string dao2cxx_userdata = "  DaoTuple *$(name) = (DaoTuple*) _p[$(index)];\n";
 
 
-const string cxx2dao = "  DaoFactory_New";
+const string cxx2dao = "  DaoProcess_New";
 
-const string cxx2dao_int = cxx2dao + "Integer( _fac, (int) $(name) );\n";
-const string cxx2dao_float = cxx2dao + "Float(  _fac,(float) $(name) );\n";
-const string cxx2dao_double = cxx2dao + "Double( _fac, (double) $(name) );\n";
-const string cxx2dao_int2 = cxx2dao + "Integer( _fac, (int) *$(name) );\n";
-const string cxx2dao_float2 = cxx2dao + "Float( _fac, (float) *$(name) );\n";
-const string cxx2dao_double2 = cxx2dao + "Double( _fac, (double) *$(name) );\n";
-const string cxx2dao_mbs = cxx2dao+"MBString( _fac, (char*) $(name), strlen( (char*)$(name) ) );\n"; // XXX for char**
-const string cxx2dao_wcs = cxx2dao + "WCString( _fac, (wchar_t*) $(name), wcslen( (wchar_t*)$(name) ) );\n"; // XXX for wchar_t**
-const string cxx2dao_bytes = cxx2dao + "VectorSB( _fac, (signed char*) $(name), $(size) );\n";
-const string cxx2dao_ubytes = cxx2dao + "VectorUB( _fac, (unsigned char*) $(name), $(size) );\n";
-const string cxx2dao_shorts = cxx2dao + "VectorSS( _fac, (signed short*) $(name), $(size) );\n";
-const string cxx2dao_ushorts = cxx2dao + "VectorUS( _fac, (unsigned short*) $(name), $(size) );\n";
-const string cxx2dao_ints = cxx2dao + "VectorSI( _fac, (signed int*) $(name), $(size) );\n";
-const string cxx2dao_uints = cxx2dao + "VectorUI( _fac, (unsigned int*) $(name), $(size) );\n";
-const string cxx2dao_floats = cxx2dao + "VectorF( _fac, (float*) $(name), $(size) );\n";
-const string cxx2dao_doubles = cxx2dao + "VectorD( _fac, (double*) $(name), $(size) );\n";
+const string cxx2dao_int = cxx2dao + "Integer( _proc, (int) $(name) );\n";
+const string cxx2dao_float = cxx2dao + "Float(  _proc,(float) $(name) );\n";
+const string cxx2dao_double = cxx2dao + "Double( _proc, (double) $(name) );\n";
+const string cxx2dao_int2 = cxx2dao + "Integer( _proc, (int) *$(name) );\n";
+const string cxx2dao_float2 = cxx2dao + "Float( _proc, (float) *$(name) );\n";
+const string cxx2dao_double2 = cxx2dao + "Double( _proc, (double) *$(name) );\n";
+const string cxx2dao_mbs = cxx2dao+"MBString( _proc, (char*) $(name), strlen( (char*)$(name) ) );\n"; // XXX for char**
+const string cxx2dao_wcs = cxx2dao + "WCString( _proc, (wchar_t*) $(name), wcslen( (wchar_t*)$(name) ) );\n"; // XXX for wchar_t**
+const string cxx2dao_bytes = cxx2dao + "VectorSB( _proc, (signed char*) $(name), $(size) );\n";
+const string cxx2dao_ubytes = cxx2dao + "VectorUB( _proc, (unsigned char*) $(name), $(size) );\n";
+const string cxx2dao_shorts = cxx2dao + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
+const string cxx2dao_ushorts = cxx2dao + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
+const string cxx2dao_ints = cxx2dao + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
+const string cxx2dao_uints = cxx2dao + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
+const string cxx2dao_floats = cxx2dao + "VectorF( _proc, (float*) $(name), $(size) );\n";
+const string cxx2dao_doubles = cxx2dao + "VectorD( _proc, (double*) $(name), $(size) );\n";
 
-const string cxx2dao_bmat = cxx2dao + "MatrixSB( _fac, (signed char**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_ubmat = cxx2dao + "MatrixUB( _fac, (unsigned char**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_smat = cxx2dao + "MatrixSS( _fac, (signed short**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_usmat = cxx2dao + "MatrixUS( _fac, (unsigned short**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_imat = cxx2dao + "MatrixSI( _fac, (signed int**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_uimat = cxx2dao + "MatrixUI( _fac, (unsigned int**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_fmat = cxx2dao + "MatrixF( _fac, (float**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_dmat = cxx2dao + "MatrixD( _fac, (double**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_bmat = cxx2dao + "MatrixSB( _proc, (signed char**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_ubmat = cxx2dao + "MatrixUB( _proc, (unsigned char**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_smat = cxx2dao + "MatrixSS( _proc, (signed short**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_usmat = cxx2dao + "MatrixUS( _proc, (unsigned short**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_imat = cxx2dao + "MatrixSI( _proc, (signed int**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_uimat = cxx2dao + "MatrixUI( _proc, (unsigned int**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_fmat = cxx2dao + "MatrixF( _proc, (float**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_dmat = cxx2dao + "MatrixD( _proc, (double**) $(name), $(size), $(size2) );\n";
 
 const string cxx2dao_bmat2 = cxx2dao_bmat; // XXX
 const string cxx2dao_ubmat2 = cxx2dao_ubmat;
@@ -138,16 +138,16 @@ const string cxx2dao_uimat2 = cxx2dao_uimat;
 const string cxx2dao_fmat2 = cxx2dao_fmat;
 const string cxx2dao_dmat2 = cxx2dao_dmat;
 
-const string cxx2dao_stream = cxx2dao + "Stream( _fac, (FILE*) $(refer) );\n";
-const string cxx2dao_voidp = "  DaoFactory_NewCdata( _fac, NULL, (void*) $(refer), 0 );\n";
-const string cxx2dao_user = "  DaoFactory_NewCdata( _fac, dao_type_$(typer), (void*) $(refer), 0 );\n";
+const string cxx2dao_stream = cxx2dao + "Stream( _proc, (FILE*) $(refer) );\n";
+const string cxx2dao_voidp = "  DaoProcess_NewCdata( _proc, NULL, (void*) $(refer), 0 );\n";
+const string cxx2dao_user = "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*) $(refer), 0 );\n";
 
-const string cxx2dao_userdata = "  DaoFactory_CacheValue( _fac, $(name) );\n";
+const string cxx2dao_userdata = "  DaoProcess_CacheValue( _proc, $(name) );\n";
 
-const string cxx2dao_qchar = cxx2dao+"Integer( _fac, $(name).digitValue() );\n";
-const string cxx2dao_qchar2 = cxx2dao+"Integer( _fac, $(name)->digitValue() );\n";
-const string cxx2dao_qbytearray = cxx2dao+"MBString( _fac, (char*) $(name).data(), 0 );\n";
-const string cxx2dao_qstring = cxx2dao+"MBString( _fac, (char*) $(name).toLocal8Bit().data(), 0 );\n";
+const string cxx2dao_qchar = cxx2dao+"Integer( _proc, $(name).digitValue() );\n";
+const string cxx2dao_qchar2 = cxx2dao+"Integer( _proc, $(name)->digitValue() );\n";
+const string cxx2dao_qbytearray = cxx2dao+"MBString( _proc, (char*) $(name).data(), 0 );\n";
+const string cxx2dao_qstring = cxx2dao+"MBString( _proc, (char*) $(name).toLocal8Bit().data(), 0 );\n";
 
 const string ctxput = "  DaoProcess_Put";
 
@@ -1386,15 +1386,14 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			cxxtyper = UT->idname;
 			daotype = "list<" + daotype + ">";
 			daopar = name + " :" + daotype;
-			getter = "  DaoFactory *fac = DaoProcess_GetFactory( _proc );\n";
-			getter += "  DaoList *list = DaoProcess_PutList( _proc );\n";
+			getter = "  DaoList *list = DaoProcess_PutList( _proc );\n";
 			if( constsize ){
 				getter += "  daoint i, n = " + size + ";\n";
 			}else{
 				getter += "  daoint i, n = self->" + size + ";\n";
 			}
 			getter += "  for(i=0; i<n; i++){\n";
-			getter += "    DaoCdata *it = DaoFactory_NewCdata( fac, dao_type_" + UT->idname;
+			getter += "    DaoCdata *it = DaoProcess_NewCdata( fac, dao_type_" + UT->idname;
 			getter += ", self->" + name + "[i], 0 );\n";
 			getter += "    DaoList_PushBack( list, (DaoValue*) it );\n";
 			getter += "  }\n";
