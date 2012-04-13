@@ -42,6 +42,7 @@ class SecondClass : public FirstClass
 //void second_function2( const SecondClass & obj = SecondClass() );
 //void second_function2( const FirstClass & obj = FirstClass() );
 
+void get_some_values(const char *mbs, int *error);
 void get_some_values(int bufsize, void **buf, int *res_count);
 void get_some_values(int bufsize, SecondClass **buf, int *res_count);
 

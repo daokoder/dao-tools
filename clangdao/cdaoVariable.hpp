@@ -28,6 +28,7 @@ struct CDaoVariable
 	SourceLocation  location;
 	const Expr     *initor;
 
+	bool    extraReturn;
 	bool    isArithmeticType;
 	bool    isPointerType;
 	bool    isObjectType;
@@ -61,6 +62,8 @@ struct CDaoVariable
 	string  dao2cxx;
 	string  cxx2dao;
 	string  ctxput;
+	string  cacheReturn;
+	string  cacheParam;
 	string  parset;
 	string  getres;
 	string  getter;

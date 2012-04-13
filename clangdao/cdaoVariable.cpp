@@ -103,10 +103,10 @@ const string dao2cxx_userdata = "  DaoTuple *$(name) = (DaoTuple*) _p[$(index)];
 
 const string cxx2dao = "  DaoProcess_New";
 
-const string cxx2dao_int = cxx2dao + "Integer( _proc, (int) $(name) );\n";
+const string cxx2dao_int = cxx2dao + "Integer( _proc, (daoint) $(name) );\n";
 const string cxx2dao_float = cxx2dao + "Float(  _proc,(float) $(name) );\n";
 const string cxx2dao_double = cxx2dao + "Double( _proc, (double) $(name) );\n";
-const string cxx2dao_int2 = cxx2dao + "Integer( _proc, (int) *$(name) );\n";
+const string cxx2dao_int2 = cxx2dao + "Integer( _proc, (daoint) *$(name) );\n";
 const string cxx2dao_float2 = cxx2dao + "Float( _proc, (float) *$(name) );\n";
 const string cxx2dao_double2 = cxx2dao + "Double( _proc, (double) *$(name) );\n";
 const string cxx2dao_mbs = cxx2dao+"MBString( _proc, (char*) $(name), strlen( (char*)$(name) ) );\n"; // XXX for char**
@@ -151,7 +151,7 @@ const string cxx2dao_qstring = cxx2dao+"MBString( _proc, (char*) $(name).toLocal
 
 const string ctxput = "  DaoProcess_Put";
 
-const string ctxput_int = ctxput + "Integer( _proc, (int) $(name) );\n";
+const string ctxput_int = ctxput + "Integer( _proc, (daoint) $(name) );\n";
 const string ctxput_float = ctxput + "Float( _proc, (float) $(name) );\n";
 const string ctxput_double = ctxput + "Double( _proc, (double) $(name) );\n";
 const string ctxput_mbs = ctxput + "MBString( _proc, (char*) $(name) );\n";
@@ -165,6 +165,8 @@ const string ctxput_doubles = ctxput + "ArrayDouble( _proc, (double*) $(name), $
 const string ctxput_stream = ctxput + "File( _proc, (FILE*) $(name) );\n"; //XXX PutFile
 const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
 const string ctxput_user = "  DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
+
+
 const string qt_procput = "  Dao_$(typer)_InitSS( ($(cxxtype)*) $(name) );\n";
 const string qt_put_qobject =
 "  DaoValue *dbase = DaoQt_Get_Wrapper( $(name) );\n\
@@ -182,6 +184,30 @@ const string ctxput_newcdata =
 "  DaoProcess_PutCdata( _proc, (void*)new $(cxxtype)( $(name) ), dao_type_$(typer) );\n";
 const string ctxput_refcdata =
 "  DaoProcess_WrapCdata( _proc, (void*)&$(name), dao_type_$(typer) );\n";
+
+const string cache = "  DaoProcess_New";
+
+const string cache_int = cache + "Integer( _proc, (daoint) $(name) );\n";
+const string cache_float = cache + "Float( _proc, (float) $(name) );\n";
+const string cache_double = cache + "Double( _proc, (double) $(name) );\n";
+const string cache_mbs = cache + "MBString( _proc, (char*) $(name), -1 );\n";
+const string cache_wcs = cache + "WCString( _proc, (wchar_t*) $(name), -1 );\n";
+const string cache_bytes = cache + "MBString( _proc, (char*) $(name), $(size) );\n"; // XXX array?
+const string cache_shorts = cache + "VectorSS( _proc, (short*) $(name), $(size) );\n";
+const string cache_ints = cache + "VectorI( _proc, (daoint*) $(name), $(size) );\n"; // XXX
+const string cache_floats = cache + "VectorF( _proc, (float*) $(name), $(size) );\n";
+const string cache_doubles = cache + "VectorD( _proc, (double*) $(name), $(size) );\n";
+
+const string cache_stream = cache + "Stream( _proc, (FILE*) $(name) );\n"; //XXX PutFile
+const string cache_voidp = cache + "Cdata( _proc, NULL, (void*) $(name), 1 );\n";
+const string cache_user = "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*) $(name), 0 );\n";
+
+const string cache_copycdata =
+"  DaoProcess_CopyCdata( _proc, (void*)&$(name), sizeof($(cxxtype)), dao_type_$(typer) );\n";
+const string cache_newcdata =
+"  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*)new $(cxxtype)( $(name) ), 1 );\n";
+const string cache_refcdata =
+"  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*)&$(name), 0 );\n";
 
 #if 0
 const string qt_qlist_decl = 
@@ -294,11 +320,12 @@ const string qt_daolist_codes = "  Dao_Put$(qtype)_$(item)( _proc, $(name) );\n"
 const string qt_daolist_codes2 = "  Dao_Put$(qtype)P_$(item)( _proc, $(name) );\n";
 #endif
 
-const string parset_int = "  DaoInteger_Set( (DaoInteger*)_p[$(index)], (int)$(name) );\n";
-const string parset_float = "  DaoFloat_Set( (DaoFloat*)_p[$(index)], (float)$(name) );\n";
-const string parset_double = "  DaoDouble_Set( (DaoDouble*)_p[$(index)], (double)$(name) );\n";
-const string parset_mbs = "  DaoString_SetMBS( (DaoString*)_p[$(index)], (char*)$(name) );\n";
-const string parset_wcs = "  DaoString_SetWCS( (DaoString*)_p[$(index)], (wchar_t*)$(name) );\n";
+const string parset_int = "  DaoProcess_NewInteger( _proc, (daoint)$(name) );\n";
+const string parset_float = "  DaoProcess_NewFloat( _proc, (float)$(name) );\n";
+const string parset_double = "  DaoProcess_NewDouble( _proc, (double)$(name) );\n";
+const string parset_mbs = "  DaoProcess_NewMBString( _proc, (char*)$(name), -1 );\n";
+const string parset_wcs = "  DaoProcess_NewWCString( _proc, (wchar_t*)$(name), -1 );\n";
+
 const string parset_bytes = "  DaoArray_FromSByte( (DaoArray*)_p[$(index)] );\n";
 const string parset_ubytes = "  DaoArray_FromUByte( (DaoArray*)_p[$(index)] );\n";
 const string parset_shorts = "  DaoArray_FromSShort( (DaoArray*)_p[$(index)] );\n";
@@ -332,9 +359,9 @@ const string parset_wcs2 =
 "  DaoString_SetWCS( (DaoString*)_p[$(index)], (wchar_t*)$(name) );\n\
   free( $(name) );\n";
 
-const string dao2cxx_qchar = "  QChar $(name)( (int)DaoValue_TryGetInteger( _p[$(index)] ) );\n";
+const string dao2cxx_qchar = "  QChar $(name)( (daoint)DaoValue_TryGetInteger( _p[$(index)] ) );\n";
 const string dao2cxx_qchar2 =
-"  QChar $(name)( (int)DaoValue_TryGetInteger( _p[$(index)] ) )\
+"  QChar $(name)( (daoint)DaoValue_TryGetInteger( _p[$(index)] ) )\
   QChar *$(name) = & _$(name);\n";
 
 const string parset_qchar = "  DaoInteger_Set( (DaoInteger*)_p[$(index)], $(name).digitValue() );\n";
@@ -416,7 +443,7 @@ const string getres_user2 = getres_cdata +
 "    $(name) = *($(cxxtype)*) DaoValue_TryCastCdata( _res, dao_type_$(typer) );\n  }\n";
 
 
-const string getitem_int = ctxput + "Integer( _proc, (int) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_int = ctxput + "Integer( _proc, (daoint) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
 const string getitem_float = ctxput + "Float( _proc, (float) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
 const string getitem_double = ctxput + "Double( _proc, (double) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
 
@@ -430,7 +457,7 @@ const string setitem_double =
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
   self->$(name)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetDouble(_p[2]);\n";
 
-const string getitem_int2 = ctxput + "Integer( _proc, (int) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_int2 = ctxput + "Integer( _proc, (daoint) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
 const string getitem_float2 = ctxput + "Float( _proc, (float) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
 const string getitem_double2 = ctxput + "Double( _proc, (double) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
 
@@ -486,6 +513,7 @@ struct CDaoVarTemplates
 	string dao2cxx;
 	string cxx2dao;
 	string ctxput;
+	string cache;
 	string parset;
 	string getres;
 	string setter;
@@ -498,6 +526,7 @@ struct CDaoVarTemplates
 		dao2cxx = dao2cxx_int;
 		cxx2dao = cxx2dao_int;
 		ctxput = ctxput_int;
+		cache = cache_int;
 		getres = getres_int;
 		setter = setter_int;
 	}
@@ -506,6 +535,7 @@ struct CDaoVarTemplates
 		dao2cxx = dao2cxx_float;
 		cxx2dao = cxx2dao_float;
 		ctxput = ctxput_float;
+		cache = cache_float;
 		getres = getres_float;
 		setter = setter_float;
 	}
@@ -514,6 +544,7 @@ struct CDaoVarTemplates
 		dao2cxx = dao2cxx_double;
 		cxx2dao = cxx2dao_double;
 		ctxput = ctxput_double;
+		cache = cache_double;
 		getres = getres_double;
 		setter = setter_double;
 	}
@@ -522,7 +553,8 @@ struct CDaoVarTemplates
 		dao2cxx = dao2cxx_mbs;
 		cxx2dao = cxx2dao_mbs;
 		ctxput = ctxput_mbs;
-		parset = parset_mbs;
+		cache = cache_mbs;
+		//parset = parset_mbs;
 		getres = getres_mbs;
 	}
 	void SetupWCString(){
@@ -530,7 +562,8 @@ struct CDaoVarTemplates
 		dao2cxx = dao2cxx_wcs;
 		cxx2dao = cxx2dao_wcs;
 		ctxput = ctxput_wcs;
-		parset = parset_wcs;
+		cache = cache_wcs;
+		//parset = parset_wcs;
 		getres = getres_wcs;
 	}
 };
@@ -563,6 +596,8 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	sprintf( sindex, "%i", cxxpid );
 	kvmap[ "index" ] = sindex;
 	var->cxx2dao = cdao_string_fill( cxx2dao, kvmap );
+	var->cacheReturn = cdao_string_fill( cache, kvmap );
+	if( var->extraReturn ) var->ctxput = cdao_string_fill( ctxput, kvmap );
 	if( daopid == VAR_INDEX_RETURN ){
 		var->ctxput = cdao_string_fill( ctxput, kvmap );
 		var->getres = cdao_string_fill( getres, kvmap );
@@ -587,6 +622,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	hostype = NULL;
 	initor = NULL;
 	ignore = false;
+	extraReturn = false;
 	isNullable = false;
 	isCallback = false;
 	isUserData = false;
@@ -738,10 +774,12 @@ int CDaoVariable::Generate( int daopar_index, int cxxpar_index )
 	}
 	if( unsupported ) outs()<<"unsupported: "<<cxxtype<<" "<<name<<"\n";
 	if( hasDaoTypeHint ){
-		bool refpar = daopar[0] == '&';
 		daotype = hintDaoType;
 		daopar = name + " :" + daotype;
-		if( refpar ) daopar = "&" + daopar;
+	}
+	if( extraReturn ){
+		cacheParam = parset;
+		parset = "";
 	}
 	return retcode || unsupported;
 }
@@ -841,8 +879,10 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		if( daopar_index == VAR_INDEX_RETURN ){
 			if( dyn_cast<CXXRecordDecl>( UT->decl ) ){
 				tpl.ctxput = ctxput_newcdata;
+				tpl.cache = cache_newcdata;
 			}else{
 				tpl.ctxput = ctxput_copycdata;
+				tpl.cache = cache_copycdata;
 			}
 		}else{
 			tpl.ctxput = ctxput_refcdata;
@@ -886,6 +926,7 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 		case BuiltinType::Long :
 		case BuiltinType::LongLong : // FIXME
 		case BuiltinType::Int128 : // FIXME
+			outs() << qualtype.getAsString() << " " << qualtype.isConstQualified() << " " << (qualtype.getLocalFastQualifiers() & Qualifiers::Const) << " " << qualtype.getQualifiers().getAsString() << " --------------------=============-\n";
 			break;
 		case BuiltinType::Float :
 			daotype = "float";
@@ -906,6 +947,7 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 }
 int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 {
+	bool isparam = daopar_index >= 0;
 	char sindex[50];
 	sprintf( sindex, "_p[%i]", daopar_index );
 	QualType canotype = qualtype.getCanonicalType();
@@ -986,6 +1028,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		}
 		return 0;
 	}else if( isbuffer && canotype->isVoidPointerType() ){
+#warning "=========================== byte array?"
 		daotype = "string";
 		cxxcall = name;
 		cxxtype = "void*";
@@ -1019,7 +1062,9 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			daotype = "string";
 			cxxcall = name;
 			tpl.SetupMBString();
-			tpl.parset = parset_mbs;
+			//tpl.parset = parset_mbs;
+#warning"=======================const char*"
+			//outs() << qualtype.getAsString() << " " << qualtype.isConstQualified() << " " << (qualtype.getQualifiers() & Qualifiers::Const) << " --------------------=============-\n";
 			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\'\'";
 			break;
 		case BuiltinType::WChar_U :
@@ -1029,7 +1074,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			daotype = "string";
 			cxxcall = name;
 			tpl.SetupWCString();
-			tpl.parset = parset_wcs;
+			//tpl.parset = parset_wcs;
 			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\"\"";
 			break;
 		case BuiltinType::UShort :
@@ -1044,26 +1089,34 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		case BuiltinType::LongLong :  // FIXME
 		case BuiltinType::Int128 :  // FIXME
 			daotype = "int";
+#warning"=======================const int*"
+			//outs() << qtype1.getAsString() << " " << qtype1.isConstQualified() << " " << (qtype1.getLocalFastQualifiers() & Qualifiers::Const) << " " << qtype1.getQualifiers().getAsString() << " --------------------=============-\n";
+			extraReturn = true;
 			tpl.SetupIntScalar();
 			tpl.parset = parset_int;
-			tpl.ctxput = ctxput_ints;
+			tpl.ctxput = isparam ? ctxput_int : ctxput_ints;
+			tpl.cache = cache_ints;
 			tpl.getres = getres_ints;
 			tpl.cxx2dao = cxx2dao_int2;
 			break;
 		case BuiltinType::Float :
 			daotype = "float";
+			extraReturn = true;
 			tpl.SetupFloatScalar();
 			tpl.parset = parset_float;
-			tpl.ctxput = ctxput_floats;
+			tpl.ctxput = isparam ? ctxput_float : ctxput_floats;
+			tpl.cache = cache_floats;
 			tpl.getres = getres_floats;
 			tpl.cxx2dao = cxx2dao_float2;
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
 			daotype = "double";
+			extraReturn = true;
 			tpl.SetupDoubleScalar();
 			tpl.parset = parset_double;
-			tpl.ctxput = ctxput_doubles;
+			tpl.ctxput = isparam ? ctxput_double : ctxput_doubles;
+			tpl.cache = cache_doubles;
 			tpl.getres = getres_doubles;
 			tpl.cxx2dao = cxx2dao_double2;
 			break;
@@ -1077,7 +1130,8 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 
 		tpl.SetupIntScalar();
 		tpl.parset = parset_int;
-		tpl.ctxput = ctxput_ints;
+		tpl.ctxput = isparam ? ctxput_int : ctxput_ints;
+		tpl.cache = cache_ints;
 		tpl.getres = getres_ints;
 		tpl.cxx2dao = cxx2dao_int2;
 		tpl.setter = "";
@@ -1091,6 +1145,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.dao2cxx = dao2cxx_stream;
 			tpl.getres = getres_stream;
 			tpl.ctxput = ctxput_stream;
+			tpl.cache = cache_stream;
 			tpl.cxx2dao = cxx2dao_stream;
 			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "io";
 		}else{
@@ -1099,6 +1154,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			cxxtyper = UT->idname;
 			tpl.daopar = daopar_user;
 			tpl.ctxput = ctxput_user;
+			tpl.cache = cache_user;
 			tpl.getres = getres_user;
 			tpl.dao2cxx = dao2cxx_user2;
 			tpl.cxx2dao = cxx2dao_user;
@@ -1123,6 +1179,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.dao2cxx = dao2cxx_void;
 			tpl.cxx2dao = cxx2dao_voidp;
 			tpl.ctxput = ctxput_voidp;
+			tpl.cache = cache_voidp;
 			if( hasDaoTypeHint && hintDaoType.find( "array" ) == 0 ){
 				daotype = hintDaoType;
 				tpl.daopar = "$(name) :" + daotype + "$(default)";
@@ -1160,9 +1217,6 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 	}
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
-	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() and daotype != "string" ){
-		if( !(qualtype.getCVRQualifiers() & Qualifiers::Const) ) daopar = "&" + daopar;
-	}
 	return 0;
 }
 int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
@@ -1199,17 +1253,21 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		case BuiltinType::LongLong :  // FIXME
 		case BuiltinType::Int128 :  // FIXME
 			daotype = "int";
+#warning"=======================const int*"
+			extraReturn = true;
 			tpl.SetupIntScalar();
 			tpl.parset = parset_int;
 			break;
 		case BuiltinType::Float :
 			daotype = "float";
+			extraReturn = true;
 			tpl.SetupFloatScalar();
 			tpl.parset = parset_float;
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
 			daotype = "double";
+			extraReturn = true;
 			tpl.SetupDoubleScalar();
 			tpl.parset = parset_double;
 			break;
@@ -1219,6 +1277,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		daotype = "int";
 		cxxcall = name;
 		isNullable = false;
+		extraReturn = true;
 
 		tpl.SetupIntScalar();
 		tpl.parset = parset_int;
@@ -1231,6 +1290,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		cxxcall = "*" + name;
 		tpl.daopar = daopar_user;
 		tpl.ctxput = ctxput_refcdata;
+		tpl.cache = cache_refcdata;
 		tpl.getres = getres_user;
 		tpl.dao2cxx = dao2cxx_user2;
 		tpl.cxx2dao = cxx2dao_user;
@@ -1244,9 +1304,6 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 	map<string,string> kvmap;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
-	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() and daotype != "string" ){
-		if( !(qualtype.getCVRQualifiers() & Qualifiers::Const) ) daopar = "&" + daopar;
-	}
 	return 0;
 }
 int CDaoVariable::GenerateForArray( int daopar_index, int cxxpar_index )
@@ -1285,6 +1342,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 		cxxcall = name;
 		tpl.daopar = daopar_ints;
 		tpl.ctxput = ctxput_ints;
+		tpl.cache = cache_ints;
 		tpl.parset = parset_ints;
 		tpl.getres = getres_ints;
 		tpl.setter = setter_ints;
@@ -1297,6 +1355,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_bytes;
 			tpl.cxx2dao = cxx2dao_bytes;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_bytes;
 			tpl.getres = getres_bytes;
 			tpl.setter = setter_string;
@@ -1307,6 +1366,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_ubytes;
 			tpl.cxx2dao = cxx2dao_ubytes;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_ubytes;
 			tpl.getres = getres_ubytes;
 			tpl.setter = setter_string;
@@ -1315,6 +1375,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_ushorts;
 			tpl.cxx2dao = cxx2dao_ushorts;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_ushorts;
 			tpl.getres = getres_ushorts;
 			tpl.setter = setter_shorts;
@@ -1324,6 +1385,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_shorts;
 			tpl.cxx2dao = cxx2dao_shorts;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_shorts;
 			tpl.getres = getres_shorts;
 			tpl.setter = setter_shorts;
@@ -1352,6 +1414,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_floats;
 			tpl.cxx2dao = cxx2dao_floats;
 			tpl.ctxput = ctxput_floats;
+			tpl.cache = cache_floats;
 			tpl.parset = parset_floats;
 			tpl.getres = getres_floats;
 			tpl.setter = setter_floats;
@@ -1366,6 +1429,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.dao2cxx = dao2cxx_doubles;
 			tpl.cxx2dao = cxx2dao_doubles;
 			tpl.ctxput = ctxput_doubles;
+			tpl.cache = cache_doubles;
 			tpl.parset = parset_doubles;
 			tpl.getres = getres_doubles;
 			tpl.setter = setter_doubles;
@@ -1423,6 +1487,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 		cxxcall = name;
 		tpl.daopar = daopar_ints;
 		tpl.ctxput = ctxput_ints;
+		tpl.cache = cache_ints;
 		tpl.parset = parset_ints;
 		tpl.getres = getres_ints;
 		tpl.setter = setter_ints;
@@ -1435,6 +1500,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_bmat;
 			tpl.cxx2dao = cxx2dao_bmat;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_bytes;
 			tpl.getres = getres_bytes;
 			tpl.setter = setter_string;
@@ -1445,6 +1511,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_ubmat;
 			tpl.cxx2dao = cxx2dao_ubmat;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_ubytes;
 			tpl.getres = getres_ubytes;
 			tpl.setter = setter_string;
@@ -1453,6 +1520,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_usmat;
 			tpl.cxx2dao = cxx2dao_usmat;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_ushorts;
 			tpl.getres = getres_ushorts;
 			tpl.setter = setter_shorts;
@@ -1462,6 +1530,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_smat;
 			tpl.cxx2dao = cxx2dao_smat;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_shorts;
 			tpl.getres = getres_shorts;
 			tpl.setter = setter_shorts;
@@ -1490,6 +1559,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_fmat;
 			tpl.cxx2dao = cxx2dao_fmat;
 			tpl.ctxput = ctxput_floats;
+			tpl.cache = cache_floats;
 			tpl.parset = parset_floats;
 			tpl.getres = getres_floats;
 			tpl.setter = setter_floats;
@@ -1504,6 +1574,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			tpl.dao2cxx = dao2cxx_dmat;
 			tpl.cxx2dao = cxx2dao_dmat;
 			tpl.ctxput = ctxput_doubles;
+			tpl.cache = cache_doubles;
 			tpl.parset = parset_doubles;
 			tpl.getres = getres_doubles;
 			tpl.setter = setter_doubles;
@@ -1537,6 +1608,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 		cxxcall = name;
 		tpl.daopar = daopar_ints;
 		tpl.ctxput = ctxput_ints;
+		tpl.cache = cache_ints;
 		tpl.parset = parset_ints;
 		tpl.getres = getres_ints;
 		tpl.setter = setter_ints;
@@ -1549,6 +1621,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_bmat2;
 			tpl.cxx2dao = cxx2dao_bmat2;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_bytes;
 			tpl.getres = getres_bytes;
 			tpl.setter = setter_string;
@@ -1559,6 +1632,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_ubmat2;
 			tpl.cxx2dao = cxx2dao_ubmat2;
 			tpl.ctxput = ctxput_bytes;
+			tpl.cache = cache_bytes;
 			tpl.parset = parset_ubytes;
 			tpl.getres = getres_ubytes;
 			tpl.setter = setter_string;
@@ -1567,6 +1641,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_usmat2;
 			tpl.cxx2dao = cxx2dao_usmat2;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_ushorts;
 			tpl.getres = getres_ushorts;
 			tpl.setter = setter_shorts;
@@ -1576,6 +1651,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_smat2;
 			tpl.cxx2dao = cxx2dao_smat2;
 			tpl.ctxput = ctxput_shorts;
+			tpl.cache = cache_shorts;
 			tpl.parset = parset_shorts;
 			tpl.getres = getres_shorts;
 			tpl.setter = setter_shorts;
@@ -1604,6 +1680,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_fmat2;
 			tpl.cxx2dao = cxx2dao_fmat2;
 			tpl.ctxput = ctxput_floats;
+			tpl.cache = cache_floats;
 			tpl.parset = parset_floats;
 			tpl.getres = getres_floats;
 			tpl.setter = setter_floats;
@@ -1618,6 +1695,7 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			tpl.dao2cxx = dao2cxx_dmat2;
 			tpl.cxx2dao = cxx2dao_dmat2;
 			tpl.ctxput = ctxput_doubles;
+			tpl.cache = cache_doubles;
 			tpl.parset = parset_doubles;
 			tpl.getres = getres_doubles;
 			tpl.setter = setter_doubles;

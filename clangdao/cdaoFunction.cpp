@@ -694,10 +694,12 @@ int CDaoFunction::Generate()
 
 	vector<IntString> unusedDefaults;
 	vector<CDaoVariable*> pps;
+	vector<CDaoVariable*> returns;
 	for(i=0; i<n; i++){
 		CDaoVariable & vo = parlist[i];
 		string sindex = utostr(i-autoself);
 		if( retype.ignore ) continue;
+		if( vo.extraReturn ) returns.push_back( & vo );
 		pps.push_back( & vo );
 		//outs() << vo.name << vo.unsupported << "-----------------\n";
 		if( vo.ignore == false ){
@@ -846,7 +848,43 @@ int CDaoFunction::Generate()
 		retype.cxxtyper = hostype->idname;
 		if( retype.daotype.find( "std::" ) == 0 ) retype.daotype.replace( 0, 5, "stdcxx::" );
 	}
-	if( retype.daotype != "" ) kvmap[ "retype" ] = "=>" + retype.daotype;
+
+	string retCode = retype.ctxput;
+	string retDaoType = retype.daotype;
+	if( retype.daotype.size() ==0 || host_name == cxxName ) retCode = "";
+	if( returns.size() ){
+		int i, n = returns.size();
+		int m = n + (retCode != "");
+		if( m > 1 ){
+			string newRetCode, newDaoType;
+			char buf[20];
+			sprintf( buf, "%i", m );
+			newDaoType += "tuple<";
+			if( retCode != "" ){
+				newRetCode += retype.cacheReturn;
+				newDaoType += retDaoType + ",";
+			}
+			for(i=0; i<n; i++){
+				newRetCode += returns[i]->cacheParam;
+				if( i ) newDaoType += ",";
+				newDaoType += returns[i]->daotype;
+			}
+			newDaoType += ">";
+			newRetCode += string("  DaoProcess_PutTuple( _proc, -") + buf + " );\n";
+			retCode = newRetCode;
+			retDaoType = newDaoType;
+		}else if( n ){
+#if 0
+			outs() << returns[0]->daotype << " 1\n";
+			outs() << returns[0]->ctxput << " 2\n";
+			outs() << returns[0]->cacheParam << " 3\n";
+#endif
+			retCode = returns[0]->ctxput;
+			retDaoType = returns[0]->daotype;
+		}
+	}
+
+	if( retDaoType != "" ) kvmap[ "retype" ] = "=>" + retDaoType;
 
 	daoProtoCodes = cdao_string_fill( dao_proto, kvmap );
 	cxxProtoCodes = cdao_string_fill( cxx_wrap_proto, kvmap );
@@ -928,10 +966,10 @@ int CDaoFunction::Generate()
 	kvmap2[ "dao2cxx" ] = dao2cxxcodes;
 	kvmap2[ "cxxcall" ] = cxxCallCodes;
 	kvmap2[ "parset" ] = parsetcodes + post_calls;
-	kvmap2[ "return" ] = retype.ctxput;
+	kvmap2[ "return" ] = retCode;
 	kvmap2[ "file" ] = decl == NULL ? "" : module->GetFileName( decl->getLocation() );
 	
-	if( retype.daotype.size() ==0 || host_name == cxxName ) kvmap2[ "return" ] = "";
+
 	//if( hostType == cxxName ) kvmap2[ 'dao2cxx' ] =''; # XXX 
 	cxxWrapper = cdao_string_fill( cxx_wrap, kvmap2 );
 	if( retype.useUserWrapper ) cxxWrapper = "";
