@@ -986,7 +986,7 @@ void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,stri
 	CDaoVariable field( module );
 	field.SetQualType( fit->getTypeSourceInfo()->getType(), location );
 	field.name = fit->getNameAsString();
-	if( field.name == "" ) return;
+	if( field.name == "" || field.name[0] == '_' ) return;
 
 	size_t pos;
 	map<string,vector<string> >::iterator it = module->functionHints.find( qname + "::" + field.name );

@@ -157,10 +157,13 @@ const string ctxput_double = ctxput + "Double( _proc, (double) $(name) );\n";
 const string ctxput_mbs = ctxput + "MBString( _proc, (char*) $(name) );\n";
 const string ctxput_wcs = ctxput + "WCString( _proc, (wchar_t*) $(name) );\n";
 const string ctxput_bytes = ctxput + "Bytes( _proc, (char*) $(name), $(size) );\n"; // XXX array?
-const string ctxput_shorts = ctxput + "ArrayShort( _proc, (short*) $(name), $(size) );\n";
-const string ctxput_ints = ctxput + "ArrayInteger( _proc, (daoint*) $(name), $(size) );\n"; // XXX
-const string ctxput_floats = ctxput + "ArrayFloat( _proc, (float*) $(name), $(size) );\n";
-const string ctxput_doubles = ctxput + "ArrayDouble( _proc, (double*) $(name), $(size) );\n";
+const string ctxput_shorts = ctxput + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
+const string ctxput_ints = ctxput + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
+const string ctxput_ushorts = ctxput + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
+const string ctxput_uints = ctxput + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
+const string ctxput_daoints = ctxput + "VectorI( _proc, (daoint*) $(name), $(size) );\n";
+const string ctxput_floats = ctxput + "VectorF( _proc, (float*) $(name), $(size) );\n";
+const string ctxput_doubles = ctxput + "VectorD( _proc, (double*) $(name), $(size) );\n";
 
 const string ctxput_stream = ctxput + "File( _proc, (FILE*) $(name) );\n"; //XXX PutFile
 const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
@@ -193,8 +196,11 @@ const string cache_double = cache + "Double( _proc, (double) $(name) );\n";
 const string cache_mbs = cache + "MBString( _proc, (char*) $(name), -1 );\n";
 const string cache_wcs = cache + "WCString( _proc, (wchar_t*) $(name), -1 );\n";
 const string cache_bytes = cache + "MBString( _proc, (char*) $(name), $(size) );\n"; // XXX array?
-const string cache_shorts = cache + "VectorSS( _proc, (short*) $(name), $(size) );\n";
-const string cache_ints = cache + "VectorI( _proc, (daoint*) $(name), $(size) );\n"; // XXX
+const string cache_shorts = cache + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
+const string cache_ushorts = cache + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
+const string cache_ints = cache + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
+const string cache_uints = cache + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
+const string cache_daoints = cache + "VectorI( _proc, (daoint*) $(name), $(size) );\n";
 const string cache_floats = cache + "VectorF( _proc, (float*) $(name), $(size) );\n";
 const string cache_doubles = cache + "VectorD( _proc, (double*) $(name), $(size) );\n";
 
@@ -484,12 +490,22 @@ const string setter_string = // XXX array?
 const string setter_shorts =
 "  int size = DaoArray_Size( (DaoArray*)_p[1] );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToShort( (DaoArray*)_p[1] ), size*sizeof(short) );\n";
+  memmove( self->$(name), DaoArray_ToSShort( (DaoArray*)_p[1] ), size*sizeof(signed short) );\n";
+
+const string setter_ushorts =
+"  int size = DaoArray_Size( (DaoArray*)_p[1] );\n\
+  if( size > $(size) ) size = $(size);\n\
+  memmove( self->$(name), DaoArray_ToUShort( (DaoArray*)_p[1] ), size*sizeof(unsigned short) );\n";
 
 const string setter_ints =
 "  int size = DaoArray_Size( (DaoArray*)_p[1] );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToSInt( (DaoArray*)_p[1] ), size*sizeof(int) );\n";
+  memmove( self->$(name), DaoArray_ToSInt( (DaoArray*)_p[1] ), size*sizeof(signed int) );\n";
+
+const string setter_uints =
+"  int size = DaoArray_Size( (DaoArray*)_p[1] );\n\
+  if( size > $(size) ) size = $(size);\n\
+  memmove( self->$(name), DaoArray_ToUInt( (DaoArray*)_p[1] ), size*sizeof(unsigned int) );\n";
 
 const string setter_floats =
 "  int size = DaoArray_Size( (DaoArray*)_p[1] );\n\
@@ -750,7 +766,6 @@ void CDaoVariable::SetHints( const string & hints )
 			if( hasDaoTypeHint ){
 				hintDaoType = sizes[0];
 				sizes.clear();
-				outs() << hintDaoType << "---------------------\n";
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";
 			pos = pos2;
@@ -926,7 +941,6 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 		case BuiltinType::Long :
 		case BuiltinType::LongLong : // FIXME
 		case BuiltinType::Int128 : // FIXME
-			outs() << qualtype.getAsString() << " " << qualtype.isConstQualified() << " " << (qualtype.getLocalFastQualifiers() & Qualifiers::Const) << " " << qualtype.getQualifiers().getAsString() << " --------------------=============-\n";
 			break;
 		case BuiltinType::Float :
 			daotype = "float";
@@ -969,6 +983,13 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		return 0;
 	}
 
+	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() ){
+		const BuiltinType *type = qtype2->getAs<BuiltinType>();
+		if( not qtype2->isAnyCharacterType() ){
+			if( qtype1.isConstQualified() && sizes.size() == 0 ) sizes.push_back( "0" );
+		}
+	}
+
 	if( sizes.size() == 1 ) return GenerateForArray( qtype2, sizes[0], daopar_index, cxxpar_index );
 	if( sizes.size() == 2 && qtype2->isPointerType() ){
 		QualType qtype3 = qtype2->getAs<PointerType>()->getPointeeType();
@@ -980,7 +1001,6 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 
 		var.SetQualType( qtype2 );
 		var.Generate();
-		outs() << var.daotype << " " << var.unsupported << " ---------------------\n";
 		if( var.unsupported ) return 1;
 		if( CDaoUserType *UT = module->HandleUserType( qtype3, location ) ){
 			string typer = "dao_type_" + UT->idname;
@@ -1064,7 +1084,6 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.SetupMBString();
 			//tpl.parset = parset_mbs;
 #warning"=======================const char*"
-			//outs() << qualtype.getAsString() << " " << qualtype.isConstQualified() << " " << (qualtype.getQualifiers() & Qualifiers::Const) << " --------------------=============-\n";
 			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\'\'";
 			break;
 		case BuiltinType::WChar_U :
@@ -1090,7 +1109,6 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		case BuiltinType::Int128 :  // FIXME
 			daotype = "int";
 #warning"=======================const int*"
-			//outs() << qtype1.getAsString() << " " << qtype1.isConstQualified() << " " << (qtype1.getLocalFastQualifiers() & Qualifiers::Const) << " " << qtype1.getQualifiers().getAsString() << " --------------------=============-\n";
 			extraReturn = true;
 			tpl.SetupIntScalar();
 			tpl.parset = parset_int;
@@ -1374,11 +1392,11 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 		case BuiltinType::UShort :
 			tpl.dao2cxx = dao2cxx_ushorts;
 			tpl.cxx2dao = cxx2dao_ushorts;
-			tpl.ctxput = ctxput_shorts;
-			tpl.cache = cache_shorts;
+			tpl.ctxput = ctxput_ushorts;
+			tpl.cache = cache_ushorts;
 			tpl.parset = parset_ushorts;
 			tpl.getres = getres_ushorts;
-			tpl.setter = setter_shorts;
+			tpl.setter = setter_ushorts;
 			break;
 		case BuiltinType::Char16 :
 		case BuiltinType::Short :
@@ -1390,8 +1408,26 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.getres = getres_shorts;
 			tpl.setter = setter_shorts;
 			break;
-		case BuiltinType::WChar_U : // FIXME: check size
 		case BuiltinType::UInt :
+			tpl.dao2cxx = dao2cxx_uints;
+			tpl.cxx2dao = cxx2dao_uints;
+			tpl.ctxput = ctxput_uints;
+			tpl.cache = cache_uints;
+			tpl.parset = parset_uints;
+			tpl.getres = getres_uints;
+			tpl.setter = setter_uints;
+			break;
+		case BuiltinType::Int :
+		case BuiltinType::Char32 :
+			tpl.dao2cxx = dao2cxx_ints;
+			tpl.cxx2dao = cxx2dao_ints;
+			tpl.ctxput = ctxput_ints;
+			tpl.cache = cache_ints;
+			tpl.parset = parset_ints;
+			tpl.getres = getres_ints;
+			tpl.setter = setter_ints;
+			break;
+		case BuiltinType::WChar_U : // FIXME: check size
 		case BuiltinType::ULong :
 		case BuiltinType::ULongLong : // FIXME
 		case BuiltinType::UInt128 : // FIXME
@@ -1399,8 +1435,6 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			tpl.cxx2dao = cxx2dao_uints;
 			break;
 		case BuiltinType::WChar_S :
-		case BuiltinType::Char32 :
-		case BuiltinType::Int :
 		case BuiltinType::Long : // FIXME: check size
 		case BuiltinType::LongLong : // FIXME
 		case BuiltinType::Int128 : // FIXME
@@ -1442,7 +1476,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 		QualType ptype = elemtype->getPointeeType();
 		if( CDaoUserType *UT = module->HandleUserType( ptype, location ) ){
 			if( UT->unsupported ) return 1;
-			if( cxxpar_index != VAR_INDEX_FIELD ) return 1;
+			if( daopar_index != VAR_INDEX_FIELD ) return 1;
 			UT->used = true;
 			daotype = cdao_make_dao_template_type_name( UT->qname );
 			cxxtype = UT->qname + "**";
@@ -1457,7 +1491,7 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 				getter += "  daoint i, n = self->" + size + ";\n";
 			}
 			getter += "  for(i=0; i<n; i++){\n";
-			getter += "    DaoCdata *it = DaoProcess_NewCdata( fac, dao_type_" + UT->idname;
+			getter += "    DaoCdata *it = DaoProcess_NewCdata( _proc, dao_type_" + UT->idname;
 			getter += ", self->" + name + "[i], 0 );\n";
 			getter += "    DaoList_PushBack( list, (DaoValue*) it );\n";
 			getter += "  }\n";
