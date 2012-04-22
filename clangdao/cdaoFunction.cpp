@@ -13,145 +13,58 @@ const string cxx_call_proto =
 
 const string cxx_call_proto_d1 = 
 "  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n\
-  else $(name) = $(func_call)( $(parlist) );\n"
+  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n"
 ;
 const string cxx_call_proto_d2 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(func_call)( $(parlist2) );\n\
-  else $(name) = $(func_call)( $(parlist) );\n"
+"  else if(_n<=$(n%i)) $(name) = $(func_call)( $(parlist%i) );\n"
 ;
 const string cxx_call_proto_d3 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(func_call)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(name) = $(func_call)( $(parlist3) );\n\
-  else $(name) = $(func_call)( $(parlist) );\n"
+"  else $(name) = $(func_call)( $(parlist) );\n"
 ;
-const string cxx_call_proto_d4 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(func_call)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(name) = $(func_call)( $(parlist3) );\n\
-  else if(_n<=$(n4)) $(name) = $(func_call)( $(parlist4) );\n\
-  else $(name) = $(func_call)( $(parlist) );\n"
-;
-const string cxx_call_proto_list[] = 
-{
-	cxx_call_proto,
-	cxx_call_proto_d1,
-	cxx_call_proto_d2,
-	cxx_call_proto_d3,
-	cxx_call_proto_d4
-};
+
 
 const string cxx_call_proto2 = 
 "  $(func_call)( $(parlist) );\n";
 
 const string cxx_call_proto2_d1 = 
-"  if(_n<=$(n1)) $(func_call)( $(parlist1) );\n\
-  else $(func_call)( $(parlist) );\n"
+"  if(_n<=$(n1)) $(func_call)( $(parlist1) );\n"
 ;
 const string cxx_call_proto2_d2 = 
-"  if(_n<=$(n1)) $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(func_call)( $(parlist2) );\n\
-  else $(func_call)( $(parlist) );\n"
+"  else if(_n<=$(n%i)) $(func_call)( $(parlist%i) );\n"
 ;
 const string cxx_call_proto2_d3 = 
-"  if(_n<=$(n1)) $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(func_call)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(func_call)( $(parlist3) );\n\
-  else $(func_call)( $(parlist) );\n"
-;
-const string cxx_call_proto2_d4 = 
-"  if(_n<=$(n1)) $(func_call)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(func_call)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(func_call)( $(parlist3) );\n\
-  else if(_n<=$(n4)) $(func_call)( $(parlist4) );\n\
-  else $(func_call)( $(parlist) );\n"
+"  else $(func_call)( $(parlist) );\n"
 ;
 
-const string cxx_call_proto2_list[] = 
-{
-	cxx_call_proto2,
-	cxx_call_proto2_d1,
-	cxx_call_proto2_d2,
-	cxx_call_proto2_d3,
-	cxx_call_proto2_d4
-};
 
 const string cxx_call_static = 
 "  $(retype) $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n";
 
 const string cxx_call_static_d1 = 
 "  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
+  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n"
 ;
 const string cxx_call_static_d2 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  else if(_n<=$(n%i)) $(name) = $(host_qname)::$(cxxname)( $(parlist%i) );\n"
 ;
 const string cxx_call_static_d3 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(name) = $(host_qname)::$(cxxname)( $(parlist3) );\n\
-  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
 ;
-const string cxx_call_static_d4 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(name) = $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(name) = $(host_qname)::$(cxxname)( $(parlist3) );\n\
-  else if(_n<=$(n4)) $(name) = $(host_qname)::$(cxxname)( $(parlist4) );\n\
-  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
-;
-const string cxx_call_static_list[] = 
-{
-	cxx_call_static,
-	cxx_call_static_d1,
-	cxx_call_static_d2,
-	cxx_call_static_d3,
-	cxx_call_static_d4
-};
+
 
 const string cxx_call_static2 = 
 "  $(host_qname)::$(cxxname)( $(parlist) );\n";
 
 const string cxx_call_static2_d1 = 
-"  if(_n<=$(n1)) $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  if(_n<=$(n1)) $(host_qname)::$(cxxname)( $(parlist1) );\n"
 ;
 const string cxx_call_static2_d2 = 
-"  if(_n<=$(n1)) $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  else if(_n<=$(n%i)) $(host_qname)::$(cxxname)( $(parlist%i) );\n"
 ;
 const string cxx_call_static2_d3 = 
-"  if(_n<=$(n1)) $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(host_qname)::$(cxxname)( $(parlist3) );\n\
-  else $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  else $(host_qname)::$(cxxname)( $(parlist) );\n"
 ;
-const string cxx_call_static2_d4 = 
-"  if(_n<=$(n1)) $(host_qname)::$(cxxname)( $(parlist1) );\n\
-  else if(_n<=$(n2)) $(host_qname)::$(cxxname)( $(parlist2) );\n\
-  else if(_n<=$(n3)) $(host_qname)::$(cxxname)( $(parlist3) );\n\
-  else if(_n<=$(n4)) $(host_qname)::$(cxxname)( $(parlist4) );\n\
-  else $(host_qname)::$(cxxname)( $(parlist) );\n"
-;
-const string cxx_call_static2_list[] = 
-{
-	cxx_call_static2,
-	cxx_call_static2_d1,
-	cxx_call_static2_d2,
-	cxx_call_static2_d3,
-	cxx_call_static2_d4
-};
+
 
 const string cxx_call_new = 
 "	$(host_qname) *_self = Dao_$(host_idname)_New( $(parlist) );\n\
@@ -407,6 +320,18 @@ extern string normalize_type_name( const string & name );
 extern string cdao_make_dao_template_type_name( const string & name );
 extern string cdao_substitute_typenames( const string & qname );
 
+static string cdao_make_temp( const string & tpl, int n )
+{
+	int i;
+	char buf[200];
+	string str;
+	for(i=2; i<n; i++){
+		sprintf( buf, tpl.c_str(), i, i );
+		str += buf;
+	}
+	return str;
+}
+
 
 CDaoFunction::CDaoFunction( CDaoModule *mod, FunctionDecl *decl, int idx )
 {
@@ -474,6 +399,14 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 	sig = fname + proto;
 	it = module->functionHints.find( sig );
 	//outs() << "search hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
+	if( it != module->functionHints.end() ){
+		SetHints( it->second, sig );
+		return;
+	}
+	pos = sig.find( '(' );
+	if( pos == string::npos ) return;
+	sig.erase( pos );
+	it = module->functionHints.find( sig );
 	if( it != module->functionHints.end() ) SetHints( it->second, sig );
 }
 void CDaoFunction::SetCallback( FunctionProtoType *func, FieldDecl *decl, const string & name )
@@ -796,7 +729,14 @@ int CDaoFunction::Generate()
 	string post_calls;
 	for(i=0; i<n; i++){
 		CDaoVariable *vo = pps[i];
-		dao2cxxcodes += vo->dao2cxx;
+		if( vo->isbuffer == false ) dao2cxxcodes += vo->dao2cxx;
+	}
+	for(i=0; i<n; i++){
+		CDaoVariable *vo = pps[i];
+		if( vo->isbuffer ) dao2cxxcodes += vo->dao2cxx;
+	}
+	for(i=0; i<n; i++){
+		CDaoVariable *vo = pps[i];
 		pre_calls += vo->pre_call;
 		post_calls += vo->post_call;
 	}
@@ -846,7 +786,8 @@ int CDaoFunction::Generate()
 	if( ctordecl && hostype ){
 		retype.daotype = cdao_make_dao_template_type_name( hostype->qname );
 		retype.cxxtyper = hostype->idname;
-		if( retype.daotype.find( "std::" ) == 0 ) retype.daotype.replace( 0, 5, "stdcxx::" );
+		if( retype.daotype.find( "std::" ) == 0 ) retype.daotype.replace( 0, 5, "_std::" );
+		if( retype.daotype.find( "io::" ) == 0 ) retype.daotype.replace( 0, 4, "_io::" );
 	}
 
 	string retCode = retype.ctxput;
@@ -924,15 +865,45 @@ int CDaoFunction::Generate()
 		}
 		//if( parlist.size() ) cxxCallCodes = ''; // XXX maybe there is no default constru
 	}else if( retype.daotype != "" ){
-		if( methdecl && methdecl->isStatic() )
-			cxxCallCodes = cdao_string_fill( cxx_call_static_list[dd], kvmap );
-		else
-			cxxCallCodes = cdao_string_fill( cxx_call_proto_list[dd], kvmap );
+		if( methdecl && methdecl->isStatic() ){
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_static, kvmap );
+			}else{
+				string tmp = cxx_call_static_d1;
+				tmp += cdao_make_temp( cxx_call_static_d2, dd );
+				tmp += cxx_call_static_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
+		}else{
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_proto, kvmap );
+			}else{
+				string tmp = cxx_call_proto_d1;
+				tmp += cdao_make_temp( cxx_call_proto_d2, dd );
+				tmp += cxx_call_proto_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
+		}
 	}else{
-		if( methdecl && methdecl->isStatic() )
-			cxxCallCodes = cdao_string_fill( cxx_call_static2_list[dd], kvmap );
-		else
-			cxxCallCodes = cdao_string_fill( cxx_call_proto2_list[ dd ], kvmap );
+		if( methdecl && methdecl->isStatic() ){
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_static2, kvmap );
+			}else{
+				string tmp = cxx_call_static2_d1;
+				tmp += cdao_make_temp( cxx_call_static2_d2, dd );
+				tmp += cxx_call_static2_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
+		}else{
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_proto2, kvmap );
+			}else{
+				string tmp = cxx_call_proto2_d1;
+				tmp += cdao_make_temp( cxx_call_proto2_d2, dd );
+				tmp += cxx_call_proto2_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
+		}
 	}
 #if 0
 	if( lib_name == LibType.LIB_QT and not excluded ){
@@ -1145,7 +1116,9 @@ int CDaoFunction::Generate()
 		kvmap3[ "parlist" ] = cxxProtoParamVirt;
 		cxxWrapperVirt3 = cdao_string_fill( cxx_virt_class5, kvmap3 );
 	}
-	if( return_ref ){
+// for virtual operator overloading such [], it is not possible to wrapper it for reimplentation
+// in the current way with extra parameter "int *_cs".
+	if( return_ref || (funcDecl && funcDecl->isOverloadedOperator()) ){
 		cxxWrapperVirtProto = "";
 		cxxWrapperVirt = "";
 		cxxWrapperVirt2 = "";

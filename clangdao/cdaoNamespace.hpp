@@ -39,6 +39,7 @@ struct CDaoNamespace
 
 	int Generate( CDaoNamespace *outer = NULL );
 	void HandleExtension( NamespaceDecl *nsdecl );
+	void HandleDeclaration( Decl *D );
 
 	void AddNamespace( CDaoNamespace *one ){ namespaces.push_back( one ); }
 	void AddUserType( CDaoUserType *one ){

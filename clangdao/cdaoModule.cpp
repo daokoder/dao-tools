@@ -219,12 +219,16 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 			//outs() << (void*)SD << ": " << GetFileName( SD->getLocation() ) << "\n";
 			//outs() << (void*)SD << ": " << GetFileName( loc ) << "\n";
 			//if( qualtype.getAsString().find( "__normal_iterator" ) != string::npos ) free((void*)12);
+
+#if 0
 			DE = cast_or_null<ClassTemplateSpecializationDecl>( SD->getDefinition());
 			if( DE == NULL ){
 				TemplateSpecializationKind kind = TSK_ExplicitSpecialization;
 				Sema & sm = compiler->getSema();
+				// this does not work for Irrlicht engine:
 				sm.InstantiateClassTemplateSpecialization( loc, SD, kind );
 			}
+#endif
 			SD->setPointOfInstantiation( loc );
 
 			CDaoUserType *UT = NewUserType( SD );
@@ -1047,6 +1051,8 @@ string CDaoModule::MakeSourceCodes( vector<CDaoFunction*> & functions, CDaoNames
 	for(i=0, n=functions.size(); i<n; i++){
 		CDaoFunction & func = *functions[i];
 		if( not func.generated || not func.IsFromMainModule() ) continue;
+		/* C++ class member method can somehow be outside of the host class type! */
+		if( func.funcDecl && dyn_cast<CXXMethodDecl>( func.funcDecl ) ) continue;
 		func_decl += func.cxxProtoCodes + ";\n";
 		func_codes += func.cxxWrapper;
 		rout_entry += func.daoProtoCodes;
@@ -1241,7 +1247,7 @@ int CDaoModule::Generate( const string & output )
 	map<string,string> kvmap;
 	kvmap[ "module" ] = moduleInfo.name;
 
-	//fout_header << topLevelScope.header;
+	fout_header << topLevelScope.header;
 	fout_header << MakeHeaderCodes( sorted );
 
 	fout_source3 << cxx_get_object_method;

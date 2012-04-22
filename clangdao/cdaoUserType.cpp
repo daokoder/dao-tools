@@ -1037,7 +1037,7 @@ int CDaoUserType::Generate( RecordDecl *decl )
 	map<string,string> kvmap;
 
 	wrapType = CDAO_WRAP_TYPE_PROXY;
-	outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
+	//outs() << name << " " << qname << " CDaoUserType::Generate( RecordDecl *decl ) " << this << "\n";
 
 	set_fields = "";
 	SetupDefaultMapping( kvmap );
@@ -1258,15 +1258,17 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		constructors.push_back( CDaoFunction( module, *ctorit, ++overloads[name] ) );
 		constructors.back().location = location;
 	}
-	CXXDestructorDecl *destr = decl->getDestructor();
-	if( destr && destr->getAccess() != AS_public ){
-		has_public_destructor = false;
-		has_private_destructor = destr->getAccess() == AS_private;
-	}
-	if( destr ){
-		const Type *type = destr->getTypeSourceInfo()->getType().getTypePtr();
-		const FunctionProtoType *ft = type->getAs<FunctionProtoType>();
-		if( ft->hasDynamicExceptionSpec() ) has_private_destructor = true;
+	if( decl->hasUserDeclaredDestructor() ){
+		CXXDestructorDecl *destr = decl->getDestructor();
+		if( destr && destr->getAccess() != AS_public ){
+			has_public_destructor = false;
+			has_private_destructor = destr->getAccess() == AS_private;
+		}
+		if( destr ){
+			const Type *type = destr->getTypeSourceInfo()->getType().getTypePtr();
+			const FunctionProtoType *ft = type->getAs<FunctionProtoType>();
+			if( ft->hasDynamicExceptionSpec() ) has_private_destructor = true;
+		}
 	}
 	if( has_public_ctor || has_protected_ctor ) has_private_ctor_only = false;
 	if( has_implicit_default_ctor ) has_public_ctor = true;
@@ -1459,7 +1461,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 		CDaoFunction func( module, mdec, ++overloads[name] );
 		func.Generate();
-		if( not func.generated ){
+		if( func.excluded or func.cxxWrapperVirt2 == "" or not func.generated ){
 			TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
 			FunctionTypeLoc ftypeloc = cast<FunctionTypeLoc>(typeloc);
 			//string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
@@ -1469,7 +1471,6 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			string proto = cdao_substitute_typenames( mdec->getResultType().getAsString() );
 			proto += " " + func.signature;
 			//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
-			if( isconst ) proto += "const";
 			kmethods += "\t" + proto + "{/*XXX 1*/}\n";
 			outs()<<proto<<"\n";
 			continue;
@@ -1490,12 +1491,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		CDaoFunction & meth = methods[i];
 		const CXXMethodDecl *mdec = dyn_cast<CXXMethodDecl>( meth.funcDecl );
 		bool isconst = mdec->getTypeQualifiers() & DeclSpec::TQ_const;
-		if( not meth.generated ){
+		if( meth.excluded or not meth.generated ){
 			if( mdec->isPure() ){
 				TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
 				string source = module->ExtractSource( typeloc.getSourceRange(), true );
 				//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
-				if( isconst ) source += "const";
 				kmethods += "\t" + source + "{/*XXX 1*/}\n";
 			}
 			continue;
@@ -1509,7 +1509,6 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
 			string source = module->ExtractSource( typeloc.getSourceRange(), true );
 			//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
-			if( isconst ) source += "const";
 			kmethods += "\t" + source + "{/*XXX 1*/}\n";
 		}
 		if( mdec->isVirtual() && meth.cxxWrapperVirt2.size() ){
@@ -1577,7 +1576,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	for(i=0, n = methods.size(); i<n; i++){
 		CDaoFunction & meth = methods[i];
 		const CXXMethodDecl *mdec = dyn_cast<CXXMethodDecl>( meth.funcDecl );
-		if( not meth.generated ) continue;
+		if( meth.excluded or not meth.generated ) continue;
 		if( mdec->getAccess() == AS_protected && not mdec->isPure() && not mdec->isOverloadedOperator() ){
 			dao_meths += meth.daoProtoCodes;
 			meth_decls += meth.cxxProtoCodes + ";\n";

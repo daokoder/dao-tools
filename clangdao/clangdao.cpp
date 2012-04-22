@@ -33,6 +33,7 @@ struct CDaoPPCallbacks : public PPCallbacks
 	}
 
 	void MacroDefined(const Token &MacroNameTok, const MacroInfo *MI);
+	void MacroUndefined(const Token &MacroNameTok, const MacroInfo *MI);
 	void InclusionDirective(SourceLocation Loc, const Token &Tok, StringRef Name, 
 			bool Angled, const FileEntry *File, SourceLocation End,
 			StringRef SearchPath, StringRef RelativePath );
@@ -52,6 +53,11 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 	}else if( MI->isFunctionLike() ){
 		module->HandleHintDefinition( name, MI );
 	}
+}
+void CDaoPPCallbacks::MacroUndefined(const Token &MacroNameTok, const MacroInfo *MI)
+{
+	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
+	module->numericConsts.erase( name );
 }
 void CDaoPPCallbacks::InclusionDirective(SourceLocation Loc, const Token &Tok, 
 		StringRef Name, bool Angled, const FileEntry *File, SourceLocation End,
@@ -202,7 +208,8 @@ string cdao_make_dao_template_type_name( const string & name0, const map<string,
 				string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 				it = subs.find( part );
 				if( it != subs.end() ) part = it->second;
-				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
+				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
+				if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 				if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 				if( type_for_quoting.size() == 0 ) quote = "";
 				result += quote + part + quote;
@@ -218,7 +225,8 @@ string cdao_make_dao_template_type_name( const string & name0, const map<string,
 	string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 	it = subs.find( part );
 	if( it != subs.end() ) part = it->second;
-	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
+	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
+	if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 	if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 	return result + quote + part + quote;
 }
@@ -235,7 +243,8 @@ string cdao_make_dao_template_type_name( const string & name0 )
 				string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 				it = type_substitutions.find( part );
 				if( it != type_substitutions.end() ) part = it->second;
-				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
+				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
+				if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 				if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 				if( istemplate == 0 ) quote = "";
 				result += quote + part + quote;
@@ -251,7 +260,8 @@ string cdao_make_dao_template_type_name( const string & name0 )
 	string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 	it = type_substitutions.find( part );
 	if( it != type_substitutions.end() ) part = it->second;
-	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "stdcxx::" );
+	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
+	if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 	if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 	if( istemplate == 0 ) quote = "";
 	return result + quote + part + quote;

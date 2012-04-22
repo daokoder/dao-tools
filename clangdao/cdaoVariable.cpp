@@ -592,7 +592,8 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->daodefault.size() ) dft += " =" + var->daodefault;
 	if( var->cxxtyper.size() ) typer = var->cxxtyper;
 
-	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "stdcxx::" );
+	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
+	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
 	kvmap[ "typer" ] = typer;
@@ -803,6 +804,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 	if( initor ){
 		SourceRange range = initor->getSourceRange();
 		daodefault = module->ExtractSource( range, true );
+		if( daodefault.find( '=' ) == 0 ) daodefault.erase(0,1);
 
 		for(int i=0,n=scopes.size(); i<n; i++){
 			daodefault = scopes[i] + "::" + daodefault;
@@ -961,12 +963,17 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 }
 int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 {
+	bool isconst = qualtype.getCVRQualifiers() & Qualifiers::Const;
 	bool isparam = daopar_index >= 0;
 	char sindex[50];
 	sprintf( sindex, "_p[%i]", daopar_index );
 	QualType canotype = qualtype.getCanonicalType();
 	QualType qtype1 = qualtype->getPointeeType();
 	QualType qtype2 = canotype->getPointeeType();
+	CDaoVarTemplates tpl;
+	map<string,string> kvmap;
+	kvmap[ "size" ] = "0";
+	kvmap[ "dao" ] = "";
 
 	if( argvLike ){
 		string lpar = string("(DaoList*)") + sindex;
@@ -1016,7 +1023,8 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			pre_call = string("  int _i, _num = DaoList_Size( ") + lpar + " );\n";
 			pre_call += "  for(_i=0; _i<_num; _i++){\n";
 			pre_call += string("    DaoValue *value = DaoList_GetItem( ") + lpar + ", _i );\n";
-			pre_call += "    " + name + "[_i] = DaoValue_TryCastCdata( value, " + typer + " );\n  }\n";
+			pre_call += "    " + name + "[_i] = (" + var.cxxtype;
+			pre_call += ")DaoValue_TryCastCdata( value, " + typer + " );\n  }\n";
 
 			if( names.size() > 1 && names[1] != "" ){
 				post_call = string("  DaoList_Clear( ") + lpar + " );\n";
@@ -1062,12 +1070,49 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		if( names.size() > 1 && names[1] != "" )
 			post_call = string("    DString_Resize( _str, ") + names[1] + " );\n";
 		return 0;
+	}else if( qtype2->isPointerType() && daopar_index >= 0 && isconst == false ){
+		QualType qtype3 = qtype2->getPointeeType();
+		CDaoUserType *UT = module->HandleUserType( qtype3, location );
+		bool isconst2 = qtype2.getCVRQualifiers() & Qualifiers::Const;
+		isconst2 |= qtype3.getCVRQualifiers() & Qualifiers::Const;
+		if( isconst2 == false && UT != NULL ){
+			if( UT->unsupported ) return 1;
+			UT->used = true;
+			if( qtype3.getAsString() == "FILE" ){
+#warning"====================FILE**"
+				daotype = "stream";
+				cxxtype = "FILE";
+				extraReturn = true;
+				tpl.daopar = daopar_stream;
+				tpl.dao2cxx = dao2cxx_stream;
+				tpl.getres = getres_stream;
+				tpl.ctxput = ctxput_stream;
+				tpl.cache = cache_stream;
+				tpl.cxx2dao = cxx2dao_stream;
+				if( daodefault == "0" || daodefault == "NULL" ) daodefault = "io";
+			}else{
+				daotype = cdao_make_dao_template_type_name( UT->qname );
+				extraReturn = true;
+				cxxtype2 = UT->qname;
+				cxxtyper = UT->idname;
+				tpl.daopar = daopar_user;
+				tpl.ctxput = ctxput_user;
+				tpl.cache = cache_user;
+				tpl.getres = getres_user;
+				tpl.dao2cxx = dao2cxx_user2;
+				tpl.cxx2dao = cxx2dao_user;
+				if( daodefault == "0" || daodefault == "NULL" ){
+					daodefault = "none";
+					isNullable = true;
+				}
+			}
+			cxxcall = "&" + name;
+			tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+			return 0;
+		}
+		return 1;
 	}
 
-	CDaoVarTemplates tpl;
-	map<string,string> kvmap;
-	kvmap[ "size" ] = "0";
-	kvmap[ "dao" ] = "";
 	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() ){
 		const BuiltinType *type = qtype2->getAs<BuiltinType>();
 		daotype = "int";
@@ -1234,7 +1279,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		return 1;
 	}
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
-	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+		extraReturn = false;
+		parset = "";
+	}
 	return 0;
 }
 int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
@@ -1827,7 +1875,13 @@ void CDaoVariable::MakeCxxParameter( QualType qtype, string & prefix, string & s
 		// const C & other: const is part of the name, not a qualifier.
 		prefix = cdao_substitute_typenames(qtype.getUnqualifiedType().getAsString()) + prefix;
 	}
-	if( qtype.getCVRQualifiers() & Qualifiers::Const ) prefix = "const " + prefix;
+	if( qtype.getCVRQualifiers() & Qualifiers::Const ){
+		if( type->isPointerType() ){
+			prefix = prefix + "const ";
+		}else{
+			prefix = "const " + prefix;
+		}
+	}
 }
 QualType CDaoVariable::GetStrippedType( QualType qtype )
 {

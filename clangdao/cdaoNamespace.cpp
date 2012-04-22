@@ -21,25 +21,35 @@ CDaoNamespace::CDaoNamespace( CDaoModule *mod, const NamespaceDecl *decl )
 		varname = cdao_qname_to_idname( varname );
 	}
 }
+void CDaoNamespace::HandleDeclaration( Decl *D )
+{
+	if( LinkageSpecDecl *TUD = dyn_cast<LinkageSpecDecl>(D) ){
+		DeclContext::decl_iterator it, end;
+		for(it=TUD->decls_begin(),end=TUD->decls_end(); it!=end; it++){
+			HandleDeclaration( *it );
+		}
+	}
+	if (VarDecl *var = dyn_cast<VarDecl>(D)) {
+		variables.push_back( var );
+	}else if (EnumDecl *e = dyn_cast<EnumDecl>(D)) {
+		enums.push_back( e );
+	}else if (FunctionDecl *func = dyn_cast<FunctionDecl>(D)) {
+		AddFunction( new CDaoFunction( module, func ) );
+	}else if (RecordDecl *record = dyn_cast<RecordDecl>(D)) {
+		QualType qtype( record->getTypeForDecl(), 0 );
+		AddUserType( module->HandleUserType( qtype, record->getLocation() ) );
+	}else if (NamespaceDecl *nsdecl = dyn_cast<NamespaceDecl>(D)) {
+		CDaoNamespace *ns = module->AddNamespace( nsdecl );
+		if( ns ) namespaces.push_back( ns );
+	}else if( TypedefDecl *decl = dyn_cast<TypedefDecl>(D) ){
+		module->HandleTypeDefine( decl );
+	}
+}
 void CDaoNamespace::HandleExtension( NamespaceDecl *nsdecl )
 {
 	NamespaceDecl::decl_iterator it, end;
 	for(it=nsdecl->decls_begin(),end=nsdecl->decls_end(); it!=end; it++){
-		if (VarDecl *var = dyn_cast<VarDecl>(*it)) {
-			variables.push_back( var );
-		}else if (EnumDecl *e = dyn_cast<EnumDecl>(*it)) {
-			enums.push_back( e );
-		}else if (FunctionDecl *func = dyn_cast<FunctionDecl>(*it)) {
-			AddFunction( new CDaoFunction( module, func ) );
-		}else if (RecordDecl *record = dyn_cast<RecordDecl>(*it)) {
-			QualType qtype( record->getTypeForDecl(), 0 );
-			AddUserType( module->HandleUserType( qtype, record->getLocation() ) );
-		}else if (NamespaceDecl *nsdecl = dyn_cast<NamespaceDecl>(*it)) {
-			CDaoNamespace *ns = module->AddNamespace( nsdecl );
-			if( ns ) namespaces.push_back( ns );
-		}else if( TypedefDecl *decl = dyn_cast<TypedefDecl>(*it) ){
-			module->HandleTypeDefine( decl );
-		}
+		HandleDeclaration( *it );
 	}
 }
 int CDaoNamespace::Generate( CDaoNamespace *outer )
@@ -62,7 +72,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 	}
 #endif
 
-	header = module->MakeHeaderCodes( usertypes );
+	header = "";
 	source = module->MakeSourceCodes( functions, this );
 	//source += module->MakeSourceCodes( usertypes, this );
 	//source2 = module->MakeSource2Codes( usertypes );
@@ -76,11 +86,14 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 
 		outer_name = cdao_qname_to_idname( outer_name );
 		if( outer == NULL || outer->nsdecl == NULL ){
-			if( name == "std" ) name = "stdcxx";
+			header += "using namespace " + name + ";\n";
+			if( name == "std" ) name = "_std";
+			if( name == "io" ) name = "_io";
 			onload += "\tDaoNamespace *" + this_name + " = DaoVmSpace_GetNamespace( ";
 			onload += "vms, \"" + name + "\" );\n";
 			onload2 += "\tDaoNamespace_AddConstValue( ns, \"" + name + "\", (DaoValue*) " + this_name + " );\n";
 		}else{
+			header += "using namespace " + qname + ";\n";
 			onload += "\tDaoNamespace *" + this_name + " = DaoNamespace_GetNamespace( ";
 			onload += outer_name + ", \"" + name + "\" );\n";
 		}
@@ -100,6 +113,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 		}
 		onload3 += module->MakeConstStruct( variables, "ns", "" );
 	}
+	//header += module->MakeHeaderCodes( usertypes );
 
 	onload3 += module->MakeOnLoadCodes( functions, this );
 	//onload3 += module->MakeOnLoad2Codes( usertypes );
