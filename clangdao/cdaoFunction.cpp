@@ -398,7 +398,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 	}
 	sig = fname + proto;
 	it = module->functionHints.find( sig );
-	//outs() << "search hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
+	//outs() << "searching hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
 	if( it != module->functionHints.end() ){
 		SetHints( it->second, sig );
 		return;

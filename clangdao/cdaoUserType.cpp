@@ -741,6 +741,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	forceOpaque = false;
 	dummyTemplate = false;
 	isQObject = isQObjectBase = false;
+	isMBString = isWCString = false;
 	wrapCount = 0;
 	wrapType = CDAO_WRAP_TYPE_NONE;
 	alloc_default = "NULL";
@@ -749,6 +750,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 }
 void CDaoUserType::SetDeclaration( RecordDecl *decl )
 {
+	size_t pos;
 	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
 	this->decl = decl;
 	location = decl->getLocation();
@@ -757,9 +759,24 @@ void CDaoUserType::SetDeclaration( RecordDecl *decl )
 	qname = CDaoModule::GetQName( decl );
 	idname = CDaoModule::GetIdName( decl );
 	name = name2 = decl->getNameAsString();
-	size_t pos;
 	if( (pos = name.find( '<' )) != string::npos ) name.erase( pos );
+	if( isC && decl->isStruct() ){
+		if( qname.find( "struct " ) != 0 ) qname = "struct " + qname;
+	}else if( isC && decl->isUnion() ){
+		if( qname.find( "union " ) != 0 ) qname = "union " + qname;
+	}
+	if( qname.find( "class " ) == 0 ){
+		outs()<<qname<<"-------------------\n";
+		exit(0);
+	}
+	SearchHints();
+}
+void CDaoUserType::SearchHints()
+{
+	string qname = this->qname;
+	size_t pos;
 
+	while( (pos = qname.find( "> >" )) != string::npos ) qname.replace( pos, 3, ">>" );
 	map<string,vector<string> >::iterator it = module->functionHints.find( qname );
 	if( it == module->functionHints.end() ){
 		string qname2 = qname;
@@ -771,11 +788,10 @@ void CDaoUserType::SetDeclaration( RecordDecl *decl )
 		var.SetHints( it->second[0] );
 		if( var.unsupported ) forceOpaque = true;
 		useTypeTag = var.useTypeTag;
-	}
-	if( isC && decl->isStruct() ){
-		if( qname.find( "struct " ) != 0 ) qname = "struct " + qname;
-	}else if( isC && decl->isUnion() ){
-		if( qname.find( "union " ) != 0 ) qname = "union " + qname;
+		isMBString = var.isMBS;
+		isWCString = var.isWCS;
+		if( isMBString or isWCString ) toChars = var.names[0];
+		if( var.hasBaseHint ) baseFromHint = var.names;
 	}
 }
 void CDaoUserType::SetNamespace( const CDaoNamespace *ns )
@@ -823,6 +839,8 @@ int CDaoUserType::Generate()
 {
 	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
 	RecordDecl *dd = decl->getDefinition();
+
+	SearchHints();
 
 #if 0
 	if( dd != NULL && dd != decl ){
@@ -930,9 +948,9 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 	kvmap[ "qname" ] = qname;
 	kvmap[ "idname" ] = idname;
 	kvmap[ "cxxname" ] = name;
-	kvmap[ "daoname" ] = name;
 	kvmap[ "name" ] = name;
 	kvmap[ "name2" ] = name2;
+	kvmap[ "daoname" ] = cdao_make_dao_template_type_name( qname );
 	kvmap[ "daotypename" ] = cdao_make_dao_template_type_name( qname );
 
 	kvmap[ "retype" ] = "=>" + name;
@@ -1431,6 +1449,24 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap[ "meths" ] = dao_meths;
 	kvmap["constructors"] = "";
 	kvmap[ "comment" ] = has_public_destructor ? "" : "//";
+
+	string parents, casts, cast_funcs;
+	for(i=0,n=bases.size(); i<n; i++){
+		CDaoUserType *sup = bases[i];
+		string supname = sup->qname;
+		string supname2 = sup->idname;
+		parents += "dao_" + supname2 + "_Typer, ";
+		casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
+		kvmap[ "parent" ] = supname;
+		kvmap[ "parent2" ] = supname2;
+		cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
+	}
+	for(i=0,n=baseFromHint.size(); i<n; i++){
+		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
+		parents += "dao_" + supname2 + "_Typer, ";
+	}
+	kvmap[ "parents" ] = parents;
+
 	//outs()<<qname<<": "<<wrapType<<" "<<has_private_ctor_only<<" "<<hasVirtual<<"\n";
 	if( wrapType == CDAO_WRAP_TYPE_DIRECT ){
 		kvmap[ "class" ] = name;
@@ -1608,18 +1644,6 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	type_codes += cdao_string_fill( tpl_class_init, kvmap );
 	type_codes += cxxWrapperVirt;
 
-	string parents, casts, cast_funcs;
-	for(i=0,n=bases.size(); i<n; i++){
-		CDaoUserType *sup = bases[i];
-		string supname = sup->qname;
-		string supname2 = sup->idname;
-		parents += "dao_" + supname2 + "_Typer, ";
-		casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
-		kvmap[ "parent" ] = supname;
-		kvmap[ "parent2" ] = supname2;
-		cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
-	}
-	kvmap[ "parents" ] = parents;
 	kvmap[ "casts" ] = casts;
 	kvmap[ "cast_funcs" ] = cast_funcs;
 	kvmap[ "alloc" ] = alloc_default;

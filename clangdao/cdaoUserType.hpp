@@ -49,6 +49,8 @@ struct CDaoUserType
 	bool   isRedundant2;
 	bool   isQObject;
 	bool   isQObjectBase;
+	bool   isMBString;
+	bool   isWCString;
 	bool   useTypeTag;
 	bool   used;
 
@@ -57,6 +59,7 @@ struct CDaoUserType
 	string  qname; // qualified name: std::vector<int>, SomeNamespace::SomeClass;
 	string  idname; // identification name: std_0_vector_1_int_2_, SomeNamespace_0_SomeClass;
 
+	string  toChars;
 	string  gcfields;
 
 	string  set_fields;
@@ -69,6 +72,8 @@ struct CDaoUserType
 	string  cxxWrapperVirt;
 	string  typer_codes;
 
+	vector<string> baseFromHint;
+
 	vector<CDaoUserType*>    priorUserTypes;
 
 	/* All virtual methods (including inherited but not overridden ones)
@@ -80,6 +85,7 @@ struct CDaoUserType
 
 	void SetDeclaration( RecordDecl *decl );
 	void SetNamespace( const CDaoNamespace *NS );
+	void SearchHints();
 
 	string GetName()const{ return decl ? decl->getNameAsString() : ""; }
 	string GetQName()const{ return decl ? decl->getQualifiedNameAsString() : ""; }

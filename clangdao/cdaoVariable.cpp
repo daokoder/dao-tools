@@ -24,6 +24,8 @@ const string daopar_user = "$(name) :$(daotype)$(default)";
 const string daopar_userdata = "$(name) :any$(default)"; // for callback data
 const string daopar_callback = "$(name) :any"; // for callback, no precise type yet! XXX
 
+const string daopar_daovalue = "$(name) :any$(default)";
+
 const string dao2cxx = "  $(cxxtype) $(name) = ($(cxxtype)) ";
 const string dao2cxx2 = "  $(cxxtype)* $(name) = ($(cxxtype)*) ";
 const string dao2cxx3 = "  $(cxxtype)* $(name) = ($(cxxtype)*) ";
@@ -57,6 +59,7 @@ const string dao2cxx_dmat = dao2cxx3 + "DaoArray_GetMatrixD( (DaoArray*)_p[$(ind
 const string dao2cxx_c8mat = dao2cxx3 + "(complex8*) DaoArray_GetMatrixF( (DaoArray*)_p[$(index)], $(size) );\n";
 const string dao2cxx_c16mat = dao2cxx3 + "(complex16*) DaoArray_GetMatrixD( (DaoArray*)_p[$(index)], $(size) );\n";
 
+
 const string dao2cxx_ubmat = dao2cxx_bmat; // TODO:
 const string dao2cxx_usmat = dao2cxx_smat;
 const string dao2cxx_uimat = dao2cxx_imat;
@@ -75,6 +78,9 @@ const string dao2cxx_uimat2 = dao2cxx_imat2;
 
 
 const string dao2cxx_stream = dao2cxx2 + "DaoStream_GetFile( (DaoStream*)_p[$(index)] );\n";
+
+const string dao2cxx_daovalue = 
+"  $(cxxtype)* $(name) = ($(cxxtype)*) _p[$(index)];\n";
 
 const string dao2cxx_void = 
 "  $(cxxtype)* $(name) = ($(cxxtype)*) DaoValue_TryGetCdata( _p[$(index)] );\n";
@@ -142,6 +148,8 @@ const string cxx2dao_stream = cxx2dao + "Stream( _proc, (FILE*) $(refer) );\n";
 const string cxx2dao_voidp = "  DaoProcess_NewCdata( _proc, NULL, (void*) $(refer), 0 );\n";
 const string cxx2dao_user = "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*) $(refer), 0 );\n";
 
+const string cxx2dao_daovalue = "  DaoProcess_CacheValue( _proc, (DaoValue*) $(refer) );\n";
+
 const string cxx2dao_userdata = "  DaoProcess_CacheValue( _proc, $(name) );\n";
 
 const string cxx2dao_qchar = cxx2dao+"Integer( _proc, $(name).digitValue() );\n";
@@ -168,6 +176,8 @@ const string ctxput_doubles = ctxput + "VectorD( _proc, (double*) $(name), $(siz
 const string ctxput_stream = ctxput + "File( _proc, (FILE*) $(name) );\n"; //XXX PutFile
 const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
 const string ctxput_user = "  DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
+
+const string ctxput_daovalue = ctxput + "Value( _proc, (DaoValue*) $(name) );\n";
 
 
 const string qt_procput = "  Dao_$(typer)_InitSS( ($(cxxtype)*) $(name) );\n";
@@ -208,12 +218,31 @@ const string cache_stream = cache + "Stream( _proc, (FILE*) $(name) );\n"; //XXX
 const string cache_voidp = cache + "Cdata( _proc, NULL, (void*) $(name), 1 );\n";
 const string cache_user = "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*) $(name), 0 );\n";
 
+const string cache_daovalue = cache + "Value( _proc, (DaoValue*) $(name) );\n";
+
 const string cache_copycdata =
 "  DaoProcess_CopyCdata( _proc, (void*)&$(name), sizeof($(cxxtype)), dao_type_$(typer) );\n";
 const string cache_newcdata =
 "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*)new $(cxxtype)( $(name) ), 1 );\n";
 const string cache_refcdata =
 "  DaoProcess_NewCdata( _proc, dao_type_$(typer), (void*)&$(name), 0 );\n";
+
+
+const string dao2cxx_mbs_class = "  $(cxxtype) $(name)( DaoValue_TryGetMBString( _p[$(index)] ) );\n";
+const string dao2cxx_wcs_class = "  $(cxxtype) $(name)( DaoValue_TryGetWCString( _p[$(index)] ) );\n";
+
+const string cxx2dao_mbs_class = cxx2dao 
++ "MBString( _proc, (char*) $(name).$(tochars)(), strlen( (char*)$(name).$(tochars)() ) );\n";
+const string cxx2dao_wcs_class = cxx2dao 
++ "WCString( _proc, (wchar_t*) $(name).$(tochars)(), wcslen( (wchar_t*)$(name).$(tochars)() ) );\n";
+
+const string ctxput_mbs_class = ctxput + "MBString( _proc, (char*) $(name).$(tochars)() );\n";
+const string ctxput_wcs_class = ctxput + "WCString( _proc, (wchar_t*) $(name).$(tochars)() );\n";
+
+const string cache_mbs_class = cache + "MBString( _proc, (char*) $(name).$(tochars)(), -1 );\n";
+const string cache_wcs_class = cache + "WCString( _proc, (wchar_t*) $(name).$(tochars)(), -1 );\n";
+
+
 
 #if 0
 const string qt_qlist_decl = 
@@ -431,6 +460,11 @@ const string getres_doubles = getres_a + "DaoArray_ToDouble( (DaoArray*)_res );\
 const string getres_stream = getres_io + "DaoStream_GetFile( (DaoArray*)_res );\n";
 const string getres_buffer = getres_p + "DaoValue_TryGetCdata( _res );\n";
 
+const string getres_mbs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
+" DaoValue_TryGetMBString( _res ) );\n";
+const string getres_wcs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
+" DaoValue_TryGetWCString( _res ) );\n";
+
 const string getres_qchar =
 "  if(DaoValue_CastInteger(_res)) $(name)= QChar(DaoValue_TryGetInteger(_res));\n";
 const string getres_qbytearray =
@@ -582,6 +616,28 @@ struct CDaoVarTemplates
 		//parset = parset_wcs;
 		getres = getres_wcs;
 	}
+	void SetupMBString( const string & tochars ){
+		map<string,string> kvmap;
+		kvmap["tochars"] = tochars;
+		daopar = cdao_string_fill( daopar_string, kvmap );
+		dao2cxx = cdao_string_fill( dao2cxx_mbs_class, kvmap );
+		cxx2dao = cdao_string_fill( cxx2dao_mbs_class, kvmap );
+		ctxput = cdao_string_fill( ctxput_mbs_class, kvmap );
+		cache = cdao_string_fill( cache_mbs_class, kvmap );
+		//parset = cdao_string_fill( parset_mbs, kvmap );
+		getres = cdao_string_fill( getres_mbs_class, kvmap );
+	}
+	void SetupWCString( const string & tochars ){
+		map<string,string> kvmap;
+		kvmap["tochars"] = tochars;
+		daopar = cdao_string_fill( daopar_string, kvmap );
+		dao2cxx = cdao_string_fill( dao2cxx_wcs_class, kvmap );
+		cxx2dao = cdao_string_fill( cxx2dao_wcs_class, kvmap );
+		ctxput = cdao_string_fill( ctxput_wcs_class, kvmap );
+		cache = cdao_string_fill( cache_wcs_class, kvmap );
+		//parset = cdao_string_fill( parset_wcs, kvmap );
+		getres = cdao_string_fill( getres_wcs_class, kvmap );
+	}
 };
 void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, int daopid, int cxxpid )
 {
@@ -594,6 +650,7 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 
 	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
 	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
+	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
 	kvmap[ "typer" ] = typer;
@@ -603,6 +660,8 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	kvmap[ "index" ] = sindex;
 	kvmap[ "default" ] = dft;
 	kvmap[ "refer" ] = var->qualtype->isPointerType() ? var->name : "&" + var->name;
+	if( var->hostype && var->hostype->name == "string" && var->daotype == "string" )
+		kvmap[ "dao" ] = "dao::";
 	if( var->isCallback ){
 		var->cxxtype = normalize_type_name( var->qualtype.getAsString() );
 		kvmap[ "cxxtype" ] = var->cxxtype;
@@ -647,6 +706,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	unsupported = false;
 	useTypeTag = false;
 	useDefault = true;
+	hasBaseHint = false;
 	hasDaoTypeHint = false;
 	isArithmeticType = false;
 	isObjectType = false;
@@ -657,6 +717,8 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	readonly = false;
 	ispixels = false;
 	isbuffer = false;
+	isMBS = false;
+	isWCS = false;
 	SetDeclaration( decl );
 }
 void CDaoVariable::SetQualType( QualType qtype, SourceLocation loc )
@@ -716,7 +778,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "mbstring" || hint == "wcstring" || hint == "base" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & sizes;
 			if( hint == "qname" ) parts = & scopes;
@@ -728,6 +790,15 @@ void CDaoVariable::SetHints( const string & hints )
 			}else if( hint == "buffer" ){
 				parts = & names;
 				isbuffer = true;
+			}else if( hint == "mbstring" ){
+				parts = & names;
+				isMBS = true;
+			}else if( hint == "wcstring" ){
+				parts = & names;
+				isWCS = true;
+			}else if( hint == "base" ){
+				parts = & names;
+				hasBaseHint = true;
 			}
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
@@ -806,7 +877,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		daodefault = module->ExtractSource( range, true );
 		if( daodefault.find( '=' ) == 0 ) daodefault.erase(0,1);
 
-		for(int i=0,n=scopes.size(); i<n; i++){
+		for(int i=scopes.size()-1; i>=0; i--){
 			daodefault = scopes[i] + "::" + daodefault;
 			cxxdefault = scopes[i] + "::" + cxxdefault;
 		}
@@ -850,6 +921,8 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 	QualType canotype = qualtype.getCanonicalType();
 	string ctypename = cdao_substitute_typenames( canotype.getAsString() );
 	cxxtype2 = cdao_substitute_typenames( GetStrippedTypeName( canotype ) );
+	//XXX
+	if( cxxtype2.find( "class " ) == 0 ) cxxtype2.erase( 0, 6 );
 	cxxtype = ctypename;
 	cxxcall = name;
 	//outs() << cxxtype << " " << cxxdefault << "  " << type->getTypeClassName() << "\n";
@@ -863,7 +936,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 	map<string,string> kvmap;
 	if( daodefault.size() > 1 ){
 		int m = daodefault.size();
-		if( daodefault[m-1] == 'f' && isdigit( daodefault[m-2] ) ) daodefault.erase( m-1 );
+		if( daodefault[m-1] == 'f' && isdigit( daodefault[0] ) ) daodefault[m-1] = '0';
 	}
 	if( canotype->isBuiltinType() ){
 		return GenerateForBuiltin( daopar_index, cxxpar_index );
@@ -881,6 +954,27 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		return 0;
 	}else if( CDaoUserType *UT = module->HandleUserType( canotype, location ) ){
 		if( UT->unsupported ) return 1;
+		if( hostype != UT and UT->isMBString ){
+			daotype = "string";
+			cxxcall = name;
+			tpl.SetupMBString( UT->toChars );
+			tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+			if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+				extraReturn = false;
+				parset = "";
+			}
+			return 0;
+		}else if( hostype == UT and UT->isWCString ){
+			daotype = "string";
+			cxxcall = name;
+			tpl.SetupWCString( UT->toChars );
+			tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+			if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+				extraReturn = false;
+				parset = "";
+			}
+			return 0;
+		}
 		UT->used = true;
 		daotype = cdao_make_dao_template_type_name( UT->qname );
 		cxxtype2 = UT->qname;
@@ -1236,6 +1330,13 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.dao2cxx = dao2cxx_userdata;
 			tpl.cxx2dao = cxx2dao_userdata;
 			kvmap[ "callback" ] = callback;
+		}else if( hasDaoTypeHint && hintDaoType == "any" ){
+			daotype = "any";
+			tpl.daopar = daopar_daovalue;
+			tpl.dao2cxx = dao2cxx_daovalue;
+			tpl.cxx2dao = cxx2dao_daovalue;
+			tpl.ctxput = ctxput_daovalue;
+			tpl.cache = cache_daovalue;
 		}else{
 			daotype = "cdata";
 			tpl.daopar = daopar_buffer;
@@ -1292,6 +1393,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 	QualType qtype2 = canotype->getPointeeType();
 
 	CDaoVarTemplates tpl;
+	map<string,string> kvmap;
 	if( qtype2->isBuiltinType() and qtype2->isArithmeticType() ){
 		const BuiltinType *type = qtype2->getAs<BuiltinType>();
 		daotype = "int";
@@ -1349,6 +1451,27 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		tpl.parset = parset_int;
 	}else if( CDaoUserType *UT = module->HandleUserType( qtype1, location ) ){
 		if( UT->unsupported ) return 1;
+		if( hostype != UT and UT->isMBString ){
+			daotype = "string";
+			cxxcall = name;
+			tpl.SetupMBString( UT->toChars );
+			tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+			if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+				extraReturn = false;
+				parset = "";
+			}
+			return 0;
+		}else if( hostype == UT and UT->isWCString ){
+			daotype = "string";
+			cxxcall = name;
+			tpl.SetupWCString( UT->toChars );
+			tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
+			if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+				extraReturn = false;
+				parset = "";
+			}
+			return 0;
+		}
 		UT->used = true;
 		daotype = cdao_make_dao_template_type_name( UT->qname );
 		cxxtype2 = UT->qname;
@@ -1367,7 +1490,6 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 	}else{
 		return 1;
 	}
-	map<string,string> kvmap;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
 	return 0;

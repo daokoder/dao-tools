@@ -47,6 +47,9 @@ struct CDaoVariable
 	bool    ispixels; // field for image pixels
 	bool    isbuffer;
 	bool    hasDaoTypeHint;
+	bool    hasBaseHint;
+	bool    isMBS;
+	bool    isWCS;
 	string  name;
 	string  cxxdefault;
 	string  daodefault;
