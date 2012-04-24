@@ -1004,6 +1004,19 @@ void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,stri
 	CDaoVariable field( module );
 	field.SetQualType( fit->getTypeSourceInfo()->getType(), location );
 	field.name = fit->getNameAsString();
+
+	if( fit->isAnonymousStructOrUnion() ){
+		outs()<<field.name<<"------------------------------\n";
+		const RecordType *RT = field.qualtype->getAsStructureType();
+		if( RT == NULL ) RT = field.qualtype->getAsUnionType();
+		RecordDecl *RD = RT->getDecl();
+		// Handle injected fields:
+		RecordDecl::field_iterator fit, fend;
+		for(fit=RD->field_begin(),fend=RD->field_end(); fit!=fend; fit++){
+			if( fit->getAccess() != AS_public ) continue;
+			WrapField( fit, kvmap );
+		}
+	}
 	if( field.name == "" || field.name[0] == '_' ) return;
 
 	size_t pos;
@@ -1432,6 +1445,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	} // isQObject
 
 	if( has_implicit_default_ctor ){
+		kvmap[ "daoname" ] = name;
 		dao_meths = cdao_string_fill( dao_proto, kvmap ) + dao_meths;
 		meth_decls = cdao_string_fill( cxx_wrap_proto, kvmap ) + ";\n" + meth_decls;
 		if( wrapType == CDAO_WRAP_TYPE_DIRECT ){
@@ -1443,6 +1457,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			class_new += cdao_string_fill( tpl_class_new, kvmap );
 			type_codes += cdao_string_fill( tpl_class_init2, kvmap );
 		}
+		kvmap[ "daoname" ] = cdao_make_dao_template_type_name( qname );
 	}
 	kvmap[ "nums" ] = module->MakeConstNumItems( enums, vars, qname, true );
 	kvmap[ "decls" ] = meth_decls;

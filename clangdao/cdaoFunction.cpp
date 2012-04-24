@@ -67,11 +67,39 @@ const string cxx_call_static2_d3 =
 
 
 const string cxx_call_new = 
-"	$(host_qname) *_self = Dao_$(host_idname)_New( $(parlist) );\n\
-	DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n";
+"  $(host_qname) *_self = new $(host_qname)( $(parlist) );\n\
+  DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
+;
+const string cxx_call_new_d1 = 
+"  $(host_qname) *_self = NULL;\n\
+  if(_n<=$(n1)) _self = new $(host_qname)( $(parlist1) );\n"
+;
+const string cxx_call_new_d2 = 
+"  else if(_n<=$(n%i)) _self = new $(host_qname)( $(parlist%i) );\n"
+;
+const string cxx_call_new_d3 = 
+"  else _self = new $(host_qname)( $(parlist) );\n\
+  DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
+;
+
 const string cxx_call_new2 = 
-"	DaoCxx_$(host_idname) *_self = DaoCxx_$(host_idname)_New( $(parlist) );\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
+"  DaoCxx_$(host_idname) *_self = new DaoCxx_$(host_idname)( $(parlist) );\n\
+  _self->DaoInitWrapper();\n\
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
+;
+const string cxx_call_new2_d1 = 
+"  DaoCxx_$(host_idname) *_self = NULL;\n\
+  if(_n<=$(n1)) _self = new DaoCxx_$(host_idname)( $(parlist1) );\n"
+;
+const string cxx_call_new2_d2 = 
+"  else if(_n<=$(n%i)) _self = new DaoCxx_$(host_idname)( $(parlist%i) );\n"
+;
+const string cxx_call_new2_d3 = 
+"  else _self = new DaoCxx_$(host_idname)( $(parlist) );\n\
+  _self->DaoInitWrapper();\n\
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
+;
+
 
 const string dao_proto =
 "  { dao_$(func_idname)$(overload), \"$(daoname)( $(parlist) )$(retype)\" },\n";
@@ -859,9 +887,23 @@ int CDaoFunction::Generate()
 	if( hostype && ctordecl != NULL and not excluded ){
 		//kvmap[ 'parlist' ] = ''; // XXX disable parameters at the moment
 		if( hostype->wrapType == CDAO_WRAP_TYPE_PROXY ){
-			cxxCallCodes = cdao_string_fill( cxx_call_new2, kvmap );
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_new2, kvmap );
+			}else{
+				string tmp = cxx_call_new2_d1;
+				tmp += cdao_make_temp( cxx_call_new2_d2, dd );
+				tmp += cxx_call_new2_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
 		}else if( hostype->wrapType == CDAO_WRAP_TYPE_DIRECT ){
-			cxxCallCodes = cdao_string_fill( cxx_call_new, kvmap );
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_call_new, kvmap );
+			}else{
+				string tmp = cxx_call_new_d1;
+				tmp += cdao_make_temp( cxx_call_new_d2, dd );
+				tmp += cxx_call_new_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
 		}
 		//if( parlist.size() ) cxxCallCodes = ''; // XXX maybe there is no default constru
 	}else if( retype.daotype != "" ){

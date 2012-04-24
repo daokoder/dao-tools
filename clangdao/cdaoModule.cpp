@@ -220,15 +220,12 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 			//outs() << (void*)SD << ": " << GetFileName( loc ) << "\n";
 			//if( qualtype.getAsString().find( "__normal_iterator" ) != string::npos ) free((void*)12);
 
-#if 0
 			DE = cast_or_null<ClassTemplateSpecializationDecl>( SD->getDefinition());
 			if( DE == NULL ){
-				TemplateSpecializationKind kind = TSK_ExplicitSpecialization;
+				TemplateSpecializationKind kind = TSK_ImplicitInstantiation;
 				Sema & sm = compiler->getSema();
-				// this does not work for Irrlicht engine:
 				sm.InstantiateClassTemplateSpecialization( loc, SD, kind );
 			}
-#endif
 			SD->setPointOfInstantiation( loc );
 
 			CDaoUserType *UT = NewUserType( SD );

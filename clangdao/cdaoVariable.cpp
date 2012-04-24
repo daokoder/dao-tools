@@ -1380,9 +1380,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		return 1;
 	}
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
-	if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
+	if( qtype2.getCVRQualifiers() & Qualifiers::Const ){
 		extraReturn = false;
 		parset = "";
+		setter = "";
 	}
 	return 0;
 }
@@ -1483,6 +1484,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		tpl.getres = getres_user;
 		tpl.dao2cxx = dao2cxx_user2;
 		tpl.cxx2dao = cxx2dao_user;
+		if( daodefault.size() ) useDefault = false;
 		if( daodefault == "0" || daodefault == "NULL" ){
 			daodefault = "none";
 			isNullable = true;
@@ -1674,7 +1676,10 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 	if( size.size() == 0 ) size = "0";
 	kvmap[ "size" ] = size;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
-	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
+		parset = "";
+		setter = "";
+	}
 	return 0;
 }
 int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2, int dpid, int cpid )
@@ -1795,7 +1800,10 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 	kvmap[ "size" ] = size;
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
-	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
+		parset = "";
+		setter = "";
+	}
 	return 0;
 }
 int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size2, int dpid, int cpid )
@@ -1916,7 +1924,10 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 	kvmap[ "size" ] = size;
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
-	if( qualtype.getCVRQualifiers() & Qualifiers::Const ) parset = "";
+	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
+		parset = "";
+		setter = "";
+	}
 	return 0;
 }
 void CDaoVariable::MakeCxxParameter( string & prefix, string & suffix )
