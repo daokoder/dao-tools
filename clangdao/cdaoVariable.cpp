@@ -826,6 +826,9 @@ void CDaoVariable::SetHints( const string & hints )
 				}else if( s == "COMMA" ){
 					parts->back() += ",";
 					concat = 1;
+				}else if( s == "COLON2" ){
+					parts->back() += "::";
+					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
 					concat = 0;
@@ -934,9 +937,9 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 	CDaoVarTemplates tpl;
 	tpl.SetupIntScalar();
 	map<string,string> kvmap;
-	if( daodefault.size() > 1 ){
-		int m = daodefault.size();
-		if( daodefault[m-1] == 'f' && isdigit( daodefault[0] ) ) daodefault[m-1] = '0';
+	int m = daodefault.size();
+	if( m > 1 && daodefault[m-1] == 'f' ){
+		if( daodefault.find( '.' ) != string::npos ) daodefault[m-1] = '0';
 	}
 	if( canotype->isBuiltinType() ){
 		return GenerateForBuiltin( daopar_index, cxxpar_index );
@@ -981,7 +984,10 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		cxxtyper = UT->idname;
 		cxxcall = "*" + name;
 		isObjectType = true;
-		if( daodefault.size() ) useDefault = false;
+		if( daodefault.size() ){
+			daodefault = "0";
+			useDefault = false;
+		}
 		tpl.daopar = daopar_user;
 		tpl.getres = getres_user2;
 		tpl.dao2cxx = dao2cxx_user2;
@@ -997,6 +1003,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 			}
 		}else{
 			tpl.ctxput = ctxput_refcdata;
+			tpl.cache = cache_refcdata;
 		}
 		if( daodefault == "0" || daodefault == "NULL" ){
 			daodefault = "none";
@@ -1233,7 +1240,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			cxxcall = name;
 			tpl.SetupWCString();
 			//tpl.parset = parset_wcs;
-			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\"\"";
+			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\\\"\\\"";
 			break;
 		case BuiltinType::UShort :
 		case BuiltinType::Bool :
@@ -1484,7 +1491,10 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		tpl.getres = getres_user;
 		tpl.dao2cxx = dao2cxx_user2;
 		tpl.cxx2dao = cxx2dao_user;
-		if( daodefault.size() ) useDefault = false;
+		if( daodefault.size() ){
+			daodefault = "0";
+			useDefault = false;
+		}
 		if( daodefault == "0" || daodefault == "NULL" ){
 			daodefault = "none";
 			isNullable = true;

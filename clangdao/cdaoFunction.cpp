@@ -12,14 +12,14 @@ const string cxx_call_proto =
 "  $(retype) $(name) = $(func_call)( $(parlist) );\n";
 
 const string cxx_call_proto_d1 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(func_call)( $(parlist1) );\n"
+"  $(retype2) $(pointer)$(prefix)$(name);\n\
+  if(_n<=$(n1)) $(prefix)$(name) = $(reference)$(func_call)( $(parlist1) );\n"
 ;
 const string cxx_call_proto_d2 = 
-"  else if(_n<=$(n%i)) $(name) = $(func_call)( $(parlist%i) );\n"
+"  else if(_n<=$(n%i)) $(prefix)$(name) = $(reference)$(func_call)( $(parlist%i) );\n"
 ;
 const string cxx_call_proto_d3 = 
-"  else $(name) = $(func_call)( $(parlist) );\n"
+"  else $(prefix)$(name) = $(reference)$(func_call)( $(parlist) );\n"
 ;
 
 
@@ -41,15 +41,17 @@ const string cxx_call_static =
 "  $(retype) $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n";
 
 const string cxx_call_static_d1 = 
-"  $(retype) $(name);\n\
-  if(_n<=$(n1)) $(name) = $(host_qname)::$(cxxname)( $(parlist1) );\n"
+"  $(retype2) $(pointer)$(prefix)$(name);\n\
+  if(_n<=$(n1)) $(prefix)$(name) = $(reference)$(host_qname)::$(cxxname)( $(parlist1) );\n"
 ;
 const string cxx_call_static_d2 = 
-"  else if(_n<=$(n%i)) $(name) = $(host_qname)::$(cxxname)( $(parlist%i) );\n"
+"  else if(_n<=$(n%i)) $(prefix)$(name) = $(reference)$(host_qname)::$(cxxname)( $(parlist%i) );\n"
 ;
 const string cxx_call_static_d3 = 
-"  else $(name) = $(host_qname)::$(cxxname)( $(parlist) );\n"
+"  else $(prefix)$(name) = $(reference)$(host_qname)::$(cxxname)( $(parlist) );\n"
 ;
+
+const string cxx_call_pointer_to_ref = "  $(retype) $(name) = $(pointer)$(prefix)$(name);\n";
 
 
 const string cxx_call_static2 = 
@@ -353,8 +355,8 @@ static string cdao_make_temp( const string & tpl, int n )
 	int i;
 	char buf[200];
 	string str;
-	for(i=2; i<n; i++){
-		sprintf( buf, tpl.c_str(), i, i );
+	for(i=1; i<n; i++){
+		sprintf( buf, tpl.c_str(), i+1, i+1 );
 		str += buf;
 	}
 	return str;
@@ -865,6 +867,19 @@ int CDaoFunction::Generate()
 	kvmap[ "retype" ] = retype.cxxtype;
 	kvmap[ "name" ] = retype.name;
 	kvmap[ "parlist" ] = cxxCallParam;
+	kvmap[ "pointer" ] = "";
+	kvmap[ "reference" ] = "";
+	kvmap[ "prefix" ] = "";
+	kvmap[ "retype2" ] = retype.cxxtype;
+
+	string pointer_to_ref = "";
+	if( retype.qualtype->isReferenceType() ){
+		kvmap[ "pointer" ] = "*";
+		kvmap[ "reference" ] = "&";
+		kvmap[ "prefix" ] = "_";
+		kvmap[ "retype2" ] = retype.cxxtype2;
+		pointer_to_ref = cdao_string_fill( cxx_call_pointer_to_ref, kvmap );
+	}
 	
 	if( methdecl ){
 #if 0
@@ -915,6 +930,7 @@ int CDaoFunction::Generate()
 				tmp += cdao_make_temp( cxx_call_static_d2, dd );
 				tmp += cxx_call_static_d3;
 				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+				cxxCallCodes += pointer_to_ref;
 			}
 		}else{
 			if( dd == 0 ){
@@ -924,6 +940,7 @@ int CDaoFunction::Generate()
 				tmp += cdao_make_temp( cxx_call_proto_d2, dd );
 				tmp += cxx_call_proto_d3;
 				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+				cxxCallCodes += pointer_to_ref;
 			}
 		}
 	}else{
