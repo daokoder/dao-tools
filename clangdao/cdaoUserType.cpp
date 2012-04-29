@@ -1,3 +1,22 @@
+/*
+// This file is a part of Dao standard tools.
+// Copyright (C) 2006-2012, Limin Fu. Email: daokoder@gmail.com
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+// software and associated documentation files (the "Software"), to deal in the Software 
+// without restriction, including without limitation the rights to use, copy, modify, merge, 
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons 
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or 
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include <clang/Lex/Preprocessor.h>
 #include <clang/AST/DeclTemplate.h>
@@ -531,9 +550,9 @@ const string tpl_class_init_qtss_decl =
 const string tpl_class_noderive =
 "\n$(qname)* DAO_DLL_$(module) Dao_$(idname)_New( $(parlist) )\n\
 {\n\
-	$(qname) *object = new $(qname)( $(parcall) );\n\
+	$(qname) *__object = new $(qname)( $(parcall) );\n\
 $(qt_make_linker3)\n\
-	return object;\n\
+	return __object;\n\
 }\n";
 const string tpl_class_init2 =
 "\nDaoCxx_$(idname)* DAO_DLL_$(module) DaoCxx_$(idname)_New( $(parlist) )\n\
@@ -744,6 +763,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	isMBString = isWCString = false;
 	wrapCount = 0;
 	wrapType = CDAO_WRAP_TYPE_NONE;
+	wrapTypeHint = CDAO_WRAP_TYPE_NONE;
 	alloc_default = "NULL";
 	this->decl = NULL;
 	SetDeclaration( (RecordDecl*) decl );
@@ -792,6 +812,22 @@ void CDaoUserType::SearchHints()
 		isWCString = var.isWCS;
 		if( isMBString or isWCString ) toChars = var.names[0];
 		if( var.hasBaseHint ) baseFromHint = var.names;
+		if( var.wrapOpaque ){
+			forceOpaque = true;
+			wrapTypeHint = CDAO_WRAP_TYPE_OPAQUE;
+		}else if( var.wrapDirect ){
+			wrapTypeHint = CDAO_WRAP_TYPE_DIRECT;
+		}
+		if( var.hasDaoTypeHint ){
+			qname = var.hintDaoType;
+			idname = cdao_qname_to_idname( qname );
+			name2 = qname;
+			pos = name2.find( "::" );
+			if( pos != string::npos ) name2.erase( 0, pos + 2 );
+			name = name2;
+			pos = name.find( "<" );
+			if( pos != string::npos ) name.erase( pos, string::npos );
+		}
 	}
 }
 void CDaoUserType::SetNamespace( const CDaoNamespace *ns )
@@ -932,7 +968,7 @@ int CDaoUserType::Generate()
 	wrapCount = 0;
 	Clear();
 
-	// simplest wrapping for types declared or defined outsided of the modules:
+	// simplest wrapping for types declared or defined outsided of the tools:
 	if( not module->IsFromModules( location ) ) return GenerateSimpleTyper();
 
 	// simplest wrapping for types declared but not defined:
@@ -1006,7 +1042,7 @@ void CDaoUserType::WrapField( CXXRecordDecl::field_iterator fit, map<string,stri
 	field.name = fit->getNameAsString();
 
 	if( fit->isAnonymousStructOrUnion() ){
-		outs()<<field.name<<"------------------------------\n";
+		//outs()<<field.name<<"------------------------------\n";
 		const RecordType *RT = field.qualtype->getAsStructureType();
 		if( RT == NULL ) RT = field.qualtype->getAsUnionType();
 		RecordDecl *RD = RT->getDecl();
@@ -1339,6 +1375,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		|| pubslots.size() || protsignals.size() || daoc_supers.size() != 0;
 
 	wrapType = proxyWrapping ? CDAO_WRAP_TYPE_PROXY : CDAO_WRAP_TYPE_DIRECT;
+	if( wrapTypeHint && wrapType > wrapTypeHint ) wrapType = wrapTypeHint;
 
 	//outs()<<name<<": "<<(int)wrapType<<" "<<has_private_ctor_only<<" "<<daoc_supers.size()<<"\n";
 

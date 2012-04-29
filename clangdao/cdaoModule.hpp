@@ -1,4 +1,22 @@
-
+/*
+// This file is a part of Dao standard tools.
+// Copyright (C) 2006-2012, Limin Fu. Email: daokoder@gmail.com
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+// software and associated documentation files (the "Software"), to deal in the Software 
+// without restriction, including without limitation the rights to use, copy, modify, merge, 
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons 
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or 
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #ifndef __CDAO_MODULE_H__
 #define __CDAO_MODULE_H__
@@ -86,13 +104,13 @@ struct CDaoModule
 	map<string,int>        cxxTypedefs2;
 	map<string,string>     daoTypedefs;
 
-	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required modules;
-	map<FileEntry*,CDaoModuleInfo>  requiredModules2; // directly/indirectly required modules;
+	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required tools;
+	map<FileEntry*,CDaoModuleInfo>  requiredModules2; // directly/indirectly required tools;
 
 	map<FileEntry*,CDaoHeaderInfo>  headers; // header files from this module;
 	map<FileEntry*,CDaoHeaderInfo>  headers2; // direct and indirect header files from this module;
-	map<FileEntry*,CDaoHeaderInfo>  extHeaders; // header files from the required modules;
-	map<FileEntry*,CDaoHeaderInfo>  extHeaders2; // direct and indirect header files from the required modules;
+	map<FileEntry*,CDaoHeaderInfo>  extHeaders; // header files from the required tools;
+	map<FileEntry*,CDaoHeaderInfo>  extHeaders2; // direct and indirect header files from the required tools;
 	map<CDaoInclusionInfo,int>      inclusions;
 	map<string,vector<string> >     functionHints;
 

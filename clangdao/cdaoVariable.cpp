@@ -1,3 +1,22 @@
+/*
+// This file is a part of Dao standard tools.
+// Copyright (C) 2006-2012, Limin Fu. Email: daokoder@gmail.com
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+// software and associated documentation files (the "Software"), to deal in the Software 
+// without restriction, including without limitation the rights to use, copy, modify, merge, 
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons 
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or 
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include <llvm/ADT/StringExtras.h>
 #include <clang/AST/Type.h>
@@ -465,6 +484,9 @@ const string getres_mbs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxty
 const string getres_wcs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGetWCString( _res ) );\n";
 
+const string setter_mbs_class = "  self->$(name) = $(cxxtype)( DaoValue_TryGetMBString(_p[1]) );\n";
+const string setter_wcs_class = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString(_p[1]) );\n";
+
 const string getres_qchar =
 "  if(DaoValue_CastInteger(_res)) $(name)= QChar(DaoValue_TryGetInteger(_res));\n";
 const string getres_qbytearray =
@@ -626,6 +648,7 @@ struct CDaoVarTemplates
 		cache = cdao_string_fill( cache_mbs_class, kvmap );
 		//parset = cdao_string_fill( parset_mbs, kvmap );
 		getres = cdao_string_fill( getres_mbs_class, kvmap );
+		setter = setter_mbs_class;
 	}
 	void SetupWCString( const string & tochars ){
 		map<string,string> kvmap;
@@ -637,6 +660,7 @@ struct CDaoVarTemplates
 		cache = cdao_string_fill( cache_wcs_class, kvmap );
 		//parset = cdao_string_fill( parset_wcs, kvmap );
 		getres = cdao_string_fill( getres_wcs_class, kvmap );
+		setter = setter_wcs_class;
 	}
 };
 void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, int daopid, int cxxpid )
@@ -704,6 +728,8 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isUserData = false;
 	hasArrayHint = false;
 	unsupported = false;
+	wrapOpaque = false;
+	wrapDirect = false;
 	useTypeTag = false;
 	useDefault = true;
 	hasBaseHint = false;
@@ -778,26 +804,25 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "mbstring" || hint == "wcstring" || hint == "base" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
-			vector<string> *parts = & sizes;
-			if( hint == "qname" ) parts = & scopes;
-			if( hint == "pixels" ){
-				parts = & names;
+			vector<string> *parts = & names;
+			string hintype = hint;
+			if( hint == "qname" ){
+				parts = & scopes;
+			}else if( hint == "array" ){
+				parts = & sizes;
+			}else if( hint == "pixels" ){
 				ispixels = true;
 			}else if( hint == "daotype" ){
 				hasDaoTypeHint = true;
 			}else if( hint == "buffer" ){
-				parts = & names;
 				isbuffer = true;
 			}else if( hint == "mbstring" ){
-				parts = & names;
 				isMBS = true;
 			}else if( hint == "wcstring" ){
-				parts = & names;
 				isWCS = true;
 			}else if( hint == "base" ){
-				parts = & names;
 				hasBaseHint = true;
 			}
 			hint = "";
@@ -839,8 +864,14 @@ void CDaoVariable::SetHints( const string & hints )
 				from = pos + 1;
 			}
 			if( hasDaoTypeHint ){
-				hintDaoType = sizes[0];
-				sizes.clear();
+				hintDaoType = names[0];
+				names.clear();
+			}else if( hintype == "wraptype" ){
+				if( names[0] == "opaque" ){
+					wrapOpaque = true;
+				}else if( names[0] == "direct" ){
+					wrapDirect = true;
+				}
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";
 			pos = pos2;
