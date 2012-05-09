@@ -125,6 +125,9 @@ extern string cdao_substitute_typenames( const string & qname );
 
 CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelScope( this )
 {
+	skipVirtual = false;
+	skipProtected = false;
+	skipExternal = false;
 	finalGenerating = false;
 	writeStringListConversion = false;
 	compiler = com;
@@ -256,7 +259,6 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 
 			CDaoUserType *UT = NewUserType( SD );
 			UT->location = loc;
-			UT->used = true;
 
 			DeclContext *DC = SD->getParent();
 			TypeSourceInfo *TSI = SD->getTypeAsWritten();
@@ -371,7 +373,10 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 				if( UT2 == NULL ) UT2 = HandleUserType( args[i].getAsType(), loc, NULL );
 				if( UT2 ){
 					UT2->used = true;
-					UT->AddRequiredType( UT2 );
+					// Cannot add required type here, consider this:
+					//   class ResourceGroupManager : public Singleton<ResourceGroupManager>
+					// Adding required type here will form a loop.
+					// UT->AddRequiredType( UT2 );
 				}
 			}
 		}
@@ -890,7 +895,10 @@ CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name
 		UTD->nspace = NS->varname;
 	}else if( RecordDecl *RD = dyn_cast<RecordDecl>( DC ) ){
 		CDaoUserType *host = GetUserType( RD );
-		assert( host != NULL );
+		if( host == NULL ){
+			delete UTD;
+			return NULL;
+		}
 		tdname = host->qname + "::" + tdname;
 		DC = RD->getParent();
 		if( NamespaceDecl *ND = dyn_cast<NamespaceDecl>( DC ) ){
@@ -983,7 +991,7 @@ string CDaoModule::MakeSourceCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 	codes += "static DaoTypeBase *dao_" + idname + "_Typers[] = \n{\n";
 	for(i=0, n=usertypes.size(); i<n; i++){
 		CDaoUserType & utp = *usertypes[i];
-		//outs() << utp.GetQName() << " " << utp.IsFromMainModule() << "\n";
+		//outs() << utp.GetQName() << " " << utp.IsFromMainModule() << " " << utp.unsupported << "\n";
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
 		codes += "\tdao_" + utp.idname + "_Typer,\n";
@@ -1143,11 +1151,13 @@ string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> 
 {
 	string idname = cdao_qname_to_idname( qname );
 	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
-	map<string,string>::iterator it, end = numericConsts.end();
-	if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
-	if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
-	for(it=numericConsts.begin(); it!=end; it++ )
-		codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
+	if( qname == "" ){
+		map<string,string>::iterator it, end = numericConsts.end();
+		if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
+		if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
+		for(it=numericConsts.begin(); it!=end; it++ )
+			codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
+	}
 	return codes + MakeConstNumItems( enums, vars, qname ) + "  { NULL, 0, 0 }\n};\n";
 }
 string CDaoModule::MakeConstStruct( vector<VarDecl*> & vars, const string & ns, const string & qname )
@@ -1228,6 +1238,7 @@ int CDaoModule::Generate( const string & output )
 
 	topLevelScope.Generate();
 	for(i=0, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
+	for(i=n, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
 	for(i=0, n=callbacks.size(); i<n; i++) retcode |= callbacks[i]->Generate();
 
 	// Sorting is necessary, because some CDaoUserType can be added during the call

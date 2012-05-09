@@ -62,6 +62,7 @@ struct CDaoVariable
 	bool    isUserData; // callback userdata
 	bool    hasArrayHint;
 	bool    unsupported;
+	bool    wrapNone;
 	bool    wrapOpaque;
 	bool    wrapDirect;
 	bool    useDefault;

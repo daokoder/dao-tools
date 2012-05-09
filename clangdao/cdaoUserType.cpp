@@ -814,6 +814,10 @@ void CDaoUserType::SearchHints()
 		CDaoVariable var;
 		var.SetHints( it->second[0] );
 		if( var.unsupported ) forceOpaque = true;
+		if( var.wrapNone ){
+			unsupported = true;
+			isRedundant2 = true;
+		}
 		useTypeTag = var.useTypeTag;
 		isMBString = var.isMBS;
 		isWCString = var.isWCS;
@@ -834,6 +838,7 @@ void CDaoUserType::SearchHints()
 			name = name2;
 			pos = name.find( "<" );
 			if( pos != string::npos ) name.erase( pos, string::npos );
+			wrapType = CDAO_WRAP_TYPE_NONE;
 		}
 	}
 }
@@ -946,14 +951,14 @@ int CDaoUserType::Generate()
 	size_t pos = name.find( '<' );
 	if( pos != string::npos ) name.erase( pos );
 	if( qname.find( "<anonymous" ) != string::npos ){
-		//outs() << module->GetFileName( decl->getLocation() ) << "============\n";
+		//outs() << qname << " " << module->GetFileName( decl->getLocation() ) << "============\n";
 		//decl->getLocation().print( outs(), module->compiler->getSourceManager() );
 		//outs() << "\n" << decl->isAnonymousStructOrUnion() << "\n\n";
 		unsupported = true;
 		return 0;
 	}
 	isRedundant = isRedundant2;
-	if( isRedundant ) return 0;
+	if( isRedundant || unsupported ) return 0;
 	if( name.find( "__" ) == 0 || qname.find( "__" ) == 0 ){
 		forceOpaque = true;
 	}
@@ -977,6 +982,7 @@ int CDaoUserType::Generate()
 
 	// simplest wrapping for types declared or defined outsided of the tools:
 	if( not module->IsFromModules( location ) ) return GenerateSimpleTyper();
+	if( module->skipExternal and not module->IsFromMainModule(location) ) return GenerateSimpleTyper();
 
 	// simplest wrapping for types declared but not defined:
 	if( dd == NULL || forceOpaque ) return GenerateSimpleTyper();
@@ -1373,6 +1379,12 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			//outs() << as << " " << is_pubslot << is_signal << " access\n";
 		}
 	}
+	if( module->skipProtected ) hasProtected = false;
+	if( module->skipVirtual ){
+		virtualMethods.clear();
+		hasVirtual = false;
+	}
+
 	// Wrapping as derivable type when there is no private-only constructor, and:
 	// 1. there is a virtual function, so that it can be re-implemented by derived Dao class;
 	// 2. or, there is a protected function, so that it can be accessed by derived Dao class;

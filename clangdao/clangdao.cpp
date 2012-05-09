@@ -66,10 +66,21 @@ struct CDaoPPCallbacks : public PPCallbacks
 void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *MI)
 {
 	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
-	if( MI->getNumTokens() < 1 ) return; // number of expansion tokens;
+	if( MI->getNumTokens() < 1 ){ // number of expansion tokens;
+		if( MI->isObjectLike() && name == "CLANGDAO_SKIP_VIRTUAL" ){
+			module->skipVirtual = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_PROTECTED" ){
+			module->skipProtected = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_EXTERNAL" ){
+			module->skipExternal = true;
+		}
+		return;
+	}
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
+		SourceLocation loc = MI->getDefinitionLoc();
+		if( module->skipExternal and not module->IsFromMainModule(loc) ) return;
 		Token tok = *MI->tokens_begin();
 		if( tok.getKind() == tok::numeric_constant ){
 			if( name[0] != '_' ) module->HandleNumericConstant( name, tok );

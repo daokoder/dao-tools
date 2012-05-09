@@ -92,6 +92,9 @@ struct CDaoModule
 {
 	bool  finalGenerating;
 	bool  writeStringListConversion;
+	bool  skipVirtual;
+	bool  skipProtected;
+	bool  skipExternal;
 
 	CompilerInstance  *compiler;
 	CDaoModuleInfo     moduleInfo;

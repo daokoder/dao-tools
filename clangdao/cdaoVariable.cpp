@@ -735,6 +735,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isUserData = false;
 	hasArrayHint = false;
 	unsupported = false;
+	wrapNone = false;
 	wrapOpaque = false;
 	wrapDirect = false;
 	useTypeTag = false;
@@ -878,6 +879,8 @@ void CDaoVariable::SetHints( const string & hints )
 					wrapOpaque = true;
 				}else if( names[0] == "direct" ){
 					wrapDirect = true;
+				}else if( names[0] == "none" ){
+					wrapNone = true;
 				}
 			}
 			//outs() << "array hint: " << hint << " " << sizes.size() << "\n";

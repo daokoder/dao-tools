@@ -562,6 +562,7 @@ int CDaoFunction::Generate()
 	DeclaratorDecl *decl = funcDecl;
 	if( decl == NULL ) decl = fieldDecl;
 	if( decl && not module->IsFromModules( location ) ) return 0;
+	if( module->skipExternal and not module->IsFromMainModule(location) ) return 0;
 	if( excluded ) return 1;
 	if( generated ) return 0;
 	if( decl ){
