@@ -78,6 +78,7 @@ struct CDaoVariable
 	bool    hasBaseHint;
 	bool    isMBS;
 	bool    isWCS;
+	short   isNumber;
 	string  name;
 	string  cxxdefault;
 	string  daodefault;

@@ -75,17 +75,18 @@ struct CDaoUserType
 	bool   isRedundant2;
 	bool   isQObject;
 	bool   isQObjectBase;
-	bool   isMBString;
-	bool   isWCString;
 	bool   useTypeTag;
 	bool   used;
+	bool   isMBString;
+	bool   isWCString;
+	short  isNumber;
 
 	string  name;  // just name: vector, SomeClass;
 	string  name2; // name, with template arguments if any: vector<int>, SomeClass;
 	string  qname; // qualified name: std::vector<int>, SomeNamespace::SomeClass;
 	string  idname; // identification name: std_0_vector_1_int_2_, SomeNamespace_0_SomeClass;
 
-	string  toChars;
+	string  toValue;
 	string  gcfields;
 
 	string  set_fields;

@@ -1151,10 +1151,10 @@ string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> 
 {
 	string idname = cdao_qname_to_idname( qname );
 	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
+	if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
+	if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
 	if( qname == "" ){
 		map<string,string>::iterator it, end = numericConsts.end();
-		if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
-		if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
 		for(it=numericConsts.begin(); it!=end; it++ )
 			codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
 	}
@@ -1234,12 +1234,13 @@ int CDaoModule::Generate( const string & output )
 	vector<CDaoUserType*>  sorted;
 	map<CDaoUserType*,int> check;
 	map<string,int> overloads;
-	int i, j, m, n, retcode = 0;
+	int i, j, m = 0, n = 0, retcode = 0;
 
 	topLevelScope.Generate();
-	for(i=0, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
-	for(i=n, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
-	for(i=0, n=callbacks.size(); i<n; i++) retcode |= callbacks[i]->Generate();
+	while( n < usertypes.size() ){
+		for(i=n, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
+		for(i=m, m=callbacks.size(); i<m; i++) retcode |= callbacks[i]->Generate();
+	}
 
 	// Sorting is necessary, because some CDaoUserType can be added during the call
 	// to Generate(), or during handling of template class handling. The dependency

@@ -661,10 +661,14 @@ $(breakref)\
 }\n";
 
 const string cast_to_parent = 
-"void* dao_cast_$(typer)_to_$(parent2)( void *data )\n\
+"void* dao_cast_$(typer)_to_$(parent2)( void *data, int down )\n\
 {\n\
+	if( down ) return ($(child)*)($(parent)*)data;\n\
 	return ($(parent)*)($(child)*)data;\n\
 }\n";
+
+//	if( down ) return dynamic_cast<$(child)*>( ($(parent)*)data );\n
+//	return dynamic_cast<$(parent)*>( ($(child)*)data );\n
 
 const string usertype_code =
 "$(cast_funcs)\n\
@@ -768,6 +772,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	dummyTemplate = false;
 	isQObject = isQObjectBase = false;
 	isMBString = isWCString = false;
+	isNumber  = 0;
 	wrapCount = 0;
 	wrapType = CDAO_WRAP_TYPE_NONE;
 	wrapTypeHint = CDAO_WRAP_TYPE_NONE;
@@ -821,7 +826,8 @@ void CDaoUserType::SearchHints()
 		useTypeTag = var.useTypeTag;
 		isMBString = var.isMBS;
 		isWCString = var.isWCS;
-		if( isMBString or isWCString ) toChars = var.names[0];
+		isNumber = var.isNumber;
+		if( isMBString or isWCString or isNumber ) toValue = var.names[0];
 		if( var.hasBaseHint ) baseFromHint = var.names;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
@@ -830,9 +836,10 @@ void CDaoUserType::SearchHints()
 			wrapTypeHint = CDAO_WRAP_TYPE_DIRECT;
 		}
 		if( var.hasDaoTypeHint ){
-			qname = var.hintDaoType;
-			idname = cdao_qname_to_idname( qname );
-			name2 = qname;
+			outs() << qname << " " << var.hintDaoType << " @@@@@@@@@@@@@@@@\n";
+			this->qname = var.hintDaoType;
+			idname = cdao_qname_to_idname( this->qname );
+			name2 = this->qname;
 			pos = name2.find( "::" );
 			if( pos != string::npos ) name2.erase( 0, pos + 2 );
 			name = name2;
@@ -889,6 +896,7 @@ int CDaoUserType::Generate()
 	RecordDecl *dd = decl->getDefinition();
 
 	SearchHints();
+	outs() << "generating: " << qname << "\n";
 
 #if 0
 	if( dd != NULL && dd != decl ){
@@ -1206,7 +1214,6 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 	vector<VarDecl*>      vars;
 	vector<EnumDecl*>     enums;
-	vector<CDaoUserType*> bases;
 	vector<CDaoFunction>  methods;
 	vector<CDaoFunction>  constructors;
 
@@ -1220,6 +1227,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	string ss_init_sup;
 	string class_new;
 	string class_decl;
+	string parents, casts, cast_funcs;
 
 	outs() << "generating: " << qname << "\n";
 	SetupDefaultMapping( kvmap );
@@ -1237,13 +1245,25 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		}
 
 		CDaoUserType *sup = find->second;
-		string supname = sup->idname;
-		bases.push_back( sup );
 		priorUserTypes.push_back( sup );
 
-		sup->used = true;
+		string supname = sup->idname;
 		sup->Generate();
 		if( module->finalGenerating == false && sup->wrapType <= CDAO_WRAP_TYPE_OPAQUE ) return 0;
+
+		if( baseit->getAccessSpecifier() != AS_private and not sup->unsupported ){
+			string supname = sup->qname;
+			string supname2 = sup->idname;
+			parents += "dao_" + supname2 + "_Typer, ";
+			kvmap[ "parent" ] = supname;
+			kvmap[ "parent2" ] = supname2;
+			if( not baseit->isVirtual() ){
+				casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
+				cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
+			}
+		}
+		sup->used = true;
+
 		//outs() << "parent: " << qname << "  " << sup->qname << " " << (int)sup->wrapType << "\n";
 		if( sup->wrapType != CDAO_WRAP_TYPE_PROXY ) continue;
 
@@ -1398,17 +1418,19 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 	//outs()<<name<<": "<<(int)wrapType<<" "<<has_private_ctor_only<<" "<<daoc_supers.size()<<"\n";
 
-	for(i=0,n=constructors.size(); i<n; i++){
-		CDaoFunction & meth = constructors[i];
-		const CXXConstructorDecl *ctor = dyn_cast<CXXConstructorDecl>( meth.funcDecl );
-		meth.Generate();
-		if( not meth.generated ) continue;
-		//XXX if( ctor->getAccess() != AS_public ) continue;
-		if( ctor->getAccess() == AS_private ) continue;
-		wrapCount += 1;
-		dao_meths += meth.daoProtoCodes;
-		meth_decls += meth.cxxProtoCodes + (meth.cxxProtoCodes.size() ? ";\n" : "");
-		meth_codes += meth.cxxWrapper;
+	if( wrapType != CDAO_WRAP_TYPE_DIRECT or not decl->isAbstract() ){
+		for(i=0,n=constructors.size(); i<n; i++){
+			CDaoFunction & meth = constructors[i];
+			const CXXConstructorDecl *ctor = dyn_cast<CXXConstructorDecl>( meth.funcDecl );
+			meth.Generate();
+			if( not meth.generated ) continue;
+			//XXX if( ctor->getAccess() != AS_public ) continue;
+			if( ctor->getAccess() == AS_private ) continue;
+			wrapCount += 1;
+			dao_meths += meth.daoProtoCodes;
+			meth_decls += meth.cxxProtoCodes + (meth.cxxProtoCodes.size() ? ";\n" : "");
+			meth_codes += meth.cxxWrapper;
+		}
 	}
 	for(i=0,n=methods.size(); i<n; i++){
 		CDaoFunction & meth = methods[i];
@@ -1521,17 +1543,6 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap["constructors"] = "";
 	kvmap[ "comment" ] = has_public_destructor ? "" : "//";
 
-	string parents, casts, cast_funcs;
-	for(i=0,n=bases.size(); i<n; i++){
-		CDaoUserType *sup = bases[i];
-		string supname = sup->qname;
-		string supname2 = sup->idname;
-		parents += "dao_" + supname2 + "_Typer, ";
-		casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
-		kvmap[ "parent" ] = supname;
-		kvmap[ "parent2" ] = supname2;
-		cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
-	}
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
 		parents += "dao_" + supname2 + "_Typer, ";
@@ -1544,15 +1555,17 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		kvmap[ "name" ] = name;
 		kvmap[ "qt_make_linker3" ] = "";
 		if( isQObject ) kvmap["qt_make_linker3"] = cdao_string_fill( qt_make_linker3, kvmap );
-		for(i=0, n = constructors.size(); i<n; i++){
-			CDaoFunction & func = constructors[i];
-			const CXXConstructorDecl *ctor = dyn_cast<CXXConstructorDecl>( func.funcDecl );
-			if( not func.generated ) continue;
-			if( ctor->getAccess() == AS_protected ) continue;
-			kvmap["parlist"] = func.cxxProtoParam;
-			kvmap["parcall"] = func.cxxCallParamV;
-			type_codes += cdao_string_fill( tpl_class_noderive, kvmap );
-			type_decls += cdao_string_fill( tpl_class_new_novirt, kvmap );
+		if( decl->isAbstract() ){
+			for(i=0, n = constructors.size(); i<n; i++){
+				CDaoFunction & func = constructors[i];
+				const CXXConstructorDecl *ctor = dyn_cast<CXXConstructorDecl>( func.funcDecl );
+				if( not func.generated ) continue;
+				if( ctor->getAccess() == AS_protected ) continue;
+				kvmap["parlist"] = func.cxxProtoParam;
+				kvmap["parcall"] = func.cxxCallParamV;
+				type_codes += cdao_string_fill( tpl_class_noderive, kvmap );
+				type_decls += cdao_string_fill( tpl_class_new_novirt, kvmap );
+			}
 		}
 		typer_codes = cdao_string_fill( usertype_code_class, kvmap );
 		return 0;
