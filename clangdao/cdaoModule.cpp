@@ -734,7 +734,7 @@ void CDaoModule::HandleFunction( FunctionDecl *funcdec )
 		if( record == NULL ) return;
 
 		RecordDecl *RD = record->getDecl();
-		CDaoUserType *UT = GetUserType( RD );
+		CDaoUserType *UT = HandleUserType( canotype, RD->getLocation() );
 		if( UT == NULL ) return;
 		string source = ExtractSource( body->getSourceRange() );
 		UT->gcfields += source;

@@ -129,10 +129,11 @@ struct CDaoProxyFunction
 		return "DaoPF" + utohexstr( proxy_function_index ++ );
 	}
 	static bool IsDefined( const string & signature ){
-		return proxy_functions.find( signature ) != proxy_functions.end();
+		if( proxy_functions.find( signature ) == proxy_functions.end() ) return false;
+		return proxy_functions[ signature ].name != "";
 	}
 	static bool IsNotDefined( const string & signature ){
-		return proxy_functions.find( signature ) == proxy_functions.end();
+		return not IsDefined( signature );
 	}
 	static void Add( const string & signature, const string & name, const string & codes ){
 		proxy_functions[ signature ] = CDaoProxyFunction( 0, name, codes );

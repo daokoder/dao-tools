@@ -1743,7 +1743,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		return usertype_code_class2.expand( kvmap );
 	}
 #endif
-	kvmap["breakref"] = gcfields;
+	kvmap["breakref"] = gcfields == "" ? "" : "\t\t" + gcfields + "\n";
 	typer_codes = cdao_string_fill( usertype_code_class2, kvmap );
 	return 0;
 }

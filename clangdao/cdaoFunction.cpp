@@ -1143,7 +1143,7 @@ int CDaoFunction::Generate()
 			proxy_codes = cdao_string_fill( cxx_proxy_body00, kvmap3 );
 		}
 		CDaoProxyFunction::Add( signature2, proxy_name, proxy_codes );
-		//outs() << proxy_name << "\n" << proxy_codes << "\n";
+		//outs() << signature2 << " " << proxy_name << "\n" << proxy_codes << "\n";
 	}
 	if( has_return or has_param ) proxy_name = CDaoProxyFunction::proxy_functions[ signature2 ].name;
 	if( retype.isUserData ) CDaoProxyFunction::Use( signature2 );
