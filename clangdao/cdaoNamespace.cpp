@@ -39,6 +39,7 @@ extern string cdao_make_dao_template_type_name( const string & name );
 
 CDaoNamespace::CDaoNamespace( CDaoModule *mod, const NamespaceDecl *decl )
 {
+	unsupported = false;
 	module = mod;
 	nsdecl = (NamespaceDecl*) decl;
 	varname = "ns";
@@ -46,9 +47,18 @@ CDaoNamespace::CDaoNamespace( CDaoModule *mod, const NamespaceDecl *decl )
 		varname = nsdecl->getQualifiedNameAsString();
 		varname = cdao_qname_to_idname( varname );
 	}
+	if( nsdecl == NULL ) return;
+
+	map<string,vector<string> >::iterator it = module->functionHints.find( varname );
+	if( it != module->functionHints.end() ){
+		CDaoVariable var;
+		var.SetHints( it->second[0] );
+		if( var.unsupported ) unsupported = true;
+	}
 }
 void CDaoNamespace::HandleDeclaration( Decl *D )
 {
+	if( unsupported ) return;
 	if( LinkageSpecDecl *TUD = dyn_cast<LinkageSpecDecl>(D) ){
 		DeclContext::decl_iterator it, end;
 		for(it=TUD->decls_begin(),end=TUD->decls_end(); it!=end; it++){
@@ -80,6 +90,15 @@ void CDaoNamespace::HandleExtension( NamespaceDecl *nsdecl )
 }
 int CDaoNamespace::Generate( CDaoNamespace *outer )
 {
+	header = "";
+	source = "";
+	source2 = "";
+	source3 = "";
+	onload = "";
+	onload2 = "";
+	onload3 = "";
+	if( unsupported ) return 0;
+
 	bool isCpp = module->compiler->getPreprocessor().getLangOptions().CPlusPlus;
 	int i, n, retcode = 0;
 	for(i=0, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();

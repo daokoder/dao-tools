@@ -661,14 +661,18 @@ $(breakref)\
 }\n";
 
 const string cast_to_parent = 
-"void* dao_cast_$(typer)_to_$(parent2)( void *data, int down )\n\
+"void* dao_cast_$(typer)_$(parent2)( void *data, int down )\n\
 {\n\
-	if( down ) return ($(child)*)($(parent)*)data;\n\
-	return ($(parent)*)($(child)*)data;\n\
+	if( down ) return static_cast<$(child)*>(($(parent)*)data);\n\
+	return dynamic_cast<$(parent)*>(($(child)*)data);\n\
+}\n";
+const string cast_to_parent_virtual_base = 
+"void* dao_cast_$(typer)_$(parent2)( void *data, int down )\n\
+{\n\
+	if( down ) return dynamic_cast<$(child)*>(($(parent)*)data);\n\
+	return dynamic_cast<$(parent)*>(($(child)*)data);\n\
 }\n";
 
-//	if( down ) return dynamic_cast<$(child)*>( ($(parent)*)data );\n
-//	return dynamic_cast<$(parent)*>( ($(child)*)data );\n
 
 const string usertype_code =
 "$(cast_funcs)\n\
@@ -1251,13 +1255,16 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		sup->Generate();
 		if( module->finalGenerating == false && sup->wrapType <= CDAO_WRAP_TYPE_OPAQUE ) return 0;
 
-		if( baseit->getAccessSpecifier() != AS_private and not sup->unsupported ){
+		if( baseit->getAccessSpecifier() == AS_public and not sup->unsupported ){
 			string supname = sup->qname;
 			string supname2 = sup->idname;
 			parents += "dao_" + supname2 + "_Typer, ";
 			kvmap[ "parent" ] = supname;
 			kvmap[ "parent2" ] = supname2;
-			if( not baseit->isVirtual() ){
+			if( baseit->isVirtual() ){
+				casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
+				cast_funcs += cdao_string_fill( cast_to_parent_virtual_base, kvmap );
+			}else{
 				casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
 				cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
 			}

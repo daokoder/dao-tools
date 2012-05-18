@@ -61,6 +61,8 @@ struct CDaoNamespace
 	string  onload2;
 	string  onload3;
 
+	bool unsupported;
+
 	CDaoNamespace( CDaoModule *mod = NULL, const NamespaceDecl *decl = NULL );
 
 	int Generate( CDaoNamespace *outer = NULL );
