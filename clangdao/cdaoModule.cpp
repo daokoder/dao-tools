@@ -809,7 +809,7 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 			}
 		}
 #else
-		if( TD && compiler->getPreprocessor().getLangOptions().C99 ){
+		if( TD && compiler->getPreprocessor().getLangOpts().C99 ){
 			string qname = UT->qname;
 			if( qname.find( "struct " ) == 0 || qname.find( "union " ) == 0 ){
 				// typedef struct{...}name:
@@ -916,6 +916,8 @@ CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name
 	cxxTypedefs2[ name + "@$" + tdname ] = 1;
 	return UTD;
 }
+extern string UppercaseString( const string & s );
+
 const char *ifdef_cpp_open = "#ifdef __cplusplus\nextern \"C\"{\n#endif\n";
 const char *ifdef_cpp_close = "#ifdef __cplusplus\n}\n#endif\n";
 void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )

@@ -112,15 +112,16 @@ struct CDaoASTConsumer : public ASTConsumer
 		compiler = cinst;
 		module = mod;
 	}
-	void HandleTopLevelDecl(DeclGroupRef group);
+	bool HandleTopLevelDecl(DeclGroupRef group);
 	void HandleDeclaration( Decl *D );
 };
 
-void CDaoASTConsumer::HandleTopLevelDecl(DeclGroupRef group)
+bool CDaoASTConsumer::HandleTopLevelDecl(DeclGroupRef group)
 {
 	for (DeclGroupRef::iterator it = group.begin(); it != group.end(); ++it) {
 		HandleDeclaration( *it );
 	}
+	return true;
 }
 void CDaoASTConsumer::HandleDeclaration( Decl *D )
 {

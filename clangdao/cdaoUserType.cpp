@@ -31,6 +31,7 @@
 #include <clang/Sema/Sema.h>
 #include <clang/Sema/Template.h>
 #include <map>
+#include <algorithm>
 
 #include "cdaoFunction.hpp"
 #include "cdaoUserType.hpp"
@@ -787,7 +788,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 void CDaoUserType::SetDeclaration( RecordDecl *decl )
 {
 	size_t pos;
-	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
+	bool isC = module->compiler->getPreprocessor().getLangOpts().C99;
 	this->decl = decl;
 	location = decl->getLocation();
 	if( decl->getDefinition() ) location = decl->getDefinition()->getLocation();
@@ -881,6 +882,12 @@ void CDaoUserType::Clear()
 	typer_codes.clear();
 	virtualMethods.clear();
 }
+string UppercaseString( const string & s )
+{
+	string str( s );
+	std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+	return str;
+}
 int CDaoUserType::GenerateSimpleTyper()
 {
 	string ss = dummyTemplate ? "<>" : "";
@@ -896,7 +903,7 @@ int CDaoUserType::GenerateSimpleTyper()
 }
 int CDaoUserType::Generate()
 {
-	bool isC = module->compiler->getPreprocessor().getLangOptions().C99;
+	bool isC = module->compiler->getPreprocessor().getLangOpts().C99;
 	RecordDecl *dd = decl->getDefinition();
 
 	SearchHints();

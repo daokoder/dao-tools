@@ -1,5 +1,5 @@
 
-CC = g++-4.2
+CC ?= g++-4.2
 
 DAO_INC =/usr/local/dao/include
 
@@ -11,7 +11,7 @@ CLANG_LIBS = -lclang \
 -lclangDriver \
 -lclangFrontend \
 -lclangFrontendTool \
--lclangIndex \
+-lclangEdit \
 -lclangLex \
 -lclangParse \
 -lclangRewrite \
@@ -23,7 +23,7 @@ CLANG_LIBS = -lclang \
 
 CFLAGS = -O2 -fno-rtti -Wall -Wno-unused -I. -I$(DAO_INC) `llvm-config --cppflags`
 CFLAGS = -ggdb -fno-rtti -Wall -Wno-unused -I. -I$(DAO_INC) `llvm-config --cppflags`
-LFLAGS = -fPIC $(CLANG_LIBS) `llvm-config --ldflags --libs`
+LFLAGS = -fPIC -lstdc++ $(CLANG_LIBS) `llvm-config --ldflags --libs`
 
 TARGET = clangdao
 

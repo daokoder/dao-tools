@@ -99,7 +99,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 	onload3 = "";
 	if( unsupported ) return 0;
 
-	bool isCpp = module->compiler->getPreprocessor().getLangOptions().CPlusPlus;
+	bool isCpp = module->compiler->getPreprocessor().getLangOpts().CPlusPlus;
 	int i, n, retcode = 0;
 	for(i=0, n=usertypes.size(); i<n; i++) retcode |= usertypes[i]->Generate();
 	for(i=0, n=functions.size(); i<n; i++){
