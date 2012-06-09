@@ -1345,7 +1345,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.SetupMBString();
 			//tpl.parset = parset_mbs;
 #warning"=======================const char*"
-			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\'\'";
+			if( daodefault == "0" || daodefault == "NULL" ){
+				daodefault = "none";
+				isNullable = true;
+			}
 			break;
 		case BuiltinType::WChar_U :
 		case BuiltinType::WChar_S :
@@ -1355,7 +1358,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			cxxcall = name;
 			tpl.SetupWCString();
 			//tpl.parset = parset_wcs;
-			if( daodefault == "0" || daodefault == "NULL" ) daodefault = "\\\"\\\"";
+			if( daodefault == "0" || daodefault == "NULL" ){
+				daodefault = "none";
+				isNullable = true;
+			}
 			break;
 		case BuiltinType::UShort :
 		case BuiltinType::Bool :

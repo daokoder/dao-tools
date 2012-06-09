@@ -1262,10 +1262,10 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			kvmap[ "parent" ] = supname;
 			kvmap[ "parent2" ] = supname2;
 			if( baseit->isVirtual() ){
-				casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
+				casts += "dao_cast_" + idname + "_" + supname2 + ",";
 				cast_funcs += cdao_string_fill( cast_to_parent_virtual_base, kvmap );
 			}else{
-				casts += "dao_cast_" + idname + "_to_" + supname2 + ",";
+				casts += "dao_cast_" + idname + "_" + supname2 + ",";
 				cast_funcs += cdao_string_fill( cast_to_parent, kvmap );
 			}
 		}
