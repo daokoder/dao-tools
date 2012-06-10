@@ -788,6 +788,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	useDefault = true;
 	hasBaseHint = false;
 	hasDaoTypeHint = false;
+	hasCodeBlockHint = false;
 	isArithmeticType = false;
 	isObjectType = false;
 	isPointerType = false;
@@ -859,7 +860,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
 			string hintype = hint;
@@ -871,6 +872,8 @@ void CDaoVariable::SetHints( const string & hints )
 				ispixels = true;
 			}else if( hint == "daotype" ){
 				hasDaoTypeHint = true;
+			}else if( hint == "codeblock" ){
+				hasCodeBlockHint = true;
 			}else if( hint == "buffer" ){
 				isbuffer = true;
 			}else if( hint == "int" ){
@@ -886,6 +889,7 @@ void CDaoVariable::SetHints( const string & hints )
 			}else if( hint == "base" ){
 				hasBaseHint = true;
 			}
+
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
 			if( pos2 != pos ) hint = hints2.substr( pos+1, pos2 - pos - 1 );
@@ -894,35 +898,45 @@ void CDaoVariable::SetHints( const string & hints )
 				pos = hint.find( '_', from );
 				if( pos > hint.size() ) pos = hint.size();
 				string s = hint.substr( from, pos - from );
+				string converted;
 				if( s == "UNDERSCORE" || s == "" ){
-					parts->back() += "_";
+					converted = "_";
 					concat = 1;
 				}else if( s == "TIMES" ){
-					parts->back() += "*";
+					converted = "*";
 					concat = 1;
 				}else if( s == "DOT" ){
-					parts->back() += ".";
+					converted = ".";
 					concat = 1;
 				}else if( s == "LB" ){
-					parts->back() += "(";
+					converted = "(";
 					concat = 1;
 				}else if( s == "RB" ){
-					parts->back() += ")";
+					converted = ")";
 					concat = 1;
 				}else if( s == "LT" ){
-					parts->back() += "<";
+					converted = "<";
 					concat = 1;
 				}else if( s == "GT" ){
-					parts->back() += ">";
+					converted = ">";
 					concat = 1;
 				}else if( s == "OR" ){
-					parts->back() += "|";
+					converted = "|";
 					concat = 1;
 				}else if( s == "COMMA" ){
-					parts->back() += ",";
+					converted = ",";
+					concat = 1;
+				}else if( s == "AT" ){
+					converted = "@";
+					concat = 1;
+				}else if( s == "COLON" ){
+					converted = ":";
 					concat = 1;
 				}else if( s == "COLON2" ){
-					parts->back() += "::";
+					converted = "::";
+					concat = 1;
+				}else if( s == "FIELD" ){
+					converted = "=>";
 					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
@@ -931,10 +945,20 @@ void CDaoVariable::SetHints( const string & hints )
 					parts->push_back( s );
 					concat = 0;
 				}
+				if( converted.size() ){
+					if( parts->size() ){
+						parts->back() += converted;
+					}else{
+						parts->push_back( converted );
+					}
+				}
 				from = pos + 1;
 			}
 			if( hintype == "daotype" ){
 				hintDaoType = names[0];
+				names.clear();
+			}else if( hintype == "codeblock" && names.size() ){
+				hintCodeBlock = names[0];
 				names.clear();
 			}else if( hintype == "wraptype" ){
 				if( names[0] == "opaque" ){
