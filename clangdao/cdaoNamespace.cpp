@@ -142,7 +142,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 			onload += "\tDaoNamespace *" + this_name + " = DaoNamespace_GetNamespace( ";
 			onload += outer_name + ", \"" + name + "\" );\n";
 		}
-		if( enums.size() || variables.size() ){
+		if( enums.size() || variables.size() || isCpp /* for constant true and false */ ){
 			source += module->MakeConstNumber( enums, variables, qname, isCpp );
 			onload2 += "\tDaoNamespace_AddConstNumbers( " + this_name;
 			onload2 += ", dao_" + this_name + "_Nums );\n";
