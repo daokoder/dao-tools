@@ -45,7 +45,7 @@ const string daopar_floats = "$(name) :$(dao)array<float>";
 const string daopar_doubles = "$(name) :$(dao)array<double>";
 const string daopar_complexs = "$(name) :$(dao)array<complex>$(default)";
 const string daopar_buffer = "$(name) :cdata$(default)";
-const string daopar_stream = "$(name) :stream$(default)";
+const string daopar_stream = "$(name) :io::stream$(default)";
 const string daopar_user = "$(name) :$(daotype)$(default)";
 const string daopar_userdata = "$(name) :any$(default)"; // for callback data
 const string daopar_callback = "$(name) :any"; // for callback, no precise type yet! XXX
@@ -506,7 +506,7 @@ const string getres_f = "  if(DaoValue_CastFloat(_res)) $(name)=($(cxxtype))";
 const string getres_d = "  if(DaoValue_CastDouble(_res)) $(name)=($(cxxtype))";
 const string getres_s = "  if(DaoValue_CastString(_res)) $(name)=($(cxxtype)*)";
 const string getres_a = "  if(DaoValue_CastArray(_res))\n    $(name)=($(cxxtype)*)";
-const string getres_p = "  if(DaoValue_CastCdata(_res)) $(name)=($(cxxtype)) ";
+const string getres_p = "  if(DaoValue_CastCdata(_res,NULL)) $(name)=($(cxxtype)) ";
 const string getres_io = "  if(DaoValue_CastStream(_res)) $(name)=($(cxxtype))";
 
 const string getres_int  = getres_i + "DaoValue_TryGetInteger(_res);\n";
@@ -535,7 +535,7 @@ const string getres_qstring =
 
 const string getres_cdata = 
 "  if( DaoValue_CastObject(_res) ) _res = (DaoValue*)DaoObject_CastCdata( (DaoObject*)_res, dao_type_$(typer) );\n\
-  if( DaoValue_CastCdata(_res) && DaoCdata_IsType( (DaoCdata*)_res, dao_type_$(typer) ) ){\n";
+  if( DaoValue_CastCdata( _res, dao_type_$(typer) ) ){\n";
 
 const string getres_user = getres_cdata +
 "    $(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _res, dao_type_$(typer) );\n  }\n";
@@ -725,8 +725,6 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->daodefault.size() ) dft += " =" + var->daodefault;
 	if( var->cxxtyper.size() ) typer = var->cxxtyper;
 
-	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
-	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
 	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
@@ -1320,7 +1318,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			UT->used = true;
 			if( qtype3.getAsString() == "FILE" ){
 #warning"====================FILE**"
-				daotype = "stream";
+				daotype = "io::stream";
 				cxxtype = "FILE";
 				extraReturn = true;
 				tpl.daopar = daopar_stream;
@@ -1448,7 +1446,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		if( UT->unsupported ) return 1;
 		UT->used = true;
 		if( qtype1.getAsString() == "FILE" ){
-			daotype = "stream";
+			daotype = "io::stream";
 			cxxtype = "FILE";
 			tpl.daopar = daopar_stream;
 			tpl.dao2cxx = dao2cxx_stream;

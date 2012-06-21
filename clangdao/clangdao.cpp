@@ -244,8 +244,6 @@ string cdao_make_dao_template_type_name( const string & name0, const map<string,
 				string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 				it = subs.find( part );
 				if( it != subs.end() ) part = it->second;
-				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
-				if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 				if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 				if( type_for_quoting.size() == 0 ) quote = "";
 				result += quote + part + quote;
@@ -261,8 +259,6 @@ string cdao_make_dao_template_type_name( const string & name0, const map<string,
 	string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 	it = subs.find( part );
 	if( it != subs.end() ) part = it->second;
-	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
-	if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 	if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 	return result + quote + part + quote;
 }
@@ -279,8 +275,6 @@ string cdao_make_dao_template_type_name( const string & name0 )
 				string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 				it = type_substitutions.find( part );
 				if( it != type_substitutions.end() ) part = it->second;
-				if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
-				if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 				if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 				if( istemplate == 0 ) quote = "";
 				result += quote + part + quote;
@@ -296,8 +290,6 @@ string cdao_make_dao_template_type_name( const string & name0 )
 	string quote = is_invalid_dao_type_name( part ) ? "'" : "";
 	it = type_substitutions.find( part );
 	if( it != type_substitutions.end() ) part = it->second;
-	if( part.find( "std::" ) == 0 ) part.replace( 0, 5, "_std::" );
-	if( part.find( "io::" ) == 0 ) part.replace( 0, 4, "_io::" );
 	if( type_for_quoting.find( part ) != type_for_quoting.end() ) quote = "'";
 	if( istemplate == 0 ) quote = "";
 	return result + quote + part + quote;

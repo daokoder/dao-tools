@@ -582,7 +582,7 @@ const string tpl_meth_decl3 =
 "$(retype) DaoWrap_$(name)( $(parlist) )$(extra){ $(return)$(qname)::$(cxxname)( $(parcall) ); }\n";
 
 const string tpl_raise_call_protected =
-"  if( DaoValue_CastCdata(_p[0]) && DaoCdata_GetObject((DaoCdata*)_p[0]) == NULL ){\n\
+"  if( DaoValue_CastCdata(_p[0],NULL) && DaoCdata_GetObject((DaoCdata*)_p[0]) == NULL ){\n\
     DaoProcess_RaiseException( _proc, DAO_ERROR, \"call to protected method\" );\n\
     return;\n\
   }\n";

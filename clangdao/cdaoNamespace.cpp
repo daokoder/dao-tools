@@ -132,8 +132,6 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 		outer_name = cdao_qname_to_idname( outer_name );
 		if( outer == NULL || outer->nsdecl == NULL ){
 			header += "using namespace " + name + ";\n";
-			if( name == "std" ) name = "_std";
-			if( name == "io" ) name = "_io";
 			onload += "\tDaoNamespace *" + this_name + " = DaoVmSpace_GetNamespace( ";
 			onload += "vms, \"" + name + "\" );\n";
 			onload2 += "\tDaoNamespace_AddConstValue( ns, \"" + name + "\", (DaoValue*) " + this_name + " );\n";
