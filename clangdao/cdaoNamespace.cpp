@@ -132,8 +132,6 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 		outer_name = cdao_qname_to_idname( outer_name );
 		if( outer == NULL || outer->nsdecl == NULL ){
 			header += "using namespace " + name + ";\n";
-			if( name == "std" ) name = "_std";
-			if( name == "io" ) name = "_io";
 			onload += "\tDaoNamespace *" + this_name + " = DaoVmSpace_GetNamespace( ";
 			onload += "vms, \"" + name + "\" );\n";
 			onload2 += "\tDaoNamespace_AddConstValue( ns, \"" + name + "\", (DaoValue*) " + this_name + " );\n";
@@ -142,7 +140,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 			onload += "\tDaoNamespace *" + this_name + " = DaoNamespace_GetNamespace( ";
 			onload += outer_name + ", \"" + name + "\" );\n";
 		}
-		if( enums.size() || variables.size() ){
+		if( enums.size() || variables.size() || isCpp /* for constant true and false */ ){
 			source += module->MakeConstNumber( enums, variables, qname, isCpp );
 			onload2 += "\tDaoNamespace_AddConstNumbers( " + this_name;
 			onload2 += ", dao_" + this_name + "_Nums );\n";

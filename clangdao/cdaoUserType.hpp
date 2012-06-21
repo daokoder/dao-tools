@@ -100,6 +100,7 @@ struct CDaoUserType
 	string  typer_codes;
 
 	vector<string> baseFromHint;
+	vector<string> extraMethods;
 
 	vector<CDaoUserType*>    priorUserTypes;
 

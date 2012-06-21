@@ -45,7 +45,7 @@ const string daopar_floats = "$(name) :$(dao)array<float>";
 const string daopar_doubles = "$(name) :$(dao)array<double>";
 const string daopar_complexs = "$(name) :$(dao)array<complex>$(default)";
 const string daopar_buffer = "$(name) :cdata$(default)";
-const string daopar_stream = "$(name) :stream$(default)";
+const string daopar_stream = "$(name) :io::stream$(default)";
 const string daopar_user = "$(name) :$(daotype)$(default)";
 const string daopar_userdata = "$(name) :any$(default)"; // for callback data
 const string daopar_callback = "$(name) :any"; // for callback, no precise type yet! XXX
@@ -506,7 +506,7 @@ const string getres_f = "  if(DaoValue_CastFloat(_res)) $(name)=($(cxxtype))";
 const string getres_d = "  if(DaoValue_CastDouble(_res)) $(name)=($(cxxtype))";
 const string getres_s = "  if(DaoValue_CastString(_res)) $(name)=($(cxxtype)*)";
 const string getres_a = "  if(DaoValue_CastArray(_res))\n    $(name)=($(cxxtype)*)";
-const string getres_p = "  if(DaoValue_CastCdata(_res)) $(name)=($(cxxtype)) ";
+const string getres_p = "  if(DaoValue_CastCdata(_res,NULL)) $(name)=($(cxxtype)) ";
 const string getres_io = "  if(DaoValue_CastStream(_res)) $(name)=($(cxxtype))";
 
 const string getres_int  = getres_i + "DaoValue_TryGetInteger(_res);\n";
@@ -535,7 +535,7 @@ const string getres_qstring =
 
 const string getres_cdata = 
 "  if( DaoValue_CastObject(_res) ) _res = (DaoValue*)DaoObject_CastCdata( (DaoObject*)_res, dao_type_$(typer) );\n\
-  if( DaoValue_CastCdata(_res) && DaoCdata_IsType( (DaoCdata*)_res, dao_type_$(typer) ) ){\n";
+  if( DaoValue_CastCdata( _res, dao_type_$(typer) ) ){\n";
 
 const string getres_user = getres_cdata +
 "    $(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _res, dao_type_$(typer) );\n  }\n";
@@ -725,8 +725,6 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->daodefault.size() ) dft += " =" + var->daodefault;
 	if( var->cxxtyper.size() ) typer = var->cxxtyper;
 
-	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
-	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
 	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
@@ -788,6 +786,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	useDefault = true;
 	hasBaseHint = false;
 	hasDaoTypeHint = false;
+	hasCodeBlockHint = false;
 	isArithmeticType = false;
 	isObjectType = false;
 	isPointerType = false;
@@ -859,7 +858,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
 			string hintype = hint;
@@ -871,6 +870,8 @@ void CDaoVariable::SetHints( const string & hints )
 				ispixels = true;
 			}else if( hint == "daotype" ){
 				hasDaoTypeHint = true;
+			}else if( hint == "codeblock" ){
+				hasCodeBlockHint = true;
 			}else if( hint == "buffer" ){
 				isbuffer = true;
 			}else if( hint == "int" ){
@@ -886,6 +887,7 @@ void CDaoVariable::SetHints( const string & hints )
 			}else if( hint == "base" ){
 				hasBaseHint = true;
 			}
+
 			hint = "";
 			if( pos2 == string::npos ) pos2 = hints2.size();
 			if( pos2 != pos ) hint = hints2.substr( pos+1, pos2 - pos - 1 );
@@ -894,35 +896,45 @@ void CDaoVariable::SetHints( const string & hints )
 				pos = hint.find( '_', from );
 				if( pos > hint.size() ) pos = hint.size();
 				string s = hint.substr( from, pos - from );
+				string converted;
 				if( s == "UNDERSCORE" || s == "" ){
-					parts->back() += "_";
+					converted = "_";
 					concat = 1;
 				}else if( s == "TIMES" ){
-					parts->back() += "*";
+					converted = "*";
 					concat = 1;
 				}else if( s == "DOT" ){
-					parts->back() += ".";
+					converted = ".";
 					concat = 1;
 				}else if( s == "LB" ){
-					parts->back() += "(";
+					converted = "(";
 					concat = 1;
 				}else if( s == "RB" ){
-					parts->back() += ")";
+					converted = ")";
 					concat = 1;
 				}else if( s == "LT" ){
-					parts->back() += "<";
+					converted = "<";
 					concat = 1;
 				}else if( s == "GT" ){
-					parts->back() += ">";
+					converted = ">";
 					concat = 1;
 				}else if( s == "OR" ){
-					parts->back() += "|";
+					converted = "|";
 					concat = 1;
 				}else if( s == "COMMA" ){
-					parts->back() += ",";
+					converted = ",";
+					concat = 1;
+				}else if( s == "AT" ){
+					converted = "@";
+					concat = 1;
+				}else if( s == "COLON" ){
+					converted = ":";
 					concat = 1;
 				}else if( s == "COLON2" ){
-					parts->back() += "::";
+					converted = "::";
+					concat = 1;
+				}else if( s == "FIELD" ){
+					converted = "=>";
 					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
@@ -931,10 +943,20 @@ void CDaoVariable::SetHints( const string & hints )
 					parts->push_back( s );
 					concat = 0;
 				}
+				if( converted.size() ){
+					if( parts->size() ){
+						parts->back() += converted;
+					}else{
+						parts->push_back( converted );
+					}
+				}
 				from = pos + 1;
 			}
 			if( hintype == "daotype" ){
 				hintDaoType = names[0];
+				names.clear();
+			}else if( hintype == "codeblock" && names.size() ){
+				hintCodeBlock = names[0];
 				names.clear();
 			}else if( hintype == "wraptype" ){
 				if( names[0] == "opaque" ){
@@ -1296,7 +1318,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			UT->used = true;
 			if( qtype3.getAsString() == "FILE" ){
 #warning"====================FILE**"
-				daotype = "stream";
+				daotype = "io::stream";
 				cxxtype = "FILE";
 				extraReturn = true;
 				tpl.daopar = daopar_stream;
@@ -1424,7 +1446,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		if( UT->unsupported ) return 1;
 		UT->used = true;
 		if( qtype1.getAsString() == "FILE" ){
-			daotype = "stream";
+			daotype = "io::stream";
 			cxxtype = "FILE";
 			tpl.daopar = daopar_stream;
 			tpl.dao2cxx = dao2cxx_stream;

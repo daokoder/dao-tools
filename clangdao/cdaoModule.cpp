@@ -916,6 +916,7 @@ CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name
 	cxxTypedefs2[ name + "@$" + tdname ] = 1;
 	return UTD;
 }
+
 const char *ifdef_cpp_open = "#ifdef __cplusplus\nextern \"C\"{\n#endif\n";
 const char *ifdef_cpp_close = "#ifdef __cplusplus\n}\n#endif\n";
 void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )

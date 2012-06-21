@@ -31,6 +31,7 @@
 #include <clang/Sema/Sema.h>
 #include <clang/Sema/Template.h>
 #include <map>
+#include <algorithm>
 
 #include "cdaoFunction.hpp"
 #include "cdaoUserType.hpp"
@@ -581,7 +582,7 @@ const string tpl_meth_decl3 =
 "$(retype) DaoWrap_$(name)( $(parlist) )$(extra){ $(return)$(qname)::$(cxxname)( $(parcall) ); }\n";
 
 const string tpl_raise_call_protected =
-"  if( DaoValue_CastCdata(_p[0]) && DaoCdata_GetObject((DaoCdata*)_p[0]) == NULL ){\n\
+"  if( DaoValue_CastCdata(_p[0],NULL) && DaoCdata_GetObject((DaoCdata*)_p[0]) == NULL ){\n\
     DaoProcess_RaiseException( _proc, DAO_ERROR, \"call to protected method\" );\n\
     return;\n\
   }\n";
@@ -810,7 +811,7 @@ void CDaoUserType::SetDeclaration( RecordDecl *decl )
 void CDaoUserType::SearchHints()
 {
 	string qname = this->qname;
-	size_t pos;
+	size_t i, j, pos;
 
 	while( (pos = qname.find( "> >" )) != string::npos ) qname.replace( pos, 3, ">>" );
 	map<string,vector<string> >::iterator it = module->functionHints.find( qname );
@@ -851,6 +852,33 @@ void CDaoUserType::SearchHints()
 			if( pos != string::npos ) name.erase( pos, string::npos );
 			wrapType = CDAO_WRAP_TYPE_NONE;
 		}
+	}
+	extraMethods.clear();
+	for(i=1; i<1000; ++i){
+		char buf[10];
+		sprintf( buf, "%i", (int)i );
+		string exname = qname + "::" + buf;
+		it = module->functionHints.find( exname );
+		if( it == module->functionHints.end() ) break;
+
+		string fname, proto;
+
+		CDaoVariable var;
+		var.SetHints( it->second[0] );
+		fname = proto = var.name;
+		proto.erase( 0, idname.size()+5 ); // dao_idname_
+		proto += "( ";
+		for(j=1; j<it->second.size(); ++j){
+			CDaoVariable var2;
+			var2.SetHints( it->second[j] );
+			if( j > 1 ) proto += ", ";
+			proto += var2.name + " :" + var2.hintDaoType;
+		}
+		proto += " )";
+		if( var.hasCodeBlockHint ) proto += " [" + var.hintCodeBlock + "]";
+		if( var.hintDaoType.size() ) proto += " => " + var.hintDaoType;
+		extraMethods.push_back( fname );
+		extraMethods.push_back( proto );
 	}
 }
 void CDaoUserType::SetNamespace( const CDaoNamespace *ns )
@@ -1500,6 +1528,10 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			meth_decls += cxxproto + (cxxproto.size() ? ";\n" : "");
 			meth_codes += codes;
 		}
+	}
+	for(i=0,n=extraMethods.size(); i<n; i+=2){
+		meth_decls += "extern void " + extraMethods[i] + "( DaoProcess *_proc, DaoValue *_p[], int _n );";
+		dao_meths += "  { " + extraMethods[i] + ", \"" + extraMethods[i+1] + "\" },\n";
 	}
 	if( isQObject ){
 		string qt_signals;
