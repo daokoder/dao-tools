@@ -1026,9 +1026,8 @@ int CDaoUserType::Generate()
 	wrapCount = 0;
 	Clear();
 
-	// simplest wrapping for types declared or defined outsided of the tools:
+	// simplest wrapping for types declared or defined outsided of the modules:
 	if( not module->IsFromModules( location ) ) return GenerateSimpleTyper();
-	if( module->skipExternal and not module->IsFromMainModule(location) ) return GenerateSimpleTyper();
 
 	// simplest wrapping for types declared but not defined:
 	if( dd == NULL || forceOpaque ) return GenerateSimpleTyper();
