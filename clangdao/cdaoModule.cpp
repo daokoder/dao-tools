@@ -500,10 +500,11 @@ bool CDaoModule::IsFromModules( SourceLocation loc )
 	is = is or requiredModules2.find( e ) != requiredModules2.end();
 	if( finalGenerating ){
 		is = is or headers.find( e ) != headers.end();
+		is = is or extHeaders.find( e ) != extHeaders.end();
 	}else{
 		is = is or headers2.find( e ) != headers2.end();
+		is = is or extHeaders2.find( e ) != extHeaders2.end();
 	}
-	is = is or extHeaders2.find( e ) != extHeaders2.end();
 	return is;
 }
 bool CDaoModule::IsFromMainModule( SourceLocation loc )

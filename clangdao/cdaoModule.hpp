@@ -114,13 +114,13 @@ struct CDaoModule
 	map<string,int>        cxxTypedefs2;
 	map<string,string>     daoTypedefs;
 
-	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required tools;
-	map<FileEntry*,CDaoModuleInfo>  requiredModules2; // directly/indirectly required tools;
+	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required modules;
+	map<FileEntry*,CDaoModuleInfo>  requiredModules2; // directly/indirectly required modules;
 
 	map<FileEntry*,CDaoHeaderInfo>  headers; // header files from this module;
 	map<FileEntry*,CDaoHeaderInfo>  headers2; // direct and indirect header files from this module;
-	map<FileEntry*,CDaoHeaderInfo>  extHeaders; // header files from the required tools;
-	map<FileEntry*,CDaoHeaderInfo>  extHeaders2; // direct and indirect header files from the required tools;
+	map<FileEntry*,CDaoHeaderInfo>  extHeaders; // header files from the required modules;
+	map<FileEntry*,CDaoHeaderInfo>  extHeaders2; // direct and indirect header files from the required modules;
 	map<CDaoInclusionInfo,int>      inclusions;
 	map<string,vector<string> >     functionHints;
 
