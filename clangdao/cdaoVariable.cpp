@@ -200,8 +200,10 @@ const string ctxput_floats = ctxput + "VectorF( _proc, (float*) $(name), $(size)
 const string ctxput_doubles = ctxput + "VectorD( _proc, (double*) $(name), $(size) );\n";
 
 const string ctxput_stream = ctxput + "File( _proc, (FILE*) $(name) );\n"; //XXX PutFile
-const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
+const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
+const string ctxput_voidp2 = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
 const string ctxput_user = "  DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
+const string ctxput_user2 = "  DaoProcess_WrapCdata( _proc, (void*) $(name), NULL );\n";
 
 const string ctxput_daovalue = ctxput + "Value( _proc, (DaoValue*) $(name) );\n";
 
@@ -724,6 +726,7 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->isNullable ) dft = "|none";
 	if( var->daodefault.size() ) dft += " =" + var->daodefault;
 	if( var->cxxtyper.size() ) typer = var->cxxtyper;
+	if( var->hintCxxType.size() ) typer = var->hintCxxType;
 
 	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
@@ -785,6 +788,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	useTypeTag = false;
 	useDefault = true;
 	hasBaseHint = false;
+	hasDeleteHint = false;
 	hasDaoTypeHint = false;
 	hasCodeBlockHint = false;
 	isArithmeticType = false;
@@ -798,6 +802,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	isbuffer = false;
 	isMBS = false;
 	isWCS = false;
+	isNew = false;
 	isNumber = 0;
 	SetDeclaration( decl );
 }
@@ -858,7 +863,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" ){
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
 			string hintype = hint;
@@ -884,8 +889,12 @@ void CDaoVariable::SetHints( const string & hints )
 				isMBS = true;
 			}else if( hint == "wcstring" ){
 				isWCS = true;
+			}else if( hint == "new" ){
+				isNew = true;
 			}else if( hint == "base" ){
 				hasBaseHint = true;
+			}else if( hint == "delete" ){
+				hasDeleteHint = true;
 			}
 
 			hint = "";
@@ -958,6 +967,14 @@ void CDaoVariable::SetHints( const string & hints )
 			}else if( hintype == "codeblock" && names.size() ){
 				hintCodeBlock = names[0];
 				names.clear();
+			}else if( (hintype == "new" || hintype == "cxxtype") && names.size() ){
+				hintCxxType = names[0];
+				hintDaoType = names[0];
+				hasDaoTypeHint = true;
+				names.clear();
+			}else if( hintype == "delete" && names.size() ){
+				hintDelete = names[0];
+				names.clear();
 			}else if( hintype == "wraptype" ){
 				if( names[0] == "opaque" ){
 					wrapOpaque = true;
@@ -978,6 +995,7 @@ int CDaoVariable::Generate( int daopar_index, int cxxpar_index )
 	string prefix, suffix;
 	int retcode;
 	if( name == "" ) name = "_p" + utostr( daopar_index );
+	if( module->nullPointers && name != "self" ) isNullable = true;
 	retcode = Generate2( daopar_index, cxxpar_index );
 	unsupported = unsupported or (retcode != 0);
 	if( unsupported == false ){
@@ -1324,7 +1342,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 				tpl.daopar = daopar_stream;
 				tpl.dao2cxx = dao2cxx_stream;
 				tpl.getres = getres_stream;
-				tpl.ctxput = ctxput_stream;
+				tpl.ctxput = isNew ? ctxput_voidp : ctxput_user;
 				tpl.cache = cache_stream;
 				tpl.cxx2dao = cxx2dao_stream;
 				if( daodefault == "0" || daodefault == "NULL" ) daodefault = "io";
@@ -1460,7 +1478,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			cxxtype2 = UT->qname;
 			cxxtyper = UT->idname;
 			tpl.daopar = daopar_user;
-			tpl.ctxput = ctxput_user;
+			tpl.ctxput = isNew ? ctxput_voidp : ctxput_user;
 			tpl.cache = cache_user;
 			tpl.getres = getres_user;
 			tpl.dao2cxx = dao2cxx_user2;
@@ -1492,7 +1510,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.daopar = daopar_buffer;
 			tpl.dao2cxx = dao2cxx_void;
 			tpl.cxx2dao = cxx2dao_voidp;
-			tpl.ctxput = ctxput_voidp;
+			tpl.ctxput = isNew ? ctxput_voidp2 : ctxput_user2;
 			tpl.cache = cache_voidp;
 			if( hasDaoTypeHint && hintDaoType.find( "array" ) == 0 ){
 				daotype = hintDaoType;

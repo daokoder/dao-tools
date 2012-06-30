@@ -128,6 +128,7 @@ CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelS
 	skipVirtual = false;
 	skipProtected = false;
 	skipExternal = false;
+	nullPointers = false;
 	finalGenerating = false;
 	writeStringListConversion = false;
 	compiler = com;
@@ -1057,6 +1058,7 @@ string CDaoModule::MakeOnLoadCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
 		kvmap[ "idname" ] = utp.idname;
+		codes += utp.set_bases;
 		codes += cdao_string_fill( tpl_wraptype, kvmap );
 	}
 	return codes;
@@ -1316,7 +1318,7 @@ int CDaoModule::Generate( const string & output )
 	fout_header << "#endif\n";
 
 	fout_source << ifdef_cpp_open;
-	string onload = "DaoOnLoad";
+	string onload = this->onload.size() ? this->onload : "DaoOnLoad";
 	fout_source << "int " << onload << "( DaoVmSpace *vms, DaoNamespace *ns )\n{\n";
 	fout_source << "\t__daoVmSpace = vms;\n";
 

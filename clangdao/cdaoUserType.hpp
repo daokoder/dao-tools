@@ -88,6 +88,7 @@ struct CDaoUserType
 
 	string  toValue;
 	string  gcfields;
+	string  hintDelete;
 
 	string  set_fields;
 	string  type_decls;
@@ -98,6 +99,7 @@ struct CDaoUserType
 	string  alloc_default;
 	string  cxxWrapperVirt;
 	string  typer_codes;
+	string  set_bases;
 
 	vector<string> baseFromHint;
 	vector<string> extraMethods;
