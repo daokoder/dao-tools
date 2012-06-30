@@ -77,14 +77,18 @@ struct CDaoVariable
 	bool    hasDaoTypeHint;
 	bool    hasCodeBlockHint;
 	bool    hasBaseHint;
+	bool    hasDeleteHint;
 	bool    isMBS;
 	bool    isWCS;
+	bool    isNew;
 	short   isNumber;
 	string  name;
 	string  cxxdefault;
 	string  daodefault;
 	string  hintDaoType;
+	string  hintCxxType;
 	string  hintCodeBlock;
+	string  hintDelete;
 
 	string  daotype;
 	string  cxxtype; // original

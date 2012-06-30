@@ -95,6 +95,9 @@ struct CDaoModule
 	bool  skipVirtual;
 	bool  skipProtected;
 	bool  skipExternal;
+	bool  nullPointers;
+
+	string onload;
 
 	CompilerInstance  *compiler;
 	CDaoModuleInfo     moduleInfo;

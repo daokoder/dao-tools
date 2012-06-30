@@ -73,11 +73,15 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 			module->skipProtected = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_EXTERNAL" ){
 			module->skipExternal = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_NULLABLE_POINTERS" ){
+			module->nullPointers = true;
 		}
 		return;
 	}
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
+	}else if( MI->isObjectLike() && name == "module_onload" ){
+		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
 		SourceLocation loc = MI->getDefinitionLoc();
 		if( module->skipExternal and not module->IsFromMainModule(loc) ) return;

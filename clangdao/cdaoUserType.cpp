@@ -691,7 +691,7 @@ DaoType *dao_type_$(typer) = NULL;\n";
 
 const string usertype_code_none =
 "static DaoTypeBase $(typer)_Typer = \n\
-{ \"$(daotypename)\", NULL, NULL, NULL, { NULL }, { NULL }, NULL, NULL };\n\
+{ \"$(daotypename)\", NULL, NULL, NULL, { NULL }, { NULL }, $(delete), NULL };\n\
 DaoTypeBase DAO_DLL_$(module) *dao_$(typer)_Typer = & $(typer)_Typer;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
 
@@ -753,7 +753,8 @@ const string cxx_set_pixel_codes =
 
 
 //const string usertype_code_none = methlist_code + usertype_code;
-const string usertype_code_struct = methlist_code + delete_struct + usertype_code;
+const string usertype_code_struct = methlist_code + usertype_code;
+const string usertype_code_struct2 = methlist_code + delete_struct + usertype_code;
 const string usertype_code_class = methlist_code + delete_class + usertype_code;
 const string usertype_code_class2 = methlist_code + delete_class + get_gcfields + usertype_code;
 
@@ -823,6 +824,7 @@ void CDaoUserType::SearchHints()
 	if( it != module->functionHints.end() ){
 		CDaoVariable var;
 		var.SetHints( it->second[0] );
+		used = true; // maybe used due to hints such as "base", "new", "cxxtype" etc;
 		if( var.unsupported ) forceOpaque = true;
 		if( var.wrapNone ){
 			unsupported = true;
@@ -834,6 +836,7 @@ void CDaoUserType::SearchHints()
 		isNumber = var.isNumber;
 		if( isMBString or isWCString or isNumber ) toValue = var.names[0];
 		if( var.hasBaseHint ) baseFromHint = var.names;
+		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
 			wrapTypeHint = CDAO_WRAP_TYPE_OPAQUE;
@@ -841,7 +844,6 @@ void CDaoUserType::SearchHints()
 			wrapTypeHint = CDAO_WRAP_TYPE_DIRECT;
 		}
 		if( var.hasDaoTypeHint ){
-			outs() << qname << " " << var.hintDaoType << " @@@@@@@@@@@@@@@@\n";
 			this->qname = var.hintDaoType;
 			idname = cdao_qname_to_idname( this->qname );
 			name2 = this->qname;
@@ -911,12 +913,26 @@ void CDaoUserType::Clear()
 }
 int CDaoUserType::GenerateSimpleTyper()
 {
-	string ss = dummyTemplate ? "<>" : "";
 	map<string,string> kvmap;
+	string ss = dummyTemplate ? "<>" : "";
+	char sindex[50];
+	int i, n;
+	set_bases = "";
+	for(i=0,n=baseFromHint.size(); i<n; i++){
+		sprintf( sindex, "%i", i );
+		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
+		set_bases += "\tdao_" + idname + "_Typer->supers[" + sindex + "] = dao_" + supname2 + "_Typer;\n";
+	}
+	if( n ){
+		sprintf( sindex, "%i", n );
+		set_bases += "\tdao_" + idname + "_Typer->supers[" + sindex + "] = NULL;\n";
+	}
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.name );
 	kvmap[ "typer" ] = idname;
 	kvmap[ "name2" ] = name2;
+	kvmap[ "delete" ] = "NULL";
 	kvmap[ "daotypename" ] = cdao_make_dao_template_type_name( qname ) + ss;
+	if( hintDelete.size() ) kvmap[ "delete" ] = "(FuncPtrDel)" + hintDelete;
 	typer_codes = cdao_string_fill( usertype_code_none, kvmap );
 	wrapType = CDAO_WRAP_TYPE_OPAQUE;
 	if( dummyTemplate ) used = true;
@@ -1227,7 +1243,12 @@ int CDaoUserType::Generate( RecordDecl *decl )
 		return usertype_code_class2.expand( kvmap );
 	}
 #endif
-	typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
+	if( hintDelete.size() ){
+		kvmap[ "delete" ] = "(FuncPtrDel)" + hintDelete;
+		typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
+	}else{
+		typer_codes = cdao_string_fill( usertype_code_struct2, kvmap );
+	}
 	return 0;
 }
 
