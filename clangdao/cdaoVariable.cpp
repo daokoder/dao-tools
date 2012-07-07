@@ -45,7 +45,7 @@ const string daopar_floats = "$(name) :$(dao)array<float>";
 const string daopar_doubles = "$(name) :$(dao)array<double>";
 const string daopar_complexs = "$(name) :$(dao)array<complex>$(default)";
 const string daopar_buffer = "$(name) :cdata$(default)";
-const string daopar_stream = "$(name) :io::stream$(default)";
+const string daopar_stream = "$(name) :dao::io::stream$(default)";
 const string daopar_user = "$(name) :$(daotype)$(default)";
 const string daopar_userdata = "$(name) :any$(default)"; // for callback data
 const string daopar_callback = "$(name) :any"; // for callback, no precise type yet! XXX
@@ -728,6 +728,9 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->cxxtyper.size() ) typer = var->cxxtyper;
 	if( var->hintCxxType.size() ) typer = var->hintCxxType;
 
+	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
+	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
+
 	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
@@ -1336,7 +1339,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			UT->used = true;
 			if( qtype3.getAsString() == "FILE" ){
 #warning"====================FILE**"
-				daotype = "io::stream";
+				daotype = "dao::io::stream";
 				cxxtype = "FILE";
 				extraReturn = true;
 				tpl.daopar = daopar_stream;
@@ -1464,7 +1467,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		if( UT->unsupported ) return 1;
 		UT->used = true;
 		if( qtype1.getAsString() == "FILE" ){
-			daotype = "io::stream";
+			daotype = "dao::io::stream";
 			cxxtype = "FILE";
 			tpl.daopar = daopar_stream;
 			tpl.dao2cxx = dao2cxx_stream;
