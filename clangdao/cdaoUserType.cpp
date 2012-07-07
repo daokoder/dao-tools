@@ -1301,7 +1301,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 		string supname = sup->idname;
 		sup->Generate();
-		if( module->finalGenerating == false && sup->wrapType <= CDAO_WRAP_TYPE_OPAQUE ) return 0;
+		if( module->finalGenerating == false ) return 0;
 
 		if( baseit->getAccessSpecifier() == AS_public and not sup->unsupported ){
 			string supname = sup->qname;

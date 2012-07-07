@@ -844,6 +844,8 @@ int CDaoFunction::Generate()
 	if( ctordecl && hostype ){
 		retype.daotype = cdao_make_dao_template_type_name( hostype->qname );
 		retype.cxxtyper = hostype->idname;
+		if( retype.daotype.find( "std::" ) == 0 ) retype.daotype.replace( 0, 5, "_std::" );
+		if( retype.daotype.find( "io::" ) == 0 ) retype.daotype.replace( 0, 4, "_io::" );
 	}
 
 	string retCode = retype.ctxput;
