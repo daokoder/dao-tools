@@ -1,0 +1,60 @@
+
+clangdao = DaoMake::Project( "ClangDao" ) 
+
+daovm = DaoMake::FindPackage( "Dao", $REQUIRED )
+llvm  = DaoMake::FindPackage( "LLVM", $REQUIRED )
+
+if( daovm == none || llvm == none ) return
+
+
+clangdao_headers = 
+{
+	"cdaoVariable.hpp" ,
+	"cdaoFunction.hpp" ,
+	"cdaoUserType.hpp" ,
+	"cdaoNamespace.hpp" ,
+	"cdaoModule.hpp" 
+}
+
+clangdao_sources = 
+{
+	"cdaoVariable.cpp" ,
+	"cdaoFunction.cpp" ,
+	"cdaoUserType.cpp" ,
+	"cdaoNamespace.cpp" ,
+	"cdaoModule.cpp" ,
+	"clangdao.cpp"
+}
+
+
+clangdao_objects = DaoMake::Objects( clangdao_sources, clangdao_headers )
+clangdao_objects.AddCompilingFlag( "-fno-rtti" );
+clangdao_objects.AddCompilingFlag( "-fvisibility-inlines-hidden" ); # llvm-3.2
+
+clangdao_exe = clangdao.AddExecutable( "clangdao", clangdao_objects )
+
+
+clangdao_exe.AddLinkingFlag( "-lstdc++" )
+clangdao_exe.AddLinkingFlag( "-lclang" )
+clangdao_exe.AddLinkingFlag( "-lclangAST" )
+clangdao_exe.AddLinkingFlag( "-lclangAnalysis" )
+clangdao_exe.AddLinkingFlag( "-lclangBasic" )
+clangdao_exe.AddLinkingFlag( "-lclangCodeGen" )
+clangdao_exe.AddLinkingFlag( "-lclangDriver" )
+clangdao_exe.AddLinkingFlag( "-lclangFrontend" )
+clangdao_exe.AddLinkingFlag( "-lclangFrontendTool" )
+clangdao_exe.AddLinkingFlag( "-lclangEdit" )
+clangdao_exe.AddLinkingFlag( "-lclangLex" )
+clangdao_exe.AddLinkingFlag( "-lclangParse" )
+clangdao_exe.AddLinkingFlag( "-lclangRewrite" )
+clangdao_exe.AddLinkingFlag( "-lclangSema" )
+clangdao_exe.AddLinkingFlag( "-lclangSerialization" )
+clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerCheckers" )
+clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerCore" )
+clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerFrontend" )
+
+
+clangdao_exe.UsePackage( llvm )
+clangdao_exe.EnableDynamicLinking()
+
+clangdao.Install( daovm.GetPath( "BIN-PATH" ), clangdao_exe );
