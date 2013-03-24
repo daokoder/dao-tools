@@ -59,8 +59,8 @@ struct CDaoPPCallbacks : public PPCallbacks
 	void MacroDefined(const Token &MacroNameTok, const MacroInfo *MI);
 	void MacroUndefined(const Token &MacroNameTok, const MacroInfo *MI);
 	void InclusionDirective(SourceLocation Loc, const Token &Tok, StringRef Name, 
-			bool Angled, const FileEntry *File, SourceLocation End,
-			StringRef SearchPath, StringRef RelativePath );
+			bool Angled, CharSourceRange FilenameRange, const FileEntry *File,
+			StringRef SearchPath, StringRef RelativePath, const Module *Imported );
 };
 
 void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *MI)
@@ -99,8 +99,8 @@ void CDaoPPCallbacks::MacroUndefined(const Token &MacroNameTok, const MacroInfo 
 	module->numericConsts.erase( name );
 }
 void CDaoPPCallbacks::InclusionDirective(SourceLocation Loc, const Token &Tok, 
-		StringRef Name, bool Angled, const FileEntry *File, SourceLocation End,
-		StringRef SearchPath, StringRef RelativePath )
+		StringRef Name, bool Angled, CharSourceRange FilenameRange, const FileEntry *File, 
+		StringRef SearchPath, StringRef RelativePath, const Module *Imported )
 {
 	module->HandleHeaderInclusion( Loc, Name.str(), File );
 }
@@ -458,7 +458,8 @@ int main(int argc, char *argv[] )
 	pp.setPredefines( pp.getPredefines() + "\n" + predefines );
 	pp.addPPCallbacks( new CDaoPPCallbacks( & compiler, & module ) );
 
-	compiler.InitializeSourceManager( main_input_file );
+	InputKind ik = FrontendOptions::getInputKindForExtension( main_input_file );
+	compiler.InitializeSourceManager( FrontendInputFile( main_input_file, ik ) );
 	compiler.getDiagnosticClient().BeginSourceFile( compiler.getLangOpts(), & pp );
 	ParseAST( pp, &compiler.getASTConsumer(), compiler.getASTContext() );
 	compiler.getDiagnosticClient().EndSourceFile();

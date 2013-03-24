@@ -25,6 +25,8 @@ CFLAGS = -O2 -fno-rtti -Wall -Wno-unused -I. -I$(DAO_INC) `llvm-config --cppflag
 CFLAGS = -ggdb -fno-rtti -Wall -Wno-unused -I. -I$(DAO_INC) `llvm-config --cppflags`
 LFLAGS = -fPIC -lstdc++ $(CLANG_LIBS) `llvm-config --ldflags --libs`
 
+CFLAGS += -fvisibility-inlines-hidden # llvm-3.2
+
 TARGET = clangdao
 
 OBJECTS = cdaoVariable.o cdaoFunction.o cdaoUserType.o cdaoNamespace.o cdaoModule.o clangdao.o

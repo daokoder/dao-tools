@@ -282,7 +282,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 				for(i=0; i<n; i++){
 					if( i ) canoname += ',';
 					if( args[i].getKind() == TemplateArgument::Integral ){
-						canoname += args[i].getAsIntegral()->toString( 10 );
+						canoname += args[i].getAsIntegral().toString( 10 );
 					}else{
 						QualType itype = args[i].getAsType();
 						CDaoUserType *UT3 = HandleUserType( itype, loc, NULL );
@@ -342,7 +342,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 					alias.erase( alias.size()-1 );
 					alias += ',';
 					if( args[i].getKind() == TemplateArgument::Integral ){
-						alias += args[i].getAsIntegral()->toString( 10 );
+						alias += args[i].getAsIntegral().toString( 10 );
 					}else{
 						QualType itype = args[i].getAsType();
 						CDaoUserType *UT3 = HandleUserType( itype, loc, NULL );
@@ -366,6 +366,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 
 			const TemplateArgumentList & args = SD->getTemplateArgs();
 			for(int i=0, n = args.size(); i<n; i++){
+				if( args[i].getKind() != TemplateArgument::Type ) continue;
 				const Type *type = args[i].getAsType().getTypePtrOrNull();
 				if( type == NULL ) continue;
 				const RecordType *RT = dyn_cast<RecordType>( type );

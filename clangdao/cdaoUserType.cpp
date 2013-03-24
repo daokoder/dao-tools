@@ -1402,7 +1402,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		//outs() << name << ": " << ctorit->getAccess() << " ......................\n";
 		//outs() << ctorit->getType().getAsString() << "\n";
 		if( ctorit->isImplicit() ) continue;
-		if( not ctorit->isImplicitlyDefined() ){
+		//if( not ctorit->isImplicitlyDefined() ){ // not for clang 3.2:
 			has_ctor = true;
 			has_implicit_default_ctor = false;
 			if( ctorit->getAccess() == AS_private ) has_private_ctor = true;
@@ -1414,7 +1414,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 				has_explicit_default_ctor = true;
 				if( ctorit->getAccess() == AS_private ) has_private_ctor_only = true;
 			}
-		}
+		//}
 		if( ctorit->getAccess() == AS_private ) continue;
 		constructors.push_back( CDaoFunction( module, *ctorit, ++overloads[name] ) );
 		constructors.back().location = location;

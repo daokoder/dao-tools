@@ -28,6 +28,7 @@
 #include <llvm/ADT/StringExtras.h>
 #include <clang/Sema/DeclSpec.h>
 #include <clang/AST/DeclTemplate.h>
+#include <clang/AST/ASTContext.h>
 #include "cdaoFunction.hpp"
 #include "cdaoModule.hpp"
 

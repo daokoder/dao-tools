@@ -1041,6 +1041,11 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		SourceLocation end = sm.getExpansionLoc( range.getEnd() );
 		const char *p = sm.getCharacterData( start );
 		const char *q = sm.getCharacterData( pp.getLocForEndOfToken( end ) );
+		std::string codes;
+
+		while( p != q ) codes += *(p++);
+		p = codes.c_str();
+		q = p + codes.size();
 
 		Lexer lexer( start, module->compiler->getLangOpts(), p, p, q );
 		Token token;
