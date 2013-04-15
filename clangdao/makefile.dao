@@ -27,7 +27,7 @@ clangdao_sources =
 }
 
 
-clangdao_objects = DaoMake::Objects( clangdao_sources, clangdao_headers )
+clangdao_objects = clangdao.AddObjects( clangdao_sources, clangdao_headers )
 clangdao_objects.AddCompilingFlag( "-fno-rtti" );
 clangdao_objects.AddCompilingFlag( "-fvisibility-inlines-hidden" ); # llvm-3.2
 
@@ -54,7 +54,7 @@ clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerCore" )
 clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerFrontend" )
 
 
-clangdao_exe.UsePackage( llvm )
+clangdao_exe.UseSharedLibrary( llvm )
 clangdao_exe.EnableDynamicLinking()
 
 clangdao.Install( daovm.GetPath( "BIN-PATH" ), clangdao_exe );
