@@ -417,7 +417,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 
 	const Type *type = decl->getTypeSourceInfo()->getType().getTypePtr();
 	const FunctionProtoType *ft = type->getAs<FunctionProtoType>();
-	if( ft->hasDynamicExceptionSpec() ){
+	if( ft && ft->hasDynamicExceptionSpec() ){
 		excluded = true;
 		return;
 	}

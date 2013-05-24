@@ -1129,6 +1129,8 @@ string CDaoModule::MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*
 		EnumDecl::enumerator_iterator it, end = dd->enumerator_end();
 		for(it=dd->enumerator_begin(); it!=end; it++){
 			string item = it->getNameAsString();
+			map<string,vector<string> >::iterator it2 = functionHints.find( item );
+			if( it2 != functionHints.end() ) continue;
 			codes += "  { \"" + item + "\", DAO_INTEGER, " + qname2 + item + " },\n";
 		}
 	}
@@ -1136,6 +1138,9 @@ string CDaoModule::MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*
 		VarDecl *decl = vars[i];
 		QualType qtype = decl->getType();
 		string item = decl->getNameAsString();
+		map<string,vector<string> >::iterator it2 = functionHints.find( item );
+		if( it2 != functionHints.end() ) continue;
+
 		if( not qtype.isConstQualified() ) continue;
 		if( not IsFromMainModule( decl->getLocation() ) ) continue;
 		qtype = qtype.getCanonicalType();
@@ -1161,8 +1166,11 @@ string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> 
 	if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
 	if( qname == "" ){
 		map<string,string>::iterator it, end = numericConsts.end();
-		for(it=numericConsts.begin(); it!=end; it++ )
+		for(it=numericConsts.begin(); it!=end; it++ ){
+			map<string,vector<string> >::iterator it2 = functionHints.find( it->first );
+			if( it2 != functionHints.end() ) continue;
 			codes += "  {  \"" + it->first + "\", " + it->second + ", " + it->first + "},\n";
+		}
 	}
 	return codes + MakeConstNumItems( enums, vars, qname ) + "  { NULL, 0, 0 }\n};\n";
 }
