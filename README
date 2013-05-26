@@ -1,0 +1,7 @@
+Dao Standard Tools
+
+This is a collection of standard Dao tools that are developed
+separately from the Dao virtual machine and the core tools.
+
+To compile these tools, they should be placed under dao/tools,
+then they can be compiled along with Dao.
