@@ -32,6 +32,7 @@
 #include <clang/AST/Decl.h>
 #include <clang/AST/DeclGroup.h>
 #include <string>
+#include <stdio.h>
 
 #include "cdaoVariable.hpp"
 
