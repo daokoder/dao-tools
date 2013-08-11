@@ -1648,7 +1648,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		func.Generate();
 		if( func.excluded or func.cxxWrapperVirt2 == "" or not func.generated ){
 			TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
-			FunctionTypeLoc ftypeloc = cast<FunctionTypeLoc>(typeloc);
+			FunctionTypeLoc ftypeloc = typeloc.castAs<FunctionTypeLoc>();
 			//string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
 			string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
 			string source2 = module->ExtractSource( ftypeloc.getResultLoc().getLocalSourceRange(), true );

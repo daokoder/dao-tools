@@ -436,14 +436,14 @@ int main(int argc, char *argv[] )
 	CompilerInstance compiler;
 	CDaoModule module( & compiler, main_input_file );
 
-	compiler.createDiagnostics(argc, argv);
+	compiler.createDiagnostics();
 	//compiler.getInvocation().setLangDefaults(IK_CXX);
 	//compiler.getInvocation().setLangDefaults(IK_ObjC);
 	CompilerInvocation::CreateFromArgs( compiler.getInvocation(),
 			argv + 1, argv + argc, compiler.getDiagnostics() );
 
 	compiler.setTarget( TargetInfo::CreateTargetInfo(
-				compiler.getDiagnostics(), compiler.getTargetOpts() ) );
+				compiler.getDiagnostics(), & compiler.getTargetOpts() ) );
 
 	compiler.createFileManager();
 	compiler.createSourceManager(compiler.getFileManager());
