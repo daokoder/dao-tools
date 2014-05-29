@@ -2,7 +2,7 @@
 // ClangDao: the C/C++ library binding tool for Dao
 // http://www.daovm.net
 //
-// Copyright (c) 2011,2012, Limin Fu
+// Copyright (c) 2011-2014, Limin Fu
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -934,6 +934,7 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#include<string.h>\n";
 	fout_header << "#include<dao.h>\n\n";
 	fout_header << ifdef_cpp_open;
+	fout_header << "#include<modules/auxlib/dao_aux.h>\n\n";
 	fout_header << "#include<daoArray.h>\n\n";
 	fout_header << ifdef_cpp_close;
 
