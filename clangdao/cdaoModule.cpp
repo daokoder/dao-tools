@@ -61,7 +61,7 @@ const string cxx_stringlist_conversion =
     DString *ds = DaoValue_TryGetString( DaoList_GetItem( slist, i ) );\n\
     daoint len = DString_Size( ds );\n\
     argv[i] = (char*)malloc( (len+1) * sizeof(char) );\n\
-    strncpy( argv[i], DString_GetMBS( ds ), len );\n\
+    strncpy( argv[i], DString_GetData( ds ), len );\n\
 	argv[i][len] = '\\0';\n\
   }\n\
   return argv;\n\

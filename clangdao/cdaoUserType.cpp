@@ -238,7 +238,7 @@ static void dao_QObject_connect_dao( DaoProcess *_proc, DaoValue *_p[], int _n )
 		s2 += DaoValue_TryGetMBString(signal);\n\
 		QObject::connect( sender, s2.data(), receiver, s1.data() );\n\
 	}else if( signal.t == DAO_STRING ){ /* Qt -> Dao */\n\
-		QByteArray name( DString_GetMBS(signal.v.s) );\n\
+		QByteArray name( DString_GetData(signal.v.s) );\n\
 		QByteArray size = QString::number( DaoQtObject::RotatingHash( name ) ).toLocal8Bit();\n\
 		QByteArray ssname( name ); \n\
 		int i = name.indexOf( \'(\' );\n\
@@ -255,7 +255,7 @@ static void dao_QObject_connect_dao( DaoProcess *_proc, DaoValue *_p[], int _n )
 			QObject::connect( senderSS, s3.data(), daoSlot, SLOT( slotDao(const DaoQtMessage&) ) );\n\
 		}\n\
 	}else if( slot.t == DAO_STRING ){ /* Dao -> Qt */\n\
-		QByteArray name( DString_GetMBS(slot.v.s) );\n\
+		QByteArray name( DString_GetData(slot.v.s) );\n\
 		QByteArray size = QString::number( DaoQtObject::RotatingHash( name ) ).toLocal8Bit();\n\
 		QByteArray ssname( name ); \n\
 		int i = name.indexOf( \'(\' );\n\
@@ -295,7 +295,7 @@ const string qt_qstringlist_func =
 	for(i=0; i<m; i++){\n\
 		DaoValue *it = DaoList_GetItem( dlist, i );\n\
 		if( it.t != DAO_STRING ) continue;\n\
-		_self->append( QString( DString_GetMBS( it.v.s ) ) );\n\
+		_self->append( QString( DString_GetData( it.v.s ) ) );\n\
 	}\n\
 }\n\
 static void dao_QStringList_toDaoList( DaoProcess *_proc, DValue *_p[], int _n )\n\
@@ -356,7 +356,7 @@ const string qt_application_func =
   static DString *str = DString_New(1);\n\
   static char* argv = (char*)DValue_GetMBString( _p[0] );\n\
   DString_SetMBS( str, argv );\n\
-  argv = DString_GetMBS( str );\n\
+  argv = DString_GetData( str );\n\
   DaoCxx_QApplication *_self = DaoCxx_QApplication_New( argc, & argv, QT_VERSION );\n\
   DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n\
 }\n";

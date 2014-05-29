@@ -159,7 +159,7 @@ const string c_callback_struct =
 
 const string c_callback_call_00 =
 "  DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
-  _ro = DaoRoutine_Resolve( _ro, NULL, NULL, 0 );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, NULL, NULL, 0 );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   DaoProcess_Call( _proc, _ro, NULL, NULL, 0 );\n\
 EndCall:\n\
@@ -204,7 +204,7 @@ const string cxx_virt_call_00 =
 "  DaoObject *_obj = NULL;\n\
   DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
-  _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _obj, NULL, 0 );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _obj, NULL, 0 );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) return;\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
   DaoProcess_Call( _proc, _ro, (DaoValue*)_obj, NULL, 0 );\n\
@@ -237,7 +237,7 @@ const string cxx_virt_call_11 =
 const string cxx_proxy_body00 =
 "static void $(proxy_name)( int *_cs, DaoRoutine *_ro, DaoObject *_ob )\n{\n\
   if( _ro == NULL ) return;\n\
-  _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, NULL, 0 );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _ob, NULL, 0 );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) return;\n\
   DaoProcess *_proc = DaoVmSpace_AcquireProcess( __daoVmSpace );\n\
   *_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, NULL, 0 );\n\
@@ -251,7 +251,7 @@ const string cxx_proxy_body01 =
   if( _ro == NULL ) goto EndCall;\n\
 $(cxx2dao)\
   _dp = DaoProcess_GetLastValues( _proc, $(count) );\n\
-  _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   *_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) );\n\
 EndCall:\n\
@@ -265,7 +265,7 @@ const string cxx_proxy_body10 =
   DaoCdata *_cd;\n\
   $(vareturn)\n\
   if( _ro == NULL ) goto EndCall;\n\
-  _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, NULL, 0 );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _ob, NULL, 0 );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   if( (*_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, NULL, 0 )) ) goto EndCall;\n\
   _res = DaoProcess_GetReturned( _proc );\n\
@@ -284,7 +284,7 @@ const string cxx_proxy_body11 =
   if( _ro == NULL ) goto EndCall;\n\
 $(cxx2dao)\
   _dp = DaoProcess_GetLastValues( _proc, $(count) );\n\
-  _ro = DaoRoutine_Resolve( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
+  _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _ob, _dp, $(count) );\n\
   if( _ro == NULL || DaoRoutine_IsWrapper( _ro ) ) goto EndCall;\n\
   if( (*_cs = DaoProcess_Call( _proc, _ro, (DaoValue*)_ob, _dp, $(count) )) ) goto EndCall;\n\
   _res = DaoProcess_GetReturned( _proc );\n\
