@@ -71,8 +71,6 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 			module->skipVirtual = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_PROTECTED" ){
 			module->skipProtected = true;
-		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_EXTERNAL" ){
-			module->skipExternal = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_NULLABLE_POINTERS" ){
 			module->nullPointers = true;
 		}
@@ -84,7 +82,7 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
 		SourceLocation loc = MI->getDefinitionLoc();
-		if( module->skipExternal and not module->IsFromMainModule(loc) ) return;
+		if( not module->IsFromMainModule(loc) ) return;
 		Token tok = *MI->tokens_begin();
 		if( tok.getKind() == tok::numeric_constant ){
 			if( name[0] != '_' ) module->HandleNumericConstant( name, tok );
@@ -398,10 +396,18 @@ static llvm::cl::opt<std::string> output_dir("o", llvm::cl::desc("output directo
 // The follow path is needed for Objective-C:
 // /Developer/SDKs/MacOSX10.5.sdk/usr/lib/gcc/i686-apple-darwin9/4.2.1/include
 
-const string predefines = 
-"#define DAO_MODULE_NAME( name )\n"
-"#define DAO_PROPERTY_HINT( hints )\n"
-"#define DAO_FUNCTION_HINT( hints )\n";
+const string predefines = "";
+
+void ClangDao_RemoveDefine( string & defines, const string & define )
+{
+	size_t pos = defines.find( define );
+	if( pos != string::npos ){
+		while( pos < defines.size() && defines[pos] != '\n' ){
+			defines[pos] = ' ';
+			pos += 1;
+		}
+	}
+}
 
 
 int main(int argc, char *argv[] )
@@ -455,7 +461,21 @@ int main(int argc, char *argv[] )
 	compiler.createSema(TU_Prefix, NULL);
 
 	Preprocessor & pp = compiler.getPreprocessor();
-	pp.setPredefines( pp.getPredefines() + "\n" + predefines );
+
+	//outs()<<pp.getPredefines()<<"\n";
+	string builtinDefines = pp.getPredefines();
+
+#if 1
+	ClangDao_RemoveDefine( builtinDefines, "#define __APPLE_CC__" );
+	ClangDao_RemoveDefine( builtinDefines, "#define __APPLE__" );
+	ClangDao_RemoveDefine( builtinDefines, "#define __MACH__" );
+	ClangDao_RemoveDefine( builtinDefines, "#define __ENVIRONMENT_MAC_OS_X" );
+	ClangDao_RemoveDefine( builtinDefines, "#define OBJC_" );
+#endif
+
+	//outs()<<builtinDefines<<"\n";
+
+	pp.setPredefines( builtinDefines + "\n" + predefines );
 	pp.addPPCallbacks( new CDaoPPCallbacks( & compiler, & module ) );
 
 	InputKind ik = FrontendOptions::getInputKindForExtension( main_input_file );

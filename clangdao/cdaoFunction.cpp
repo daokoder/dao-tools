@@ -346,7 +346,7 @@ const string dao_callback_def =
 
 const string dao_check_callback =
 "  if( _$(name_cb) != $(name_ud) || DaoTuple_GetItem( $(name_ud), 0 ) == NULL ){\n\
-     DaoProcess_RaiseException( _proc, DAO_ERROR_PARAM, \"invalid callback\" );\n\
+     DaoProcess_RaiseError( _proc, \"PARAM\", \"invalid callback\" );\n\
 	 return;\n\
    }";
 
@@ -563,7 +563,7 @@ int CDaoFunction::Generate()
 	DeclaratorDecl *decl = funcDecl;
 	if( decl == NULL ) decl = fieldDecl;
 	if( decl && not module->IsFromModules( location ) ) return 0;
-	if( module->skipExternal and not module->IsFromMainModule(location) ) return 0;
+	if( not module->IsFromMainModule(location) ) return 0;
 	if( excluded ) return 1;
 	if( generated ) return 0;
 	if( decl ){

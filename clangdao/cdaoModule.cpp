@@ -127,7 +127,6 @@ CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelS
 {
 	skipVirtual = false;
 	skipProtected = false;
-	skipExternal = false;
 	nullPointers = false;
 	finalGenerating = false;
 	writeStringListConversion = false;

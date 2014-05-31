@@ -94,7 +94,6 @@ struct CDaoModule
 	bool  writeStringListConversion;
 	bool  skipVirtual;
 	bool  skipProtected;
-	bool  skipExternal;
 	bool  nullPointers;
 
 	string onload;
