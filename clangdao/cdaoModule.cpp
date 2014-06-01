@@ -1267,8 +1267,6 @@ int CDaoModule::Generate( const string & output )
 		string mod = it2->second.name;
 		topLevelScope.onload += "\tDaoNamespace *" + mod + " = ";
 		topLevelScope.onload += "DaoVmSpace_LinkModule( vms, ns, \"" + mod + "\" );\n";
-		topLevelScope.onload += "\tif( " + mod + " == NULL ) " + mod + " = ";
-		topLevelScope.onload += "DaoVmSpace_LinkModule( vms, ns, \"Dao" + mod + "\" );\n";
 		topLevelScope.onload += "\tif( " + mod + " == NULL ) return 1;\n";
 	}
 
@@ -1330,6 +1328,8 @@ int CDaoModule::Generate( const string & output )
 	string onload = this->onload.size() ? this->onload : "DaoOnLoad";
 	fout_source << "int " << onload << "( DaoVmSpace *vms, DaoNamespace *ns )\n{\n";
 	fout_source << "\t__daoVmSpace = vms;\n";
+	fout_source << "\tDaoNamespace *aux = DaoVmSpace_LinkModule( vms, ns, \"aux\" );\n";
+	fout_source << "\tif( aux == NULL ) return 1;\n";
 
 #if 0
 	map<string,string>::iterator ssit, ssend = daoTypedefs.end();
