@@ -651,10 +651,10 @@ const string delete_class =
 }\n";
 
 const string get_gcfields =
-"static void Dao_$(typer)_GetGCFields( void *P, DArray *VS, DArray *AS, DArray *MS, int RM )\n\
+"static void Dao_$(typer)_GetGCFields( void *P, DList *VS, DList *AS, DList *MS, int RM )\n\
 {\n\
 	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) P;\n\
-	if( self->_cdata ) DArray_Append( VS, (void*) self->_cdata );\n\
+	if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
 	if( RM ){\n\
 $(breakref)\
 		self->_cdata = NULL;\n\

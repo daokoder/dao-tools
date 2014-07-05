@@ -934,7 +934,7 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#include<dao.h>\n\n";
 	fout_header << ifdef_cpp_open;
 	fout_header << "#include<modules/auxlib/dao_aux.h>\n\n";
-	fout_header << "#include<daoArray.h>\n\n";
+	fout_header << "#include<daoList.h>\n\n";
 	fout_header << ifdef_cpp_close;
 
 	map<FileEntry*,CDaoHeaderInfo>::iterator it, end = headers.end();
