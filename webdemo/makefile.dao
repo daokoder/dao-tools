@@ -1,0 +1,155 @@
+
+###########################################################################
+#
+# Create a project named "Dao", which can be accessed by other
+# DaoMake files using DaoMake::FindPackage( "Dao" ).
+#
+###########################################################################
+
+daojs = DaoMake::Project( "Dao" )
+
+
+###########################################################################
+#
+# Options to enable/disable language features:
+#
+###########################################################################
+
+daojs_with_numarray   = $ON;
+daojs_with_decorator  = $ON;
+daojs_with_thread     = $OFF;
+daojs_with_concurrent = $OFF;
+
+
+###########################################################################
+#
+# project.AddDefinition( "DEFINITION_NAME" ) will add "-DDEFINITION_NAME"
+# to the compiling flags of all its targets.
+#
+###########################################################################
+
+if( daojs_with_numarray   == $ON ) daojs.AddDefinition( "DAO_WITH_NUMARRAY" )
+if( daojs_with_decorator  == $ON ) daojs.AddDefinition( "DAO_WITH_DECORATOR" )
+if( daojs_with_thread     == $ON ) daojs.AddDefinition( "DAO_WITH_THREAD" )
+if( daojs_with_concurrent == $ON ) daojs.AddDefinition( "DAO_WITH_CONCURRENT" )
+
+changeset = io.read( DaoMake::MakePath( DaoMake::SourcePath(), "manifest.uuid" ), 1 )
+if( % changeset ) daojs.AddDefinition( "CHANGESET_ID", "\\\"FOS." + changeset[:11] + "\\\"" )
+
+
+###########################################################################
+#
+# Header and source file lists:
+#
+###########################################################################
+
+daojs_kernel_headers =
+{
+	"../../kernel/dao.h" ,
+	"../../kernel/daoBase.h" ,
+	"../../kernel/daoClass.h" ,
+	"../../kernel/daoConst.h" ,
+	"../../kernel/daoGC.h" ,
+	"../../kernel/daoLexer.h" ,
+	"../../kernel/daoList.h" ,
+	"../../kernel/daoMap.h" ,
+	"../../kernel/daoNamespace.h" ,
+	"../../kernel/daoNumtype.h" ,
+	"../../kernel/daoObject.h" ,
+	"../../kernel/daoParser.h" ,
+	"../../kernel/daoBytecode.h" ,
+	"../../kernel/daoOptimizer.h" ,
+	"../../kernel/daoProcess.h" ,
+	"../../kernel/daoRegex.h" ,
+	"../../kernel/daoRoutine.h" ,
+	"../../kernel/daoTasklet.h" ,
+	"../../kernel/daoStdlib.h" ,
+	"../../kernel/daoStdtype.h" ,
+	"../../kernel/daoStream.h" ,
+	"../../kernel/daoString.h" ,
+	"../../kernel/daoThread.h" ,
+	"../../kernel/daoPlatforms.h" ,
+	"../../kernel/daoType.h" ,
+	"../../kernel/daoValue.h" ,
+	"../../kernel/daoVmcode.h" ,
+	"../../kernel/daoVmspace.h" 
+}
+
+daojs_kernel_sources =
+{
+	"../../kernel/daoClass.c" ,
+	"../../kernel/daoConst.c" ,
+	"../../kernel/daoGC.c" ,
+	"../../kernel/daoLexer.c" ,
+	"../../kernel/daoList.c" ,
+	"../../kernel/daoMap.c" ,
+	"../../kernel/daoNamespace.c" ,
+	"../../kernel/daoNumtype.c" ,
+	"../../kernel/daoObject.c" ,
+	"../../kernel/daoParser.c" ,
+	"../../kernel/daoBytecode.c" ,
+	"../../kernel/daoOptimizer.c" ,
+	"../../kernel/daoRoutine.c" ,
+	"../../kernel/daoProcess.c" ,
+	"../../kernel/daoValue.c" ,
+	"../../kernel/daoType.c" ,
+	"../../kernel/daoRegex.c" ,
+	"../../kernel/daoTasklet.c" ,
+	"../../kernel/daoStdlib.c" ,
+	"../../kernel/daoStdtype.c" ,
+	"../../kernel/daoStream.c" ,
+	"../../kernel/daoString.c" ,
+	"../../kernel/daoThread.c" ,
+	"../../kernel/daoPlatforms.c" ,
+	"../../kernel/daoVmcode.c" ,
+	"../../kernel/daoVmspace.c" 
+}
+
+
+
+###########################################################################
+#
+# daojs.AddObjects( source_file_list, header_file_list ) will create an object
+# set that includes the objects compiled from the "source_file_list":
+#
+###########################################################################
+daojs_kernel_objects = daojs.AddObjects( daojs_kernel_sources, daojs_kernel_headers )
+
+
+daojs.AddIncludePath( "../../kernel" )
+
+
+###########################################################################
+#
+# Add platform specific flags:
+#
+###########################################################################
+
+daojs.AddPlatformDefs();
+
+if( DaoMake::IsPlatform( "UNIX" ) ){
+	daojs.AddCompilingFlag( "-fPIC" )
+	daojs.AddLinkingFlag( "-lm" )
+	if( DaoMake::IsPlatform( "LINUX" ) ) daojs.AddLinkingFlag( "-ldl" )
+}else if( DaoMake::IsPlatform( "MINGW" ) ){
+	daojs.AddLinkingFlag( "-lwinmm" )
+}
+
+
+###########################################################################
+#
+# Add an javascript target:
+#
+###########################################################################
+ems_export  = @[]"['_DaoInit','_DaoQuit',@[]
+ems_export += @[]'_DaoVmSpace_Eval','_DaoVmSpace_StdioStream',@[]
+ems_export += @[]'_DaoStream_WriteChars']"@[]
+daojs_js_main = daojs.AddObjects( { "../../kernel/daoMain.c" }, daojs_kernel_headers );
+daojs_js = daojs.AddJavaScriptLibrary( "dao", daojs_kernel_objects, daojs_js_main )
+daojs_js.AddDefinition( "DAO_BUILD_JS_TARGET" )
+daojs_js.AddDefinition( "DAO_WITHOUT_DLL" )
+daojs_js.AddDefinition( "WITHOUT_WCTYPE_H" )
+daojs_js.AddDefinition( "WITHOUT_DIRECT_THREADING" )
+daojs_js.AddLinkingFlag( "-s EXPORTED_FUNCTIONS=" + ems_export )
+#daojs_js.AddLinkingFlag( "-s ASM_JS=1" )
+if( DaoMake::BuildMode() == $RELEASE ) daojs_js.AddLinkingFlag( "-O2 --closure 1" )
