@@ -1,0 +1,49 @@
+
+load os.fs
+load web.http
+load pkgtools.archive
+load zip
+
+routine main( command: var<"get">, url: string, save = "" )
+{
+	data = Client::Get( url, $GET )
+
+	if( save == "" ){
+		caps = url.capture( "/ ( [^/]* %. %w+ ) $" )
+		if( % caps ) save = caps[1]
+	}
+	if( save == "" ){
+		io.writeln( data )
+	}else{
+		fout = io::open( save, "w+" )
+		fout.write( data )
+		fout.close()
+	}
+}
+
+routine main( command: var<"zip">, input: string, output = "" )
+{
+	if( output == "" ) output = input.change( "[%/%\\] $", "" ) + ".dz"
+	if( not fs::exists( input ) ) std::error( "Input path not exist: " + input )
+	if( fs::exists( output ) ) std::error( "Output path already exist: " + output )
+	
+	archive = Archive()
+	archive.Add( input )
+
+	data = zip::Compress( archive.GetBuffer() )
+	fout = io::open( output, "w+" )
+	fout.write( data )
+	fout.close()
+}
+
+routine main( command: var<"unzip">, input: string, output = "" )
+{
+	if( output == "" ) output = input.change( "{{.dz}} $", "" )
+	if( not fs::exists( input ) ) std::error( "Input path not exist: " + input )
+	if( fs::entry( input ).kind != $file ) std::error( "Input path is not a file: " + input )
+	if( fs::exists( output ) ) std::error( "Output path already exist: " + output )
+
+	data = zip::Decompress( io.read( input ) )
+	Archive::Extract( data, output )
+}
+
