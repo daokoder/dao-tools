@@ -32,6 +32,7 @@ clangdao_objects.AddCompilingFlag( "-fno-rtti" );
 clangdao_objects.AddCompilingFlag( "-fvisibility-inlines-hidden" ); # llvm-3.2
 
 clangdao_exe = clangdao.AddExecutable( "clangdao", clangdao_objects )
+clangdao_exe.SetTargetPath( "../../bin" )
 
 
 clangdao_exe.AddLinkingFlag( "-lstdc++" )
