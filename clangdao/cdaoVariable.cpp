@@ -37,12 +37,12 @@
 
 const string daopar_int = "$(name): int$(default)";
 const string daopar_float = "$(name): float$(default)";
-const string daopar_double = "$(name): double$(default)";
+const string daopar_double = "$(name): float$(default)";
 const string daopar_complex = "$(name): complex$(default)";
 const string daopar_string = "$(name): $(dao)string$(default)";
 const string daopar_ints = "$(name): $(dao)array<int>";
 const string daopar_floats = "$(name): $(dao)array<float>";
-const string daopar_doubles = "$(name): $(dao)array<double>";
+const string daopar_doubles = "$(name): $(dao)array<float>";
 const string daopar_complexs = "$(name): $(dao)array<complex>$(default)";
 const string daopar_buffer = "$(name): cdata$(default)";
 const string daopar_stream = "$(name): dao::io::stream$(default)";
@@ -60,42 +60,42 @@ const string dao2cxx4 = "  $(cxxtype) (*$(name))[$(size2)] = ($(cxxtype)(*)[$(si
 const string dao2cxx_char = dao2cxx + "DaoValue_TryGetChars( _p[$(index)] )[0];\n";
 const string dao2cxx_int  = dao2cxx + "DaoValue_TryGetInteger( _p[$(index)] );\n";
 const string dao2cxx_float = dao2cxx + "DaoValue_TryGetFloat( _p[$(index)] );\n";
-const string dao2cxx_double = dao2cxx + "DaoValue_TryGetDouble( _p[$(index)] );\n";
+const string dao2cxx_double = dao2cxx + "DaoValue_TryGetFloat( _p[$(index)] );\n";
 const string dao2cxx_complex = dao2cxx + "DaoValue_TryGetComplex( _p[$(index)] );\n";
 const string dao2cxx_mbs = dao2cxx2 + "DaoValue_TryGetChars( _p[$(index)] );\n";
 const string dao2cxx_wcs = dao2cxx2 + "DaoValue_TryGetWCString( _p[$(index)] );\n";
-const string dao2cxx_bytes = dao2cxx2 + "DaoArray_ToSByte( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_ubytes = dao2cxx2 + "DaoArray_ToUByte( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_shorts = dao2cxx2 + "DaoArray_ToSShort( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_ushorts = dao2cxx2 + "DaoArray_ToUShort( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_ints = dao2cxx2 + "DaoArray_ToSInt( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_uints = dao2cxx2 + "DaoArray_ToUInt( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_floats = dao2cxx2 + "DaoArray_ToFloat( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_doubles = dao2cxx2 + "DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_complexs8 = dao2cxx2 + "(complex8*) DaoArray_ToFloat( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_complexs16 = dao2cxx2 + "(complex16*) DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_bytes = dao2cxx2 + "DaoArray_ToSInt8( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_ubytes = dao2cxx2 + "DaoArray_ToUInt8( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_shorts = dao2cxx2 + "DaoArray_ToSInt16( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_ushorts = dao2cxx2 + "DaoArray_ToUInt16( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_ints = dao2cxx2 + "DaoArray_ToSInt32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_uints = dao2cxx2 + "DaoArray_ToUInt32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_floats = dao2cxx2 + "DaoArray_ToFloat32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_doubles = dao2cxx2 + "DaoArray_ToFloat64( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_complexs8 = dao2cxx2 + "(complex8*) DaoArray_ToFloat32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_complexs16 = dao2cxx2 + "(complex16*) DaoArray_ToFloat64( (DaoArray*)_p[$(index)] );\n";
 const string dao2cxx_array_buffer = dao2cxx2 + "DaoArray_GetBuffer( (DaoArray*)_p[$(index)] );\n";
 
 const string dao2cxx_bmat = dao2cxx3 + "DaoArray_GetMatrixB( (DaoArray*)_p[$(index)], $(size) );\n";
 const string dao2cxx_smat = dao2cxx3 + "DaoArray_GetMatrixS( (DaoArray*)_p[$(index)], $(size) );\n";
-const string dao2cxx_imat = dao2cxx3 + "DaoArray_GetMatrixI( (DaoArray*)_p[$(index)], $(size) );\n";
-const string dao2cxx_fmat = dao2cxx3 + "DaoArray_GetMatrixF( (DaoArray*)_p[$(index)], $(size) );\n";
-const string dao2cxx_dmat = dao2cxx3 + "DaoArray_GetMatrixD( (DaoArray*)_p[$(index)], $(size) );\n";
-const string dao2cxx_c8mat = dao2cxx3 + "(complex8*) DaoArray_GetMatrixF( (DaoArray*)_p[$(index)], $(size) );\n";
-const string dao2cxx_c16mat = dao2cxx3 + "(complex16*) DaoArray_GetMatrixD( (DaoArray*)_p[$(index)], $(size) );\n";
+const string dao2cxx_imat = dao2cxx3 + "DaoArray_GetMatrixInt64 (DaoArray*)_p[$(index)], $(size) );\n";
+const string dao2cxx_fmat = dao2cxx3 + "DaoArray_GetMatrixFloat32( (DaoArray*)_p[$(index)], $(size) );\n";
+const string dao2cxx_dmat = dao2cxx3 + "DaoArray_GetMatrixFloat64( (DaoArray*)_p[$(index)], $(size) );\n";
+const string dao2cxx_c8mat = dao2cxx3 + "(complex8*) DaoArray_GetMatrixFloat32( (DaoArray*)_p[$(index)], $(size) );\n";
+const string dao2cxx_c16mat = dao2cxx3 + "(complex16*) DaoArray_GetMatrixFloat64( (DaoArray*)_p[$(index)], $(size) );\n";
 
 
 const string dao2cxx_ubmat = dao2cxx_bmat; // TODO:
 const string dao2cxx_usmat = dao2cxx_smat;
 const string dao2cxx_uimat = dao2cxx_imat;
 
-const string dao2cxx_bmat2 = dao2cxx4 + "DaoArray_ToSByte( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_smat2 = dao2cxx4 + "DaoArray_ToSShort( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_imat2 = dao2cxx4 + "DaoArray_ToSInt( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_fmat2 = dao2cxx4 + "DaoArray_ToFloat( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_dmat2 = dao2cxx4 + "DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_c8mat2 = dao2cxx4 + "(complex8*) DaoArray_ToFloat( (DaoArray*)_p[$(index)] );\n";
-const string dao2cxx_c16mat2 = dao2cxx4 + "(complex16*) DaoArray_ToDouble( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_bmat2 = dao2cxx4 + "DaoArray_ToSInt8( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_smat2 = dao2cxx4 + "DaoArray_ToSInt16( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_imat2 = dao2cxx4 + "DaoArray_ToSInt32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_fmat2 = dao2cxx4 + "DaoArray_ToFloat32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_dmat2 = dao2cxx4 + "DaoArray_ToFloat64( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_c8mat2 = dao2cxx4 + "(complex8*) DaoArray_ToFloat32( (DaoArray*)_p[$(index)] );\n";
+const string dao2cxx_c16mat2 = dao2cxx4 + "(complex16*) DaoArray_ToFloat64( (DaoArray*)_p[$(index)] );\n";
 
 const string dao2cxx_ubmat2 = dao2cxx_bmat2; // TODO:
 const string dao2cxx_usmat2 = dao2cxx_smat2;
@@ -134,31 +134,31 @@ const string dao2cxx_userdata = "  DaoTuple *$(name) = (DaoTuple*) _p[$(index)];
 
 const string cxx2dao = "  DaoProcess_New";
 
-const string cxx2dao_int = cxx2dao + "Integer( _proc, (daoint) $(name) );\n";
-const string cxx2dao_float = cxx2dao + "Float(  _proc,(float) $(name) );\n";
-const string cxx2dao_double = cxx2dao + "Double( _proc, (double) $(name) );\n";
-const string cxx2dao_int2 = cxx2dao + "Integer( _proc, (daoint) *$(name) );\n";
-const string cxx2dao_float2 = cxx2dao + "Float( _proc, (float) *$(name) );\n";
-const string cxx2dao_double2 = cxx2dao + "Double( _proc, (double) *$(name) );\n";
+const string cxx2dao_int = cxx2dao + "Integer( _proc, (dao_integer) $(name) );\n";
+const string cxx2dao_float = cxx2dao + "Float(  _proc,(dao_float) $(name) );\n";
+const string cxx2dao_double = cxx2dao + "Float( _proc, (dao_float) $(name) );\n";
+const string cxx2dao_int2 = cxx2dao + "Integer( _proc, (dao_integer) *$(name) );\n";
+const string cxx2dao_float2 = cxx2dao + "Float( _proc, (dao_float) *$(name) );\n";
+const string cxx2dao_double2 = cxx2dao + "Float( _proc, (dao_float) *$(name) );\n";
 const string cxx2dao_mbs = cxx2dao+"String( _proc, (char*) $(name), strlen( (char*)$(name) ) );\n"; // XXX for char**
 const string cxx2dao_wcs = cxx2dao + "WCString( _proc, (wchar_t*) $(name), wcslen( (wchar_t*)$(name) ) );\n"; // XXX for wchar_t**
-const string cxx2dao_bytes = cxx2dao + "VectorSB( _proc, (signed char*) $(name), $(size) );\n";
-const string cxx2dao_ubytes = cxx2dao + "VectorUB( _proc, (unsigned char*) $(name), $(size) );\n";
-const string cxx2dao_shorts = cxx2dao + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
-const string cxx2dao_ushorts = cxx2dao + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
-const string cxx2dao_ints = cxx2dao + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
-const string cxx2dao_uints = cxx2dao + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
-const string cxx2dao_floats = cxx2dao + "VectorF( _proc, (float*) $(name), $(size) );\n";
-const string cxx2dao_doubles = cxx2dao + "VectorD( _proc, (double*) $(name), $(size) );\n";
+const string cxx2dao_bytes = cxx2dao + "VectorSInt8( _proc, (signed char*) $(name), $(size) );\n";
+const string cxx2dao_ubytes = cxx2dao + "VectorUInt8( _proc, (unsigned char*) $(name), $(size) );\n";
+const string cxx2dao_shorts = cxx2dao + "VectorSInt16( _proc, (signed short*) $(name), $(size) );\n";
+const string cxx2dao_ushorts = cxx2dao + "VectorUInt16( _proc, (unsigned short*) $(name), $(size) );\n";
+const string cxx2dao_ints = cxx2dao + "VectorSInt32( _proc, (signed int*) $(name), $(size) );\n";
+const string cxx2dao_uints = cxx2dao + "VectorUInt32( _proc, (unsigned int*) $(name), $(size) );\n";
+const string cxx2dao_floats = cxx2dao + "VectorFloat32( _proc, (float*) $(name), $(size) );\n";
+const string cxx2dao_doubles = cxx2dao + "VectorFloat64( _proc, (double*) $(name), $(size) );\n";
 
-const string cxx2dao_bmat = cxx2dao + "MatrixSB( _proc, (signed char**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_ubmat = cxx2dao + "MatrixUB( _proc, (unsigned char**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_smat = cxx2dao + "MatrixSS( _proc, (signed short**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_usmat = cxx2dao + "MatrixUS( _proc, (unsigned short**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_imat = cxx2dao + "MatrixSI( _proc, (signed int**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_uimat = cxx2dao + "MatrixUI( _proc, (unsigned int**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_fmat = cxx2dao + "MatrixF( _proc, (float**) $(name), $(size), $(size2) );\n";
-const string cxx2dao_dmat = cxx2dao + "MatrixD( _proc, (double**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_bmat = cxx2dao + "MatrixSInt8( _proc, (signed char**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_ubmat = cxx2dao + "MatrixUInt8( _proc, (unsigned char**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_smat = cxx2dao + "MatrixSInt16( _proc, (signed short**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_usmat = cxx2dao + "MatrixUInt16( _proc, (unsigned short**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_imat = cxx2dao + "MatrixSInt32( _proc, (signed int**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_uimat = cxx2dao + "MatrixUInt32( _proc, (unsigned int**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_fmat = cxx2dao + "MatrixFloat32( _proc, (float**) $(name), $(size), $(size2) );\n";
+const string cxx2dao_dmat = cxx2dao + "MatrixFloat64( _proc, (double**) $(name), $(size), $(size2) );\n";
 
 const string cxx2dao_bmat2 = cxx2dao_bmat; // XXX
 const string cxx2dao_ubmat2 = cxx2dao_ubmat;
@@ -184,19 +184,19 @@ const string cxx2dao_qstring = cxx2dao+"String( _proc, (char*) $(name).toLocal8B
 
 const string ctxput = "  DaoProcess_Put";
 
-const string ctxput_int = ctxput + "Integer( _proc, (daoint) $(name) );\n";
-const string ctxput_float = ctxput + "Float( _proc, (float) $(name) );\n";
-const string ctxput_double = ctxput + "Double( _proc, (double) $(name) );\n";
+const string ctxput_int = ctxput + "Integer( _proc, (dao_integer) $(name) );\n";
+const string ctxput_float = ctxput + "Float( _proc, (dao_float) $(name) );\n";
+const string ctxput_double = ctxput + "Float( _proc, (dao_float) $(name) );\n";
 const string ctxput_mbs = ctxput + "Chars( _proc, (char*) $(name) );\n";
 const string ctxput_wcs = ctxput + "WCString( _proc, (wchar_t*) $(name) );\n";
 const string ctxput_bytes = ctxput + "Bytes( _proc, (char*) $(name), $(size) );\n"; // XXX array?
-const string ctxput_shorts = ctxput + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
-const string ctxput_ints = ctxput + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
-const string ctxput_ushorts = ctxput + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
-const string ctxput_uints = ctxput + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
-const string ctxput_daoints = ctxput + "VectorI( _proc, (daoint*) $(name), $(size) );\n";
-const string ctxput_floats = ctxput + "VectorF( _proc, (float*) $(name), $(size) );\n";
-const string ctxput_doubles = ctxput + "VectorD( _proc, (double*) $(name), $(size) );\n";
+const string ctxput_shorts = ctxput + "VectorSInt16( _proc, (signed short*) $(name), $(size) );\n";
+const string ctxput_ints = ctxput + "VectorSInt32( _proc, (signed int*) $(name), $(size) );\n";
+const string ctxput_ushorts = ctxput + "VectorUInt16( _proc, (unsigned short*) $(name), $(size) );\n";
+const string ctxput_uints = ctxput + "VectorUInt32( _proc, (unsigned int*) $(name), $(size) );\n";
+const string ctxput_daoints = ctxput + "VectorInt64 _proc, (long long*) $(name), $(size) );\n";
+const string ctxput_floats = ctxput + "VectorFloat32( _proc, (float*) $(name), $(size) );\n";
+const string ctxput_doubles = ctxput + "VectorFloat64( _proc, (double*) $(name), $(size) );\n";
 
 const string ctxput_stream = ctxput + "File( _proc, (FILE*) $(name) );\n"; //XXX PutFile
 const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
@@ -207,13 +207,13 @@ const string ctxput_user2 = "  DaoProcess_WrapCdata( _proc, (void*) $(name), NUL
 const string ctxput_daovalue = ctxput + "Value( _proc, (DaoValue*) $(name) );\n";
 
 
-const string qt_procput = "  Dao_$(typer)_InitSS( ($(cxxtype)*) $(name) );\n";
+const string qt_procput = "  Dao_$(typer)_InitSInt16( ($(cxxtype)*) $(name) );\n";
 const string qt_put_qobject =
 "  DaoValue *dbase = DaoQt_Get_Wrapper( $(name) );\n\
   if( dbase ){\n\
     DaoProcess_PutValue( _proc, dbase );\n\
   }else{\n\
-    Dao_$(typer)_InitSS( ($(cxxtype)*) $(name) );\n\
+    Dao_$(typer)_InitSInt16( ($(cxxtype)*) $(name) );\n\
     DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n\
   }\n\
 ";
@@ -227,19 +227,19 @@ const string ctxput_refcdata =
 
 const string cache = "  DaoProcess_New";
 
-const string cache_int = cache + "Integer( _proc, (daoint) $(name) );\n";
-const string cache_float = cache + "Float( _proc, (float) $(name) );\n";
-const string cache_double = cache + "Double( _proc, (double) $(name) );\n";
+const string cache_int = cache + "Integer( _proc, (dao_integer) $(name) );\n";
+const string cache_float = cache + "Float( _proc, (dao_float) $(name) );\n";
+const string cache_double = cache + "Float( _proc, (dao_float) $(name) );\n";
 const string cache_mbs = cache + "String( _proc, (char*) $(name), -1 );\n";
 const string cache_wcs = cache + "WCString( _proc, (wchar_t*) $(name), -1 );\n";
 const string cache_bytes = cache + "String( _proc, (char*) $(name), $(size) );\n"; // XXX array?
-const string cache_shorts = cache + "VectorSS( _proc, (signed short*) $(name), $(size) );\n";
-const string cache_ushorts = cache + "VectorUS( _proc, (unsigned short*) $(name), $(size) );\n";
-const string cache_ints = cache + "VectorSI( _proc, (signed int*) $(name), $(size) );\n";
-const string cache_uints = cache + "VectorUI( _proc, (unsigned int*) $(name), $(size) );\n";
-const string cache_daoints = cache + "VectorI( _proc, (daoint*) $(name), $(size) );\n";
-const string cache_floats = cache + "VectorF( _proc, (float*) $(name), $(size) );\n";
-const string cache_doubles = cache + "VectorD( _proc, (double*) $(name), $(size) );\n";
+const string cache_shorts = cache + "VectorSInt16( _proc, (signed short*) $(name), $(size) );\n";
+const string cache_ushorts = cache + "VectorUInt16( _proc, (unsigned short*) $(name), $(size) );\n";
+const string cache_ints = cache + "VectorSInt32( _proc, (signed int*) $(name), $(size) );\n";
+const string cache_uints = cache + "VectorUInt32( _proc, (unsigned int*) $(name), $(size) );\n";
+const string cache_daoints = cache + "VectorInt64 _proc, (long long*) $(name), $(size) );\n";
+const string cache_floats = cache + "VectorFloat32( _proc, (float*) $(name), $(size) );\n";
+const string cache_doubles = cache + "VectorFloat64( _proc, (double*) $(name), $(size) );\n";
 
 const string cache_stream = cache + "Stream( _proc, (FILE*) $(name) );\n"; //XXX PutFile
 const string cache_voidp = cache + "Cdata( _proc, NULL, (void*) $(name), 1 );\n";
@@ -421,20 +421,20 @@ const string qt_daolist_codes = "  Dao_Put$(qtype)_$(item)( _proc, $(name) );\n"
 const string qt_daolist_codes2 = "  Dao_Put$(qtype)P_$(item)( _proc, $(name) );\n";
 #endif
 
-const string parset_int = "  DaoProcess_NewInteger( _proc, (daoint)$(name) );\n";
-const string parset_float = "  DaoProcess_NewFloat( _proc, (float)$(name) );\n";
-const string parset_double = "  DaoProcess_NewDouble( _proc, (double)$(name) );\n";
+const string parset_int = "  DaoProcess_NewInteger( _proc, (dao_integer)$(name) );\n";
+const string parset_float = "  DaoProcess_NewFloat( _proc, (dao_float)$(name) );\n";
+const string parset_double = "  DaoProcess_NewFloat( _proc, (dao_float)$(name) );\n";
 const string parset_mbs = "  DaoProcess_NewString( _proc, (char*)$(name), -1 );\n";
 const string parset_wcs = "  DaoProcess_NewWCString( _proc, (wchar_t*)$(name), -1 );\n";
 
-const string parset_bytes = "  DaoArray_FromSByte( (DaoArray*)_p[$(index)] );\n";
-const string parset_ubytes = "  DaoArray_FromUByte( (DaoArray*)_p[$(index)] );\n";
-const string parset_shorts = "  DaoArray_FromSShort( (DaoArray*)_p[$(index)] );\n";
-const string parset_ushorts = "  DaoArray_FromUShort( (DaoArray*)_p[$(index)] );\n";
-const string parset_ints = "  DaoArray_FromSInt( (DaoArray*)_p[$(index)] );\n";
-const string parset_uints = "  DaoArray_FromUInt( (DaoArray*)_p[$(index)] );\n";
-const string parset_floats = "  DaoArray_FromFloat( (DaoArray*)_p[$(index)] );\n";
-const string parset_doubles = "  DaoArray_FromDouble( (DaoArray*)_p[$(index)] );\n";
+const string parset_bytes = "  DaoArray_FromSInt8( (DaoArray*)_p[$(index)] );\n";
+const string parset_ubytes = "  DaoArray_FromUInt8( (DaoArray*)_p[$(index)] );\n";
+const string parset_shorts = "  DaoArray_FromSInt16( (DaoArray*)_p[$(index)] );\n";
+const string parset_ushorts = "  DaoArray_FromUInt16( (DaoArray*)_p[$(index)] );\n";
+const string parset_ints = "  DaoArray_FromSInt32( (DaoArray*)_p[$(index)] );\n";
+const string parset_uints = "  DaoArray_FromUInt32( (DaoArray*)_p[$(index)] );\n";
+const string parset_floats = "  DaoArray_FromFloat32( (DaoArray*)_p[$(index)] );\n";
+const string parset_doubles = "  DaoArray_FromFloat64( (DaoArray*)_p[$(index)] );\n";
 
 const string dao2cxx2cst = "  const $(cxxtype)* $(name)= (const $(cxxtype)*) ";
 const string dao2cxx_mbs_cst = dao2cxx2cst + "DaoValue_TryGetChars( _p[$(index)] );\n";
@@ -504,7 +504,7 @@ const string ctxput_qstring =
 
 const string getres_i = "  if(DaoValue_CastInteger(_res)) $(name)=($(cxxtype))";
 const string getres_f = "  if(DaoValue_CastFloat(_res)) $(name)=($(cxxtype))";
-const string getres_d = "  if(DaoValue_CastDouble(_res)) $(name)=($(cxxtype))";
+const string getres_d = "  if(DaoValue_CastFloat(_res)) $(name)=($(cxxtype))";
 const string getres_s = "  if(DaoValue_CastString(_res)) $(name)=($(cxxtype)*)";
 const string getres_a = "  if(DaoValue_CastArray(_res))\n    $(name)=($(cxxtype)*)";
 const string getres_p = "  if(DaoValue_CastCdata(_res,NULL)) $(name)=($(cxxtype)) ";
@@ -512,17 +512,17 @@ const string getres_io = "  if(DaoValue_CastStream(_res)) $(name)=($(cxxtype))";
 
 const string getres_int  = getres_i + "DaoValue_TryGetInteger(_res);\n";
 const string getres_float = getres_f + "DaoValue_TryGetFloat(_res);\n";
-const string getres_double = getres_d + "DaoValue_TryGetDouble(_res);\n";
+const string getres_double = getres_d + "DaoValue_TryGetFloat(_res);\n";
 const string getres_mbs = getres_s + "DaoValue_TryGetChars( _res );\n";
 const string getres_wcs = getres_s + "DaoValue_TryGetWCString( _res );\n";
-const string getres_bytes = getres_a + "DaoArray_ToByte( (DaoArray*)_res );\n";
-const string getres_ubytes = getres_a + "DaoArray_ToUByte( (DaoArray*)_res );\n";
-const string getres_shorts = getres_a + "DaoArray_ToShort( (DaoArray*)_res );\n";
-const string getres_ushorts = getres_a + "DaoArray_ToUShort( (DaoArray*)_res );\n";
-const string getres_ints = getres_a + "DaoArray_ToSInt( (DaoArray*)_res );\n";
-const string getres_uints = getres_a + "DaoArray_ToUInt( (DaoArray*)_res );\n";
-const string getres_floats = getres_a + "DaoArray_ToFloat( (DaoArray*)_res );\n";
-const string getres_doubles = getres_a + "DaoArray_ToDouble( (DaoArray*)_res );\n";
+const string getres_bytes = getres_a + "DaoArray_ToInt8( (DaoArray*)_res );\n";
+const string getres_ubytes = getres_a + "DaoArray_ToUInt8( (DaoArray*)_res );\n";
+const string getres_shorts = getres_a + "DaoArray_ToInt16( (DaoArray*)_res );\n";
+const string getres_ushorts = getres_a + "DaoArray_ToUInt16( (DaoArray*)_res );\n";
+const string getres_ints = getres_a + "DaoArray_ToSInt32( (DaoArray*)_res );\n";
+const string getres_uints = getres_a + "DaoArray_ToUInt32( (DaoArray*)_res );\n";
+const string getres_floats = getres_a + "DaoArray_ToFloat32( (DaoArray*)_res );\n";
+const string getres_doubles = getres_a + "DaoArray_ToFloat64( (DaoArray*)_res );\n";
 const string getres_stream = getres_io + "DaoStream_GetFile( (DaoArray*)_res );\n";
 const string getres_buffer = getres_p + "DaoValue_TryGetCdata( _res );\n";
 
@@ -545,9 +545,9 @@ const string getres_user2 = getres_cdata +
 "    $(name) = *($(cxxtype)*) DaoValue_TryCastCdata( _res, dao_type_$(typer) );\n  }\n";
 
 
-const string getitem_int = ctxput + "Integer( _proc, (daoint) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
-const string getitem_float = ctxput + "Float( _proc, (float) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
-const string getitem_double = ctxput + "Double( _proc, (double) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_int = ctxput + "Integer( _proc, (dao_integer) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_float = ctxput + "Float( _proc, (dao_float) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_double = ctxput + "Float( _proc, (dao_float) self->$(name)[DaoValue_TryGetInteger(_p[1])] );\n";
 
 const string setitem_int = 
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
@@ -557,11 +557,11 @@ const string setitem_float =
   self->$(name)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetFloat(_p[2]);\n";
 const string setitem_double = 
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
-  self->$(name)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetDouble(_p[2]);\n";
+  self->$(name)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetFloat(_p[2]);\n";
 
-const string getitem_int2 = ctxput + "Integer( _proc, (daoint) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
-const string getitem_float2 = ctxput + "Float( _proc, (float) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
-const string getitem_double2 = ctxput + "Double( _proc, (double) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_int2 = ctxput + "Integer( _proc, (dao_integer) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_float2 = ctxput + "Float( _proc, (dao_float) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
+const string getitem_double2 = ctxput + "Float( _proc, (dao_float) (*self)[DaoValue_TryGetInteger(_p[1])] );\n";
 
 const string setitem_int2 = 
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
@@ -573,11 +573,11 @@ const string setitem_float2 =
 
 const string setitem_double2 = 
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
-  (*self)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetDouble(_p[2]);\n";
+  (*self)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetFloat(_p[2]);\n";
 
 const string setter_int = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetInteger(_p[1]);\n";
 const string setter_float = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetFloat(_p[1]);\n";
-const string setter_double = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetDouble(_p[1]);\n";
+const string setter_double = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetFloat(_p[1]);\n";
 const string setter_string = // XXX array?
 "  int size = DaoString_Size( (DaoString*)_p[1] );\n\
   if( size > $(size) ) size = $(size);\n\
@@ -587,43 +587,43 @@ const string setter_shorts =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToSShort( array ), size*sizeof(signed short) );\n\
-  DaoArray_FromSShort( array );\n";
+  memmove( self->$(name), DaoArray_ToSInt16( array ), size*sizeof(signed short) );\n\
+  DaoArray_FromSInt16( array );\n";
 
 const string setter_ushorts =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToUShort( array ), size*sizeof(unsigned short) );\n\
-  DaoArray_FromUShort( array );\n";
+  memmove( self->$(name), DaoArray_ToUInt16( array ), size*sizeof(unsigned short) );\n\
+  DaoArray_FromUInt16( array );\n";
 
 const string setter_ints =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToSInt( array ), size*sizeof(signed int) );\n\
-  DaoArray_FromSInt( array );\n";
+  memmove( self->$(name), DaoArray_ToSInt32( array ), size*sizeof(signed int) );\n\
+  DaoArray_FromSInt32( array );\n";
 
 const string setter_uints =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToUInt( array ), size*sizeof(unsigned int) );\n\
-  DaoArray_FromUInt( array );\n";
+  memmove( self->$(name), DaoArray_ToUInt32( array ), size*sizeof(unsigned int) );\n\
+  DaoArray_FromUInt32( array );\n";
 
 const string setter_floats =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToFloat( array ), size*sizeof(float) );\n\
-  DaoArray_FromFloat( array );\n";
+  memmove( self->$(name), DaoArray_ToFloat32( array ), size*sizeof(float) );\n\
+  DaoArray_FromFloat32( array );\n";
 
 const string setter_doubles =
 "  DaoArray *array = (DaoArray*) _p[1];\n\
   int size = DaoArray_Size( array );\n\
   if( size > $(size) ) size = $(size);\n\
-  memmove( self->$(name), DaoArray_ToDouble( array ), size*sizeof(double) );\n\
-  DaoArray_FromDouble( array );\n";
+  memmove( self->$(name), DaoArray_ToFloat64( array ), size*sizeof(double) );\n\
+  DaoArray_FromFloat64( array );\n";
 
 extern string cdao_string_fill( const string & tpl, const map<string,string> & subs );
 extern string cdao_qname_to_idname( const string & qname );
@@ -1144,8 +1144,8 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}else if( hostype != UT and UT->isNumber ){
-				string numbers[4] = {"","int","float","double"};
-				string Numbers[4] = {"","Integer","Float","Double"};
+				string numbers[4] = {"","int","float","float"};
+				string Numbers[4] = {"","Integer","Float","Float"};
 				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = numbers[UT->isNumber];
@@ -1225,7 +1225,7 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "double";
+			daotype = "float";
 			tpl.SetupDoubleScalar();
 			break;
 		default : break;
@@ -1455,7 +1455,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "double";
+			daotype = "float";
 			extraReturn = true;
 			tpl.SetupDoubleScalar();
 			tpl.parset = parset_double;
@@ -1622,7 +1622,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "double";
+			daotype = "float";
 			extraReturn = true;
 			tpl.SetupDoubleScalar();
 			tpl.parset = parset_double;
@@ -1664,8 +1664,8 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}else if( hostype != UT and UT->isNumber ){
-				string numbers[4] = {"","int","float","double"};
-				string Numbers[4] = {"","Integer","Float","Double"};
+				string numbers[4] = {"","int","float","float"};
+				string Numbers[4] = {"","Integer","Float","Float"};
 				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = numbers[UT->isNumber];
@@ -1835,8 +1835,8 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "array<double>";
-			dao_itemtype = "double";
+			daotype = "array<float>";
+			dao_itemtype = "float";
 			tpl.daopar = daopar_doubles;
 			tpl.dao2cxx = dao2cxx_doubles;
 			tpl.cxx2dao = cxx2dao_doubles;
@@ -1983,8 +1983,8 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "array<double>";
-			dao_itemtype = "double";
+			daotype = "array<float>";
+			dao_itemtype = "float";
 			tpl.daopar = daopar_doubles;
 			tpl.dao2cxx = dao2cxx_dmat;
 			tpl.cxx2dao = cxx2dao_dmat;
@@ -2107,8 +2107,8 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 			break;
 		case BuiltinType::Double :
 		case BuiltinType::LongDouble : // FIXME
-			daotype = "array<double>";
-			dao_itemtype = "double";
+			daotype = "array<float>";
+			dao_itemtype = "float";
 			tpl.daopar = daopar_doubles;
 			tpl.dao2cxx = dao2cxx_dmat2;
 			tpl.cxx2dao = cxx2dao_dmat2;

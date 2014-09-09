@@ -371,7 +371,7 @@ static void dao_QTextStream_Write5( DaoProcess *_proc, DValue *_p[], int _n );\n
 const string qt_qstream_dao =
 "  { dao_QTextStream_Write1, \"write( self : QTextStream, data : int )=>QTextStream\" },\n\
   { dao_QTextStream_Write2, \"write( self : QTextStream, data : float )=>QTextStream\" },\n\
-  { dao_QTextStream_Write3, \"write( self : QTextStream, data : double )=>QTextStream\" },\n\
+  { dao_QTextStream_Write3, \"write( self : QTextStream, data : float )=>QTextStream\" },\n\
   { dao_QTextStream_Write4, \"write( self : QTextStream, data : string )=>QTextStream\" },\n\
   { dao_QTextStream_Write5, \"write( self : QTextStream, data : any )=>QTextStream\" },\n";
 

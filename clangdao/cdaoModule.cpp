@@ -709,7 +709,7 @@ void CDaoModule::HandleHintDefinition( const string & name, const MacroInfo *mac
 void CDaoModule::HandleNumericConstant( const string & name, const Token token )
 {
 #warning"HandleNumericConstant double"
-	string type = "DAO_DOUBLE";
+	string type = "DAO_FLOAT";
 	numericConsts[name] = type;
 }
 void CDaoModule::HandleVariable( VarDecl *var )
@@ -870,7 +870,7 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 				break;
 			case BuiltinType::Double :
 			case BuiltinType::LongDouble : // FIXME
-				daotype = "double";
+				daotype = "float";
 				break;
 			default : break;
 			}
@@ -1152,7 +1152,7 @@ string CDaoModule::MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*
 		}else if( type->getKind() == BuiltinType::Float ){
 			tidname = "DAO_FLOAT";
 		}else if( type->isFloatingPoint() ){
-			tidname = "DAO_DOUBLE";
+			tidname = "DAO_FLOAT";
 		}
 		codes += "  { \"" + item + "\", " + tidname + ", " + qname2 + item + " },\n";
 	}
