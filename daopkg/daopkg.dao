@@ -93,19 +93,19 @@ routine main( ... as args )
 	io.writeln( pkg.pkgPath )
 }
 
-routine main( command: var<"get">, url: string, save = "" )
+routine main( command: enum<get>, url: string, save = "" )
 {
 	DaoPKG::Get( url, save )
 }
-routine main( command: var<"zip">, input: string, output = "" )
+routine main( command: enum<zip>, input: string, output = "" )
 {
 	DaoPKG::Zip( input, output )
 }
-routine main( command: var<"unzip">, input: string, output = "" )
+routine main( command: enum<unzip>, input: string, output = "" )
 {
 	DaoPKG::Unzip( input, output )
 }
-routine main( command: var<"test-zip">, input: string, output = "" )
+routine main( command: enum<testzip>, input: string, output = "" )
 {
 	input2 = DaoPKG::Zip( input )
 	DaoPKG::Unzip( input2, output )
