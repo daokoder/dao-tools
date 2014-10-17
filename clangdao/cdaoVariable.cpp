@@ -45,7 +45,7 @@ const string daopar_floats = "$(name): $(dao)array<float>";
 const string daopar_doubles = "$(name): $(dao)array<float>";
 const string daopar_complexs = "$(name): $(dao)array<complex>$(default)";
 const string daopar_buffer = "$(name): cdata$(default)";
-const string daopar_stream = "$(name): dao::io::stream$(default)";
+const string daopar_stream = "$(name): dao::io::Stream$(default)";
 const string daopar_user = "$(name): $(daotype)$(default)";
 const string daopar_userdata = "$(name): any$(default)"; // for callback data
 const string daopar_callback = "$(name): any"; // for callback, no precise type yet! XXX
@@ -1355,7 +1355,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			UT->used = true;
 			if( qtype3.getAsString() == "FILE" ){
 #warning"====================FILE**"
-				daotype = "dao::io::stream";
+				daotype = "dao::io::Stream";
 				cxxtype = "FILE";
 				extraReturn = true;
 				tpl.daopar = daopar_stream;
@@ -1483,7 +1483,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		if( UT->unsupported ) return 1;
 		UT->used = true;
 		if( qtype1.getAsString() == "FILE" ){
-			daotype = "dao::io::stream";
+			daotype = "dao::io::Stream";
 			cxxtype = "FILE";
 			tpl.daopar = daopar_stream;
 			tpl.dao2cxx = dao2cxx_stream;
@@ -1883,7 +1883,8 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, int daopar_i
 	kvmap[ "size" ] = size;
 	tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
-		parset = "";
+		/* DaoArray_FromXXX() is needed regardless of the "const" qualifier: */
+		//parset = "";
 		setter = "";
 	}
 	return 0;
@@ -2007,7 +2008,8 @@ int CDaoVariable::GenerateForArray( QualType elemtype, string size, string size2
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
 	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
-		parset = "";
+		/* DaoArray_FromXXX() is needed regardless of the "const" qualifier: */
+		//parset = "";
 		setter = "";
 	}
 	return 0;
@@ -2131,7 +2133,8 @@ int CDaoVariable::GenerateForArray2( QualType elemtype, string size, string size
 	kvmap[ "size2" ] = size2;
 	tpl.Generate( this, kvmap, dpid, cpid );
 	if( elemtype.getCVRQualifiers() & Qualifiers::Const ){
-		parset = "";
+		/* DaoArray_FromXXX() is needed regardless of the "const" qualifier: */
+		//parset = "";
 		setter = "";
 	}
 	return 0;

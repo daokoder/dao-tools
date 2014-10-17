@@ -175,7 +175,7 @@ int CDaoNamespace::Generate( CDaoNamespace *outer )
 	//onload2 += module->MakeOnLoadCodes( this );
 
 #if 0
-	string code = "\tDaoNamespace_TypeDefine( " + varname + ", \"";
+	string code = "\tDaoNamespace_DefineType( " + varname + ", \"";
 	for(i=0, n=usertypes.size(); i<n; i++){
 		CDaoUserType *ut = usertypes[i];
 		if( ut->isRedundant || ut->IsFromRequiredModules() ) continue;

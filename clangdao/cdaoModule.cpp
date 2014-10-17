@@ -68,7 +68,7 @@ const string cxx_stringlist_conversion =
 }\n";
 
 const string add_number = "  { \"$(name)\", $(type), $(namespace)$(value) },\n";
-const string tpl_typedef = "\tDaoNamespace_TypeDefine( ns, \"$(old)\", \"$(new)\" );\n";
+const string tpl_typedef = "\tDaoNamespace_DefineType( ns, \"$(old)\", \"$(new)\" );\n";
 const string add_ccdata = "  DaoNamespace_AddConstData( $(ns), \"$(name)\", "
 "(DaoValue*)DaoCdata_Wrap( dao_$(type)_Typer, ($(type)*) $(refer) $(name) ) );\n";
 
@@ -1287,7 +1287,7 @@ int CDaoModule::Generate( const string & output )
 			//source += "//" + td->name + ";" + td->alias;
 		}
 		topLevelScope.source += source + "\tNULL\n};\n";
-		topLevelScope.onload2 += "\tDaoNamespace_TypeDefines( ns, dao__Aliases );\n";
+		topLevelScope.onload2 += "\tDaoNamespace_AliasTypes( ns, dao__Aliases );\n";
 	}
 	//topLevelScope.onload3 += MakeOnLoad2Codes( sorted );
 
@@ -1334,7 +1334,7 @@ int CDaoModule::Generate( const string & output )
 #if 0
 	map<string,string>::iterator ssit, ssend = daoTypedefs.end();
 	for(ssit=daoTypedefs.begin(); ssit!=ssend; ssit++){
-		fout_source << "\tDaoNamespace_TypeDefine( ns, \"" << ssit->second;
+		fout_source << "\tDaoNamespace_DefineType( ns, \"" << ssit->second;
 		fout_source << "\", \"" << ssit->first << "\" );\n";
 	}
 #endif
