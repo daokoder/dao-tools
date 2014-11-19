@@ -33,7 +33,7 @@ if( daojs_with_decorator  == $ON ) daojs.AddDefinition( "DAO_WITH_DECORATOR" )
 if( daojs_with_thread     == $ON ) daojs.AddDefinition( "DAO_WITH_THREAD" )
 if( daojs_with_concurrent == $ON ) daojs.AddDefinition( "DAO_WITH_CONCURRENT" )
 
-changeset = io.read( DaoMake::MakePath( DaoMake::SourcePath(), "manifest.uuid" ), 1 )
+changeset = io.read( DaoMake::MakePath( DaoMake::SourcePath(), "../../manifest.uuid" ), 1 )
 if( % changeset ) daojs.AddDefinition( "CHANGESET_ID", "\\\"FOS." + changeset[:11] + "\\\"" )
 
 

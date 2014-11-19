@@ -34,7 +34,7 @@ all:
 	@echo "Please choose a platform among ($(PLATS))!"
 
 $(PLATS) :
-	cd $(ROOTDIR)/tools/daomake/bootstrap && $(MAKE) $@
+	cd $(ROOTDIR)/tools/daomake/bootstrap && $(MAKE) $@ PLAT=$@
 	$(ROOTDIR)/tools/daomake/bootstrap/daomake $(DAOMAKE_ARGS) .
 	$(MAKE)
 
