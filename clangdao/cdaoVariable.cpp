@@ -1041,7 +1041,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 			daodefault = scopes[i] + "::" + daodefault;
 			cxxdefault = scopes[i] + "::" + cxxdefault;
 		}
-		cxxdefault = "=" + daodefault;
+		if( daodefault.size() ) cxxdefault = "=" + daodefault;
 		if( daodefault == "0L" ) daodefault = "0";
 
 		std::replace( daodefault.begin(), daodefault.end(), '\"', '\'');
@@ -1062,7 +1062,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		Token token;
 		vector<Token> tokens;
 		while( lexer.getBufferLocation() < q ){
-			lexer.Lex( token );
+			lexer.LexFromRawLexer( token );
 			tokens.push_back( token );
 		}
 		if( tokens.size() > 1 ){

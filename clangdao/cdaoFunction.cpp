@@ -430,7 +430,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 		proto += cdao_substitute_typenames( pardecl->getTypeSourceInfo()->getType().getAsString() );
 	}
 	retype.name = "_" + cdao_qname_to_idname( decl->getNameAsString() );
-	retype.SetQualType( funcDecl->getResultType(), funcDecl->getLocation() );
+	retype.SetQualType( funcDecl->getReturnType(), funcDecl->getLocation() );
 
 	proto += ")";
 	proto = normalize_type_name( proto );
@@ -494,15 +494,15 @@ void CDaoFunction::SetCallback( FunctionProtoType *func, FieldDecl *decl, const 
 		}
 	}
 	sig = qname + "(";
-	for(i=0, n=func->getNumArgs(); i<n; i++){
-		QualType partype = func->getArgType( i );
+	for(i=0, n=func->getNumParams(); i<n; i++){
+		QualType partype = func->getParamType( i );
 		parlist.push_back( CDaoVariable( module ) );
 		parlist.back().SetQualType( partype, location );
 		if( i ) sig += ",";
 		sig += partype.getAsString();
 	}
 	retype.name = "_" + idname;
-	retype.SetQualType( func->getResultType(), location );
+	retype.SetQualType( func->getReturnType(), location );
 
 	sig += ")";
 	sig = normalize_type_name( sig );

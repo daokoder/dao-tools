@@ -1648,12 +1648,14 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		func.Generate();
 		if( func.excluded or func.cxxWrapperVirt2 == "" or not func.generated ){
 			TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
+#if 0
 			FunctionTypeLoc ftypeloc = cast<FunctionTypeLoc>(typeloc);
 			//string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
 			string source = module->ExtractSource( ftypeloc.getLocalSourceRange(), true );
-			string source2 = module->ExtractSource( ftypeloc.getResultLoc().getLocalSourceRange(), true );
+			string source2 = module->ExtractSource( ftypeloc.getReturnLoc().getLocalSourceRange(), true );
+#endif
 
-			string proto = cdao_substitute_typenames( mdec->getResultType().getAsString() );
+			string proto = cdao_substitute_typenames( mdec->getReturnType().getAsString() );
 			proto += " " + func.signature;
 			//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
 			kmethods += "\t" + proto + "{/*XXX 1*/}\n";

@@ -611,7 +611,7 @@ void CDaoModule::HandleModuleDeclaration( const MacroInfo *macro )
 	FileID fid = sourceman.getFileID( loc );
 	FileEntry *entry = (FileEntry*) sourceman.getFileEntryForID( fid );
 	string name = macro->getReplacementToken( 0 ).getIdentifierInfo()->getName();
-	if( sourceman.isFromMainFile( loc ) ){
+	if( sourceman.isInMainFile( loc ) ){
 		if( moduleInfo.name.size() ) return;
 		moduleInfo.name = name;
 		moduleInfo.entry = entry;
@@ -642,7 +642,7 @@ void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name,
 	inclusions[ CDaoInclusionInfo( entryInclude, entryHeader ) ] = 1;
 	if( IsSourceFile( name ) ){
 		if( requiredModules2.find( entryHeader ) != requiredModules2.end() ) return;
-		if( sourceman.isFromMainFile( loc ) ){
+		if( sourceman.isInMainFile( loc ) ){
 			requiredModules[ entryHeader ] = CDaoModuleInfo();
 			requiredModules[ entryHeader ].path = name;
 			requiredModules[ entryHeader ].entry = entryHeader;
@@ -655,7 +655,7 @@ void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name,
 		return;
 	}
 	if( not IsHeaderFile( name ) ) return;
-	if( sourceman.isFromMainFile( loc ) ){
+	if( sourceman.isInMainFile( loc ) ){
 		if( headers.find( entryHeader ) != headers.end() ) return;
 		headers[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
 		headers2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );

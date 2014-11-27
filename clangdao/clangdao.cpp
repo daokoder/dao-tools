@@ -56,15 +56,16 @@ struct CDaoPPCallbacks : public PPCallbacks
 		module = mod;
 	}
 
-	void MacroDefined(const Token &MacroNameTok, const MacroInfo *MI);
-	void MacroUndefined(const Token &MacroNameTok, const MacroInfo *MI);
+	void MacroDefined(const Token &MacroNameTok, const MacroDirective *MI);
+	void MacroUndefined(const Token &MacroNameTok, const MacroDirective *MI);
 	void InclusionDirective(SourceLocation Loc, const Token &Tok, StringRef Name, 
 			bool Angled, CharSourceRange FilenameRange, const FileEntry *File,
 			StringRef SearchPath, StringRef RelativePath, const Module *Imported );
 };
 
-void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *MI)
+void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirective *MD)
 {
+	const MacroInfo *MI = MD->getMacroInfo();
 	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
 	if( MI->getNumTokens() < 1 ){ // number of expansion tokens;
 		if( MI->isObjectLike() && name == "CLANGDAO_SKIP_VIRTUAL" ){
@@ -91,7 +92,7 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroInfo *M
 		module->HandleHintDefinition( name, MI );
 	}
 }
-void CDaoPPCallbacks::MacroUndefined(const Token &MacroNameTok, const MacroInfo *MI)
+void CDaoPPCallbacks::MacroUndefined(const Token &MacroNameTok, const MacroDirective *MI)
 {
 	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
 	module->numericConsts.erase( name );
@@ -442,18 +443,19 @@ int main(int argc, char *argv[] )
 	CompilerInstance compiler;
 	CDaoModule module( & compiler, main_input_file );
 
-	compiler.createDiagnostics(argc, argv);
+	compiler.createDiagnostics();
 	//compiler.getInvocation().setLangDefaults(IK_CXX);
 	//compiler.getInvocation().setLangDefaults(IK_ObjC);
 	CompilerInvocation::CreateFromArgs( compiler.getInvocation(),
 			argv + 1, argv + argc, compiler.getDiagnostics() );
 
+	std::shared_ptr<TargetOptions> taropts( new TargetOptions( compiler.getTargetOpts() ) ); 
 	compiler.setTarget( TargetInfo::CreateTargetInfo(
-				compiler.getDiagnostics(), compiler.getTargetOpts() ) );
+				compiler.getDiagnostics(), taropts ) );
 
 	compiler.createFileManager();
 	compiler.createSourceManager(compiler.getFileManager());
-	compiler.createPreprocessor();
+	compiler.createPreprocessor( TU_Complete );
 	compiler.createASTContext();
 	compiler.setASTConsumer( new CDaoASTConsumer( & compiler, & module ) );
 	//XXX compiler.createSema(false, NULL);
