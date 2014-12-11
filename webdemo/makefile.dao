@@ -129,8 +129,6 @@ daojs.AddPlatformDefs();
 
 if( DaoMake::IsPlatform( "UNIX" ) ){
 	daojs.AddCompilingFlag( "-fPIC" )
-	daojs.AddLinkingFlag( "-lm" )
-	if( DaoMake::IsPlatform( "LINUX" ) ) daojs.AddLinkingFlag( "-ldl" )
 }else if( DaoMake::IsPlatform( "MINGW" ) ){
 	daojs.AddLinkingFlag( "-lwinmm" )
 }
@@ -146,10 +144,10 @@ ems_export += @[]'_DaoVmSpace_Eval','_DaoVmSpace_StdioStream',@[]
 ems_export += @[]'_DaoStream_WriteChars']"@[]
 daojs_js_main = daojs.AddObjects( { "../../kernel/daoMain.c" }, daojs_kernel_headers );
 daojs_js = daojs.AddJavaScriptLibrary( "dao", daojs_kernel_objects, daojs_js_main )
-daojs_js.AddDefinition( "DAO_BUILD_JS_TARGET" )
-daojs_js.AddDefinition( "DAO_WITHOUT_DLL" )
-daojs_js.AddDefinition( "WITHOUT_WCTYPE_H" )
-daojs_js.AddDefinition( "WITHOUT_DIRECT_THREADING" )
+daojs_kernel_objects.AddDefinition( "DAO_BUILD_JS_TARGET" )
+daojs_kernel_objects.AddDefinition( "DAO_WITHOUT_DLL" )
+daojs_kernel_objects.AddDefinition( "WITHOUT_WCTYPE_H" )
+daojs_kernel_objects.AddDefinition( "WITHOUT_DIRECT_THREADING" )
 daojs_js.AddLinkingFlag( "-s EXPORTED_FUNCTIONS=" + ems_export )
-#daojs_js.AddLinkingFlag( "-s ASM_JS=1" )
+daojs_js.AddLinkingFlag( "-s ASM_JS=1" )
 if( DaoMake::BuildMode() == $RELEASE ) daojs_js.AddLinkingFlag( "-O2 --closure 1" )

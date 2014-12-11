@@ -54,7 +54,7 @@ clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerCore" )
 clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerFrontend" )
 
 
-clangdao_exe.UseSharedLibrary( llvm )
+clangdao.UseSharedLibrary( llvm )
 clangdao_exe.EnableDynamicLinking()
 
 clangdao.Install( DaoMake::Variables[ "INSTALL_BIN" ], clangdao_exe );
