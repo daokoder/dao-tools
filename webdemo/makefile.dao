@@ -141,11 +141,70 @@ if( DaoMake::IsPlatform( "UNIX" ) ){
 ###########################################################################
 ems_export  = @[]"['_DaoInit','_DaoQuit',@[]
 ems_export += @[]'_DaoVmSpace_Eval','_DaoVmSpace_StdioStream',@[]
-ems_export += @[]'_DaoStream_WriteChars']"@[]
-daojs_js_main = daojs.AddObjects( { "../../kernel/daoMain.c" }, daojs_kernel_headers );
-daojs_js = daojs.AddJavaScriptLibrary( "dao", daojs_kernel_objects, daojs_js_main )
+ems_export += @[]'_DaoStream_WriteChars',@[]
+
+daojs_modules = daojs.AddObjects( { "../../kernel/daoMain.c", "dao_webdemo.c" }, daojs_kernel_headers );
+
+if( DaoMake::IsDir( "../../modules/bigint" ) ){
+	daojs_modules.AddSources( "../../modules/bigint/dao_bigint.c" )
+	ems_export += @[]'_DaoBigint_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/binary" ) ){
+	daojs_modules.AddIncludePath( "../../modules/binary" )
+	daojs_modules.AddHeaders( "../../modules/binary/dao_binary.h" )
+	daojs_modules.AddSources( "../../modules/binary/dao_binary.c" )
+	ems_export += @[]'_DaoBinary_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/coroutine" ) ){
+	daojs_modules.AddIncludePath( "../../modules/coroutine" )
+	daojs_modules.AddSources( "../../modules/coroutine/dao_coroutine.c" )
+	ems_export += @[]'_DaoCoroutine_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/dataframe" ) ){
+	daojs_modules.AddIncludePath( "../../modules/dataframe" )
+	daojs_modules.AddSources( "../../modules/dataframe/dao_dataframe.c" )
+	ems_export += @[]'_DaoDataframe_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/macro" ) ){
+	daojs_modules.AddIncludePath( "../../modules/macro" )
+	daojs_modules.AddSources( "../../modules/macro/dao_macro.c" )
+	ems_export += @[]'_DaoMacro_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/math" ) ){
+	daojs_modules.AddIncludePath( "../../modules/math" )
+	daojs_modules.AddSources( "../../modules/math/dao_math.c" )
+	ems_export += @[]'_DaoMath_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/meta" ) ){
+	daojs_modules.AddIncludePath( "../../modules/meta" )
+	daojs_modules.AddSources( "../../modules/meta/dao_meta.c" )
+	ems_export += @[]'_DaoMeta_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/serializer" ) ){
+	daojs_modules.AddIncludePath( "../../modules/serializer" )
+	daojs_modules.AddSources( "../../modules/serializer/dao_serializer.c" )
+	ems_export += @[]'_DaoSerializer_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/time" ) ){
+	daojs_modules.AddIncludePath( "../../modules/time" )
+	daojs_modules.AddSources( "../../modules/time/dao_time.c" )
+	ems_export += @[]'_DaoTime_OnLoad',@[]
+}
+
+ems_export += @[]'_DaoWebDemo_AddModules']"@[]
+
+daojs_js = daojs.AddJavaScriptLibrary( "dao", daojs_kernel_objects, daojs_modules )
 daojs_kernel_objects.AddDefinition( "DAO_BUILD_JS_TARGET" )
 daojs_kernel_objects.AddDefinition( "DAO_WITHOUT_DLL" )
+daojs_kernel_objects.AddDefinition( "DAO_WITHOUT_COLORPRINT" )
 daojs_kernel_objects.AddDefinition( "WITHOUT_WCTYPE_H" )
 daojs_kernel_objects.AddDefinition( "WITHOUT_DIRECT_THREADING" )
 daojs_js.AddLinkingFlag( "-s EXPORTED_FUNCTIONS=" + ems_export )

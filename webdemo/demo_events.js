@@ -19,8 +19,11 @@
 	DaoVmSpace_StdioStream = Module.cwrap( "DaoVmSpace_StdioStream", "number", ["number"] );
 	DaoStream_WriteChars = Module.cwrap( "DaoStream_WriteChars", "number", ["number", "string"] );
 
+   	DaoWebDemo_AddModules = Module.cwrap("DaoWebDemo_AddModules", "number", ["number"]);
+
     daoVmSpace = DaoInit("");
 	daoStdio = DaoVmSpace_StdioStream( daoVmSpace );
+	DaoWebDemo_AddModules( daoVmSpace );
 
 	var demo = "hello.dao";
     jQuery.get('/projects/Dao/doc/tip/demo/' + demo, function(data) {
