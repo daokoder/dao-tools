@@ -11,6 +11,10 @@
     terminal.setValue( terminal.getValue() + x + '\n' );
 	printed = true;
   };
+  window.Module['printErr'] = function (x) {
+    terminal.setValue( terminal.getValue() + x + '\n' );
+	printed = true;
+  };
 
   jQuery(document).ready(function() {
     DaoInit = Module.cwrap("DaoInit", "number", ["string"]);
