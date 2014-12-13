@@ -163,6 +163,12 @@ if( DaoMake::IsDir( "../../modules/coroutine" ) ){
 	ems_export += @[]'_DaoCoroutine_OnLoad',@[]
 }
 
+if( DaoMake::IsDir( "../../modules/crypto" ) ){
+	daojs_modules.AddIncludePath( "../../modules/crypto" )
+	daojs_modules.AddSources( "../../modules/crypto/dao_crypto.c" )
+	ems_export += @[]'_DaoMeta_OnLoad',@[]
+}
+
 if( DaoMake::IsDir( "../../modules/dataframe" ) ){
 	daojs_modules.AddIncludePath( "../../modules/dataframe" )
 	daojs_modules.AddSources( "../../modules/dataframe/dao_dataframe.c" )
@@ -187,10 +193,40 @@ if( DaoMake::IsDir( "../../modules/meta" ) ){
 	ems_export += @[]'_DaoMeta_OnLoad',@[]
 }
 
+if( DaoMake::IsDir( "../../modules/protobject" ) ){
+	daojs_modules.AddIncludePath( "../../modules/protobject" )
+	daojs_modules.AddSources( "../../modules/protobject/dao_protobject.c" )
+	ems_export += @[]'_DaoMeta_OnLoad',@[]
+}
+
 if( DaoMake::IsDir( "../../modules/serializer" ) ){
 	daojs_modules.AddIncludePath( "../../modules/serializer" )
 	daojs_modules.AddSources( "../../modules/serializer/dao_serializer.c" )
 	ems_export += @[]'_DaoSerializer_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/statistics" ) ){
+	daojs_modules.AddIncludePath( "../../modules/statistics" )
+	daojs_modules.AddSources( "../../modules/statistics/dao_statistics.c" )
+	ems_export += @[]'_DaoStatistics_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/string/format" ) ){
+	daojs_modules.AddIncludePath( "../../modules/string/format" )
+	daojs_modules.AddSources( "../../modules/string/format/dao_format.c" )
+	ems_export += @[]'_DaoFormat_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/string/scanner" ) ){
+	daojs_modules.AddIncludePath( "../../modules/string/scanner" )
+	daojs_modules.AddSources( "../../modules/string/scanner/dao_scanner.c" )
+	ems_export += @[]'_DaoScanner_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/string/template" ) ){
+	daojs_modules.AddIncludePath( "../../modules/string/template" )
+	daojs_modules.AddSources( "../../modules/string/template/dao_template.c" )
+	ems_export += @[]'_DaoTemplate_OnLoad',@[]
 }
 
 if( DaoMake::IsDir( "../../modules/time" ) ){
@@ -198,6 +234,37 @@ if( DaoMake::IsDir( "../../modules/time" ) ){
 	daojs_modules.AddSources( "../../modules/time/dao_time.c" )
 	ems_export += @[]'_DaoTime_OnLoad',@[]
 }
+
+if( DaoMake::IsDir( "../../modules/web/html" ) ){
+	daojs_modules.AddIncludePath( "../../modules/web/html" )
+	daojs_modules.AddSources( "../../modules/web/html/dao_html.c" )
+	ems_export += @[]'_DaoHtml_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/web/json" ) ){
+	daojs_modules.AddIncludePath( "../../modules/web/json" )
+	daojs_modules.AddSources( "../../modules/web/json/dao_json.c" )
+	ems_export += @[]'_DaoJson_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/zip" ) ){
+	sources = {
+		"../../modules/zip/dao_zip.c" ,
+		"../../modules/zip/bzip2/blocksort.c" ,
+		"../../modules/zip/bzip2/huffman.c" ,
+		"../../modules/zip/bzip2/crctable.c" ,
+		"../../modules/zip/bzip2/randtable.c" ,
+		"../../modules/zip/bzip2/compress.c" ,
+		"../../modules/zip/bzip2/decompress.c" ,
+		"../../modules/zip/bzip2/bzlib.c"
+	}
+
+	daojs_modules.AddIncludePath( "../../modules/zip" )
+	daojs_modules.AddIncludePath( "../../modules/zip/bzip2" )
+	daojs_modules.AddSources( sources )
+	ems_export += @[]'_DaoZip_OnLoad',@[]
+}
+
 
 ems_export += @[]'_DaoWebDemo_AddModules']"@[]
 

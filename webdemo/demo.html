@@ -27,7 +27,7 @@
 	}
     #editor-container {
       margin: 1ex 0;
-      height: 360pt;
+      height: 320pt;
       width: 98%;
     }
     #editor {
@@ -37,7 +37,7 @@
     }
     #terminal-container {
       margin: 1ex 0;
-      height: 360pt;
+      height: 160pt;
       width: 98%;
     }
     #terminal {
@@ -53,10 +53,10 @@
   <script src="/javascripts/plusone.js"></script>
 </head>
 
-<body>
+<body style="margin-left:20pt; margin-right:20pt">
   <div id="code-form">
   	<table width="100%">
-	<tr><td width="60%">
+	<tr><td>
     <b>Select a demo</b>
 	<select id="select-demo">
 	<option value="hello.dao">Hello Dao!</option>
@@ -80,26 +80,51 @@
 	<option value="errors.dao">Error Handling</option>
 	<!-- option value="macros.dao">Syntax Macro</option -->
 	</select>
-	<td width="20%"><a href="http://daovm.net/help/en/" target="view_window">Help</a>
-	<td width="20%">
+    <b>Or enter some code and</b>
+	<input type='button' value='Submit' id='submit-button'/>
+	<input type="checkbox" checked=true id=checkResetOutput>Reset Output</input>
+	<input type='button' value='Duplicate Demo' id='duplicate-demo'/>
+	<td><a href="http://daovm.net/help/en/" target="view_window"><b>Help</b></a>
 	<!-- Place this tag where you want the badge to render-->
 	<!--a href="https://plus.google.com/116928024969122793495/?prsrc=3" style="text-decoration: none;"><img src="https://ssl.gstatic.com/images/icons/gplus-32.png" width="32" height="25" style="border: 0; margin-right: 8px;"/></a-->
 	<!-- Place this tag where you want the +1 button to render -->
 	<!--g:plusone></g:plusone-->
-    <tr><td><b>Or enter some Dao codes, and then</b>:
-	<input type='button' value='Submit' id='submit-button'/>
 	</table>
   	<table width="100%">
 	<tr>
-    <td width="60%"><div id="editor-container">
+  	<td><table width="100%">
+    <tr><td width="85%"><div id="editor-container" style="border:2px solid #D8DADD;">
       <div id="editor"></div>
     </div>
-    <td width="40%"><div id="terminal-container">
+	<tr>
+    <td width="85%"><div id="terminal-container" style="border:2px solid #D8DADD;">
 	  <div id="terminal"></div>
 	<tr>
-	<td><input type='button' value='Duplicate Demo' id='duplicate-demo'/>
-	<td><input type="checkbox" id=checkKeepHistory>Keep Output History</input>
     </div>
+	</table>
+	<td width="15%">
+	<b>Loadable</b><br/>
+	<b>Modules:</b><br/>
+	<ul>
+	<li>bigint
+	<li>binary
+	<li>coroutine
+	<li>crypto
+	<li>dataframe
+	<li>macro
+	<li>math
+	<li>meta
+	<li>protobject
+	<li>serializer
+	<li>statistics
+	<li>string.format
+	<li>string.scanner
+	<li>string.template
+	<li>time
+	<li>web.html
+	<li>web.json
+	<li>zip
+	</ul>
 	</table>
   </div>
   </div>
@@ -119,12 +144,8 @@
   <hr>
   <table width="100%">
   <tr><td width="99%">
-    <ul>
-	<li> This JavaScript version of Dao virtual machine was compiled from C to JavaScript
-		using <a href="http://emscripten.org">Emscripten</a>;
-	<li> It supports almost all features except concurrent programming. Currently supported modules include: bigint, binary, coroutine, dataframe, macro, math, meta, serializer and time etc.;
-	<li> The skeleton of this page is partially adapted from <a href="https://github.com/xxuejie/mruby-web-irb">https://github.com/xxuejie/mruby-web-irb</a>.
-    </ul>
+  Powered by Dao Virtual Machine compiled with <a href="http://emscripten.org">Emscripten</a>.
+  Note: concurrent programming is not supported!
   <td width="1%">
 	<a href="http://www2.clustrmaps.com/counter/maps.php?url=http://daovm.net" id="clustrMapsLink"><img width="0px" height="0px" src="http://www2.clustrmaps.com/counter/index2.php?url=http://daovm.net" style="border:0px;" alt="Visitor Map" title="Locations of visitors to this page" id="clustrMapsImg" onerror="this.onerror=null; this.src='http://clustrmaps.com/images/clustrmaps-back-soon.jpg'; document.getElementById('clustrMapsLink').href='http://clustrmaps.com';" /></a>
   </table>

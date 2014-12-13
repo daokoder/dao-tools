@@ -40,7 +40,7 @@
 
     jQuery("#submit-button").click(function() {
 	
-	  if( ! jQuery("#checkKeepHistory").is(':checked') ) terminal.setValue( '' );
+	  if( jQuery("#checkResetOutput").is(':checked') ) terminal.setValue( '' );
 	  printed = false;
 
       DaoVmSpace_Eval(daoVmSpace, editor.getValue());
