@@ -18,6 +18,8 @@ extern int DaoTemplate_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoTime_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoHtml_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoJson_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
+extern int DaoImage_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
+extern int DaoCanvas_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoZip_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 
 DaoVModule dao_virtual_modules[] =
@@ -39,6 +41,8 @@ DaoVModule dao_virtual_modules[] =
   { "$(CMD_DIR)/lib/dao/modules/libdao_time.so", 0, NULL, DaoTime_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/web/libdao_html.so", 0, NULL, DaoHtml_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/web/libdao_json.so", 0, NULL, DaoJson_OnLoad },
+  { "$(CMD_DIR)/lib/dao/modules/libdao_image.so", 0, NULL, DaoImage_OnLoad },
+  { "$(CMD_DIR)/lib/dao/modules/libdao_canvas.so", 0, NULL, DaoCanvas_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_zip.so", 0, NULL, DaoZip_OnLoad },
   { NULL, 0, NULL, NULL }
 };

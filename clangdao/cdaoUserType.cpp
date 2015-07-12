@@ -798,14 +798,11 @@ void CDaoUserType::SetDeclaration( RecordDecl *decl )
 	idname = CDaoModule::GetIdName( decl );
 	name = name2 = decl->getNameAsString();
 	if( (pos = name.find( '<' )) != string::npos ) name.erase( pos );
+
 	if( isC && decl->isStruct() ){
 		if( qname.find( "struct " ) != 0 ) qname = "struct " + qname;
 	}else if( isC && decl->isUnion() ){
 		if( qname.find( "union " ) != 0 ) qname = "union " + qname;
-	}
-	if( qname.find( "class " ) == 0 ){
-		outs()<<qname<<"-------------------\n";
-		exit(0);
 	}
 	SearchHints();
 }

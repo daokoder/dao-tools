@@ -15,6 +15,10 @@
     terminal.setValue( terminal.getValue() + x + '\n' );
 	printed = true;
   };
+  window.Module['display'] = function (x) {
+    var img = document.getElementById('canvas_display'); 
+	img.src = x;
+  };
 
   jQuery(document).ready(function() {
     DaoInit = Module.cwrap("DaoInit", "number", ["string"]);

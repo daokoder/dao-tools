@@ -58,6 +58,7 @@ daojs_kernel_headers =
 	"../../kernel/daoObject.h" ,
 	"../../kernel/daoParser.h" ,
 	"../../kernel/daoBytecode.h" ,
+	"../../kernel/daoInferencer.h" ,
 	"../../kernel/daoOptimizer.h" ,
 	"../../kernel/daoProcess.h" ,
 	"../../kernel/daoRegex.h" ,
@@ -69,6 +70,7 @@ daojs_kernel_headers =
 	"../../kernel/daoString.h" ,
 	"../../kernel/daoThread.h" ,
 	"../../kernel/daoPlatforms.h" ,
+	"../../kernel/daoInterface.h" ,
 	"../../kernel/daoType.h" ,
 	"../../kernel/daoValue.h" ,
 	"../../kernel/daoVmcode.h" ,
@@ -88,11 +90,13 @@ daojs_kernel_sources =
 	"../../kernel/daoObject.c" ,
 	"../../kernel/daoParser.c" ,
 	"../../kernel/daoBytecode.c" ,
+	"../../kernel/daoInferencer.c" ,
 	"../../kernel/daoOptimizer.c" ,
 	"../../kernel/daoRoutine.c" ,
 	"../../kernel/daoProcess.c" ,
 	"../../kernel/daoValue.c" ,
 	"../../kernel/daoType.c" ,
+	"../../kernel/daoInterface.c" ,
 	"../../kernel/daoRegex.c" ,
 	"../../kernel/daoTasklet.c" ,
 	"../../kernel/daoStdlib.c" ,
@@ -236,8 +240,25 @@ if( DaoMake::IsDir( "../../modules/time" ) ){
 }
 
 if( DaoMake::IsDir( "../../modules/web/html" ) ){
+	sources =
+	{
+		"../../modules/web/html/gumbo-parser/src/attribute.c",
+		"../../modules/web/html/gumbo-parser/src/parser.c",
+		"../../modules/web/html/gumbo-parser/src/tag.c",
+		"../../modules/web/html/gumbo-parser/src/util.c",
+		"../../modules/web/html/gumbo-parser/src/char_ref.c",
+		"../../modules/web/html/gumbo-parser/src/string_buffer.c",
+		"../../modules/web/html/gumbo-parser/src/tokenizer.c",
+		"../../modules/web/html/gumbo-parser/src/vector.c",
+		"../../modules/web/html/gumbo-parser/src/error.c",
+		"../../modules/web/html/gumbo-parser/src/string_piece.c",
+		"../../modules/web/html/gumbo-parser/src/utf8.c"
+	}
+	#daojs.AddCompilingFlag( "-std=c99" )
 	daojs_modules.AddIncludePath( "../../modules/web/html" )
+	daojs_modules.AddIncludePath( "../../modules/web/html/gumbo-parser/src" )
 	daojs_modules.AddSources( "../../modules/web/html/dao_html.c" )
+	daojs_modules.AddSources( sources )
 	ems_export += @[]'_DaoHtml_OnLoad',@[]
 }
 
@@ -245,6 +266,36 @@ if( DaoMake::IsDir( "../../modules/web/json" ) ){
 	daojs_modules.AddIncludePath( "../../modules/web/json" )
 	daojs_modules.AddSources( "../../modules/web/json/dao_json.c" )
 	ems_export += @[]'_DaoJson_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/image" ) ){
+	sources = 
+	{
+		"../../modules/image/source/dao_image.c" ,
+		"../../modules/image/source/lode_png.c" ,
+		"../../modules/image/source/micro_jpeg.c" 
+	}
+
+	daojs_modules.AddIncludePath( "../../modules/image/source" )
+	daojs_modules.AddSources( sources )
+	ems_export += @[]'_DaoImage_OnLoad',@[]
+}
+
+if( DaoMake::IsDir( "../../modules/canvas" ) ){
+	sources = 
+	{
+		"../../modules/canvas/source/dao_common.c" ,
+		"../../modules/canvas/source/dao_font.c" ,
+		"../../modules/canvas/source/dao_path.c" ,
+		"../../modules/canvas/source/dao_canvas.c" ,
+		"../../modules/canvas/source/dao_painter.c" ,
+		"../../modules/canvas/source/dao_rasterizer.c" ,
+		"../../modules/canvas/source/dao_onload.c" 
+	}
+
+	daojs_modules.AddIncludePath( "../../modules/canvas/source" )
+	daojs_modules.AddSources( sources )
+	ems_export += @[]'_DaoCanvas_OnLoad',@[]
 }
 
 if( DaoMake::IsDir( "../../modules/zip" ) ){

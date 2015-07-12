@@ -119,6 +119,8 @@ struct CDaoModule
 	map<FileEntry*,CDaoModuleInfo>  requiredModules; // directly required modules;
 	map<FileEntry*,CDaoModuleInfo>  requiredModules2; // directly/indirectly required modules;
 
+	vector<CDaoHeaderInfo> includes; // header files in the including order;
+
 	map<FileEntry*,CDaoHeaderInfo>  headers; // header files from this module;
 	map<FileEntry*,CDaoHeaderInfo>  headers2; // direct and indirect header files from this module;
 	map<FileEntry*,CDaoHeaderInfo>  extHeaders; // header files from the required modules;

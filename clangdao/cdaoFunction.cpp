@@ -840,6 +840,7 @@ int CDaoFunction::Generate()
 	kvmap[ "refs" ] = refs;
 	kvmap[ "signature" ] = signature;
 	kvmap[ "overload" ] = overload;
+
 	kvmap[ "file" ] = decl == NULL ? "" : module->GetFileName( decl->getLocation() );
 
 	if( ctordecl && hostype ){
@@ -1026,7 +1027,15 @@ int CDaoFunction::Generate()
 	kvmap2[ "cxxcall" ] = cxxCallCodes;
 	kvmap2[ "parset" ] = parsetcodes + post_calls;
 	kvmap2[ "return" ] = retCode;
-	kvmap2[ "file" ] = decl == NULL ? "" : module->GetFileName( decl->getLocation() );
+
+	string fname;
+	if( decl ){
+		size_t pos;
+		fname = module->GetFileName( decl->getLocation() );
+		pos = fname.rfind( "/" );
+		if( pos != string::npos ) fname.erase( 0, pos+1 );
+	}
+	kvmap2[ "file" ] = fname;
 	
 
 	//if( hostType == cxxName ) kvmap2[ 'dao2cxx' ] =''; # XXX 

@@ -657,6 +657,7 @@ void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name,
 	if( not IsHeaderFile( name ) ) return;
 	if( sourceman.isInMainFile( loc ) ){
 		if( headers.find( entryHeader ) != headers.end() ) return;
+		includes.push_back( CDaoHeaderInfo( name, entryHeader ) );
 		headers[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
 		headers2[ entryHeader ] = CDaoHeaderInfo( name, entryHeader );
 
@@ -925,6 +926,7 @@ const char *ifdef_cpp_close = "#ifdef __cplusplus\n}\n#endif\n";
 void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 {
 	string name_macro = UppercaseString( moduleInfo.name );
+	int i;
 
 	fout_header << "#ifndef __DAO_" << name_macro << "_H__\n";
 	fout_header << "#define __DAO_" << name_macro << "_H__\n";
@@ -937,10 +939,9 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#include<daoList.h>\n\n";
 	fout_header << ifdef_cpp_close;
 
-	map<FileEntry*,CDaoHeaderInfo>::iterator it, end = headers.end();
-	for(it=headers.begin(); it != end; it++){
-		if( it->second.path == "" ) continue;
-		fout_header << "#include\"" << it->second.path << "\"\n"; // TODO: angular
+	for(i=0; i<includes.size(); ++i){
+		if( includes[i].path == "" ) continue;
+		fout_header << "#include\"" << includes[i].path << "\"\n"; // TODO: angular
 	}
 	fout_header << "\n";
 	map<FileEntry*,CDaoModuleInfo>::iterator it2, end2 = requiredModules.end();
