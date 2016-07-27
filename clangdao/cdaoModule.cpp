@@ -76,7 +76,7 @@ const string ext_typer = "extern DaoTypeBase *dao_$(type)_Typer;\n";
 const string ext_dao_types = "extern DaoType *dao_type_$(type);\n";
 
 const string tpl_wraptype =
-"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Typer, 1 );\n";
+"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Typer, DAO_CDATA, 0 );\n";
 
 
 extern string cdao_qname_to_idname( const string & qname );
@@ -307,8 +307,8 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 				//if( canoname.find( "NULL TYPE" ) != string::npos )
 				//outs() << canotype.getAsString() << "  " << canoname << "================\n";
 			}
-			// Disable "<anonymous>" types:
-			if( canoname.find( "<anonymous>" ) != string::npos ) canoname = "<anonymous>";
+			// Disable "(anonymous)" types:
+			if( canoname.find( "(anonymous)" ) != string::npos ) canoname = "(anonymous)";
 
 			writtenName = normalize_type_name( writtenName );
 			canoname = normalize_type_name( canoname );
@@ -334,7 +334,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 				nsname = topLevelScope.varname;
 				//outs() << nsname << " " << qname << " " << canotype.getAsString() << "\n";
 			}
-			if( TST && canoname != "<anonymous>" && UT->isRedundant == false and UT->IsFromRequiredModules() == false ){
+			if( TST && canoname != "(anonymous)" && UT->isRedundant == false and UT->IsFromRequiredModules() == false ){
 				const TemplateArgumentList & args = SD->getTemplateArgs();
 				string alias = canoname;
 				for(i=TST->getNumArgs(), n=args.size(); i<n; i++){
@@ -409,7 +409,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 	}
 	string canoname = canotype.getAsString();
 	string qualname = qualtype.getAsString();
-	if( UT->qname == "<anonymous>" && canoname.find( "<anonymous" ) == string::npos ){
+	if( UT->qname == "(anonymous)" && canoname.find( "(anonymous" ) == string::npos ){
 		UT->qname = canoname;
 		UT->name = qualname;
 		UT->name2 = UT->name;
@@ -447,7 +447,7 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 		}
 	}
 #endif
-	if( UT->qname.find( "<anonymous" ) != string::npos ) UT->unsupported = true;
+	if( UT->qname.find( "(anonymous" ) != string::npos ) UT->unsupported = true;
 	if( TD && UT->isRedundant == false ){
 		if( cxxTypedefs.find( TD ) != cxxTypedefs.end() ) return UT;
 
@@ -818,7 +818,7 @@ void CDaoModule::HandleTypeDefine( TypedefDecl *TD )
 				// typedef struct{...}name:
 				// isAnonymousStructOrUnion() is false!?
 				//if( UT->decl->isAnonymousStructOrUnion() ) UT->qname = TD->getNameAsString();
-				if( qname.find( "<anonymous>" ) != string::npos ){
+				if( qname.find( "(anonymous)" ) != string::npos ){
 					UT->qname = UT->name = UT->idname = UT->name2 = TD->getNameAsString();
 					UT->typedefed = true;
 					UT->unsupported = false;
@@ -936,6 +936,7 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#include<dao.h>\n\n";
 	fout_header << ifdef_cpp_open;
 	fout_header << "#include<modules/auxlib/dao_aux.h>\n\n";
+	fout_header << "#include<modules/stream/dao_stream.h>\n\n";
 	fout_header << "#include<daoList.h>\n\n";
 	fout_header << ifdef_cpp_close;
 
@@ -949,9 +950,15 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 		string name_macro2 = UppercaseString( it2->second.name );
 		fout_header << "#ifndef DAO_" << name_macro2 << "_STATIC\n";
 		fout_header << "#define DAO_DLL_" << name_macro2 << " DAO_DLL_IMPORT\n";
+		fout_header << "#ifdef WIN32\n";
+		fout_header << "#define DAO_DLL2_" << name_macro2 << " DAO_DLL_IMPORT\n";
+		fout_header << "#else\n";
+		fout_header << "#define DAO_DLL2_" << name_macro2 << "\n";
+		fout_header << "#endif\n\n";
 		fout_header << "#include\"dao_" << it2->second.name << ".h\"\n";
 		fout_header << "#else\n";
 		fout_header << "#define DAO_DLL_" << name_macro2 << "\n";
+		fout_header << "#define DAO_DLL2_" << name_macro2 << "\n";
 		fout_header << "#include\"dao_" << it2->second.name + ".h\"\n";
 		fout_header << "#endif\n";
 	}
@@ -961,6 +968,11 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#endif\n";
 	fout_header << "#else\n";
 	fout_header << "#define DAO_DLL_" << name_macro << "\n";
+	fout_header << "#endif\n\n";
+	fout_header << "#ifdef WIN32\n";
+	fout_header << "#define DAO_DLL2_" << name_macro << " DAO_DLL_" << name_macro << "\n";
+	fout_header << "#else\n";
+	fout_header << "#define DAO_DLL2_" << name_macro << "\n";
 	fout_header << "#endif\n\n";
 	fout_header << "extern DaoVmSpace *__daoVmSpace;\n";
 }

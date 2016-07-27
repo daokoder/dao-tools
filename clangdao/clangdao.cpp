@@ -80,7 +80,11 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirecti
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
 	}else if( MI->isObjectLike() && name == "module_onload" ){
-		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
+		SourceManager & sourceman = compiler->getSourceManager();
+		SourceLocation loc = MI->getDefinitionLoc();
+		if( sourceman.isInMainFile( loc ) ){
+			module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
+		}
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
 		SourceLocation loc = MI->getDefinitionLoc();
 		if( not module->IsFromMainModule(loc) ) return;

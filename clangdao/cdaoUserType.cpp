@@ -162,7 +162,7 @@ class DaoQtObject : public QObjectUserData\n\
 
 const string daoss_class =
 "\n\
-class DAO_DLL_$(module) DaoSS_$(idname) : $(ss_parents)\n\
+class DAO_DLL2_$(module) DaoSS_$(idname) : $(ss_parents)\n\
 { Q_OBJECT\n\
 public:\n\
 	DaoSS_$(idname)() $(init_parents) {}\n\
@@ -426,7 +426,7 @@ const string dao_proto =
 const string cxx_wrap_proto 
 = "static void dao_$(host_idname)_$(cxxname)$(overload)( DaoProcess *_proc, DaoValue *_p[], int _n )";
 
-const string tpl_struct = "$(qname)* DAO_DLL_$(module) Dao_$(idname)_New();\n";
+const string tpl_struct = "DAO_DLL_$(module) $(qname)* Dao_$(idname)_New();\n";
 
 const string tpl_struct_alloc =
 "$(qname)* Dao_$(idname)_New()\n{\n\
@@ -441,13 +441,13 @@ const string tpl_struct_alloc2 =
 
 const string tpl_struct_daoc = 
 "typedef struct Dao_$(idname) Dao_$(idname);\n\
-struct DAO_DLL_$(module) Dao_$(idname)\n\
+struct DAO_DLL2_$(module) Dao_$(idname)\n\
 {\n\
 	$(qname)  nested;\n\
 	$(qname) *object;\n\
 	DaoCdata *_cdata;\n\
 };\n\
-Dao_$(idname)* DAO_DLL_$(module) Dao_$(idname)_New();\n";
+DAO_DLL_$(module) Dao_$(idname)* Dao_$(idname)_New();\n";
 
 const string tpl_struct_daoc_alloc =
 "Dao_$(idname)* Dao_$(idname)_New()\n\
@@ -488,7 +488,7 @@ const string cxx_wrap_alloc2 =
 }\n";
 
 const string tpl_class_def = 
-"class DAO_DLL_$(module) DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
+"class DAO_DLL2_$(module) DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
 	public:\n\
 	DaoCxxVirt_$(idname)(){ _cdata = 0; }\n\
 	void DaoInitWrapper( DaoCdata *d );\n\n\
@@ -496,7 +496,7 @@ const string tpl_class_def =
 \n$(virtuals)\n\
 $(qt_virt_emit)\n\
 };\n\
-class DAO_DLL_$(module) DaoCxx_$(idname) : public $(qname), public DaoCxxVirt_$(idname)\n\
+class DAO_DLL2_$(module) DaoCxx_$(idname) : public $(qname), public DaoCxxVirt_$(idname)\n\
 { $(Q_OBJECT)\n\n\
 \tpublic:\n\
 $(constructors)\n\
@@ -530,7 +530,7 @@ void DaoCxx_$(idname)::DaoInitWrapper()\n\
 $(qt_make_linker)\
 }\n";
 const string tpl_class_init_qtss = 
-"void DAO_DLL_$(module) Dao_$(idname)_InitSS( $(qname) *p )\n\
+"DAO_DLL_$(module) void Dao_$(idname)_InitSS( $(qname) *p )\n\
 {\n\
    if( p->userData(0) == NULL ){\n\
 		DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
@@ -539,7 +539,7 @@ const string tpl_class_init_qtss =
 	}\n\
 }\n";
 const string tpl_class_copy = tpl_class_init +
-"$(qname)* DAO_DLL_$(module) Dao_$(idname)_Copy( const $(qname) &p )\n\
+"DAO_DLL_$(module) $(qname)* Dao_$(idname)_Copy( const $(qname) &p )\n\
 {\n\
 	$(qname) *object = new $(qname)( p );\n\
 $(qt_make_linker3)\n\
@@ -549,21 +549,21 @@ const string tpl_class_decl_constru =
 "	DaoCxx_$(idname)( $(parlist) ) : $(qname)( $(parcall) ){}\n";
 
 const string tpl_class_new =
-"\nDaoCxx_$(idname)* DAO_DLL_$(module) DaoCxx_$(idname)_New( $(parlist) );\n";
+"\nDAO_DLL_$(module) DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) );\n";
 const string tpl_class_new_novirt =
-"\n$(qname)* DAO_DLL_$(module) Dao_$(idname)_New( $(parlist) );\n";
+"\nDAO_DLL_$(module) $(qname)* Dao_$(idname)_New( $(parlist) );\n";
 const string tpl_class_init_qtss_decl =
-"\nvoid DAO_DLL_$(module) Dao_$(idname)_InitSS( $(qname) *p );\n";
+"\nDAO_DLL_$(module) void Dao_$(idname)_InitSS( $(qname) *p );\n";
 
 const string tpl_class_noderive =
-"\n$(qname)* DAO_DLL_$(module) Dao_$(idname)_New( $(parlist) )\n\
+"\nDAO_DLL_$(module) $(qname)* Dao_$(idname)_New( $(parlist) )\n\
 {\n\
 	$(qname) *__object = new $(qname)( $(parcall) );\n\
 $(qt_make_linker3)\n\
 	return __object;\n\
 }\n";
 const string tpl_class_init2 =
-"\nDaoCxx_$(idname)* DAO_DLL_$(module) DaoCxx_$(idname)_New( $(parlist) )\n\
+"\nDAO_DLL_$(module) DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) )\n\
 {\n\
 	DaoCxx_$(idname) *self = new DaoCxx_$(idname)( $(parcall) );\n\
 	self->DaoInitWrapper();\n\
@@ -686,13 +686,13 @@ static DaoTypeBase $(typer)_Typer = \n\
   $(delete),\n\
   $(gcfields)\n\
 };\n\
-DaoTypeBase DAO_DLL_$(module) *dao_$(typer)_Typer = & $(typer)_Typer;\n\
+DaoTypeBase *dao_$(typer)_Typer = & $(typer)_Typer;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
 
 const string usertype_code_none =
 "static DaoTypeBase $(typer)_Typer = \n\
 { \"$(daotypename)\", NULL, NULL, NULL, { NULL }, { NULL }, $(delete), NULL };\n\
-DaoTypeBase DAO_DLL_$(module) *dao_$(typer)_Typer = & $(typer)_Typer;\n\
+DaoTypeBase *dao_$(typer)_Typer = & $(typer)_Typer;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
 
 const string cxx_get_pixel_codes =
@@ -1007,9 +1007,9 @@ int CDaoUserType::Generate()
 		}
 	}
 
-	size_t pos = name.find( '<' );
+	size_t pos = name.find( '(' );
 	if( pos != string::npos ) name.erase( pos );
-	if( qname.find( "<anonymous" ) != string::npos ){
+	if( qname.find( "(anonymous" ) != string::npos ){
 		//outs() << qname << " " << module->GetFileName( decl->getLocation() ) << "============\n";
 		//decl->getLocation().print( outs(), module->compiler->getSourceManager() );
 		//outs() << "\n" << decl->isAnonymousStructOrUnion() << "\n\n";
