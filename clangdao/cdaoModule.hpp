@@ -92,9 +92,12 @@ struct CDaoModule
 {
 	bool  finalGenerating;
 	bool  writeStringListConversion;
+	bool  wrapExplicit;
 	bool  skipVirtual;
 	bool  skipProtected;
 	bool  nullPointers;
+	bool  variantNumber;
+	bool  variantString;
 
 	string onload;
 
@@ -149,9 +152,14 @@ struct CDaoModule
 	bool IsSourceFile( const string & name );
 	bool IsFromModules( SourceLocation loc );
 	bool IsFromMainModule( SourceLocation loc );
+	bool IsFromMainModuleSource( SourceLocation loc );
 	bool IsFromModuleSources( SourceLocation loc );
 	bool IsFromRequiredModules( SourceLocation loc );
 	bool CheckHeaderDependency();
+
+	bool WrapExplicit() const { return wrapExplicit; }
+	bool UseVariantNumber() const { return variantNumber; }
+	bool UseVariantString() const { return variantString; }
 
 	string GetFileName( SourceLocation );
 

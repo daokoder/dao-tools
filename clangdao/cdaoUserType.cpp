@@ -946,6 +946,10 @@ int CDaoUserType::Generate()
 	bool isC = module->compiler->getPreprocessor().getLangOpts().C99;
 	RecordDecl *dd = decl->getDefinition();
 
+	if( isMBString and not module->UseVariantString() ) isRedundant2 = true;
+	if( isWCString and not module->UseVariantString() ) isRedundant2 = true;
+	if( isNumber and not module->UseVariantNumber() ) isRedundant2 = true;
+
 	SearchHints();
 	outs() << "generating: " << qname << "\n";
 

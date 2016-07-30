@@ -35,6 +35,7 @@
 #include "cdaoVariable.hpp"
 #include "cdaoModule.hpp"
 
+const string daopar_bool = "$(name): bool$(default)";
 const string daopar_int = "$(name): int$(default)";
 const string daopar_float = "$(name): float$(default)";
 const string daopar_double = "$(name): float$(default)";
@@ -58,6 +59,7 @@ const string dao2cxx3 = "  $(cxxtype)* $(name) = ($(cxxtype)*) ";
 const string dao2cxx4 = "  $(cxxtype) (*$(name))[$(size2)] = ($(cxxtype)(*)[$(size2)]) ";
 
 const string dao2cxx_char = dao2cxx + "DaoValue_TryGetChars( _p[$(index)] )[0];\n";
+const string dao2cxx_bool  = dao2cxx + "DaoValue_TryGetBoolean( _p[$(index)] );\n";
 const string dao2cxx_int  = dao2cxx + "DaoValue_TryGetInteger( _p[$(index)] );\n";
 const string dao2cxx_float = dao2cxx + "DaoValue_TryGetFloat( _p[$(index)] );\n";
 const string dao2cxx_double = dao2cxx + "DaoValue_TryGetFloat( _p[$(index)] );\n";
@@ -134,6 +136,7 @@ const string dao2cxx_userdata = "  DaoTuple *$(name) = (DaoTuple*) _p[$(index)];
 
 const string cxx2dao = "  DaoProcess_New";
 
+const string cxx2dao_bool = cxx2dao + "Boolean( _proc, (dao_boolean) $(name) );\n";
 const string cxx2dao_int = cxx2dao + "Integer( _proc, (dao_integer) $(name) );\n";
 const string cxx2dao_float = cxx2dao + "Float(  _proc,(dao_float) $(name) );\n";
 const string cxx2dao_double = cxx2dao + "Float( _proc, (dao_float) $(name) );\n";
@@ -184,6 +187,7 @@ const string cxx2dao_qstring = cxx2dao+"String( _proc, (char*) $(name).toLocal8B
 
 const string ctxput = "  DaoProcess_Put";
 
+const string ctxput_bool = ctxput + "Boolean( _proc, (dao_boolean) $(name) );\n";
 const string ctxput_int = ctxput + "Integer( _proc, (dao_integer) $(name) );\n";
 const string ctxput_float = ctxput + "Float( _proc, (dao_float) $(name) );\n";
 const string ctxput_double = ctxput + "Float( _proc, (dao_float) $(name) );\n";
@@ -227,6 +231,7 @@ const string ctxput_refcdata =
 
 const string cache = "  DaoProcess_New";
 
+const string cache_bool = cache + "Boolean( _proc, (dao_boolean) $(name) );\n";
 const string cache_int = cache + "Integer( _proc, (dao_integer) $(name) );\n";
 const string cache_float = cache + "Float( _proc, (dao_float) $(name) );\n";
 const string cache_double = cache + "Float( _proc, (dao_float) $(name) );\n";
@@ -256,58 +261,72 @@ const string cache_refcdata =
 
 
 
-const string daopar_number_user = "$(name): $(dao)$(number)|$(daotype)$(default)";
+const string daopar_number_plain = "$(name): $(dao)$(number)$(default)";
+const string daopar_number_variant = "$(name): $(dao)$(number)|$(daotype)$(default)";
 
-const string dao2cxx_number_class =
+const string dao2cxx_number_plain =
+"  $(cxxtype) $(name)( DaoValue_TryGet$(Number)( _p[$(index)] ) );\n";
+
+const string dao2cxx_number_variant =
 "  $(cxxtype) *__cdata_$(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _p[$(index)], dao_type_$(typer) );\n"
 "  $(cxxtype) __$(name)( __cdata_$(name) ? 0 : DaoValue_TryGet$(Number)( _p[$(index)] ) );\n"
 "  $(cxxtype) & $(name) = __cdata_$(name) ? *__cdata_$(name) : __$(name);\n";
 
-const string cxx2dao_number_class = cxx2dao + "$(Number)( _proc, $(name).$(tonumber)() ) );\n";
+const string cxx2dao_number_common = cxx2dao + "$(Number)( _proc, $(name).$(tonumber)() ) );\n";
 
-const string ctxput_number_class = ctxput + "$(Number)( _proc, $(name).$(tonumber)() );\n";
+const string ctxput_number_common = ctxput + "$(Number)( _proc, $(name).$(tonumber)() );\n";
 
-const string cache_number_class = cache + "$(Number)( _proc, $(name).$(tonumber)() );\n";
+const string cache_number_common = cache + "$(Number)( _proc, $(name).$(tonumber)() );\n";
 
-const string getres_number_class = "  if(DaoValue_Cast$(Number)(_res)) $(name)=$(cxxtype)("
+const string getres_number_common = "  if(DaoValue_Cast$(Number)(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGet$(Number)( _res ) );\n";
 
-const string setter_number_class = "  self->$(name) = $(cxxtype)( DaoValue_TryGet$(Number)(_p[1]) );\n";
+const string setter_number_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGet$(Number)(_p[1]) );\n";
 
 
 
-const string daopar_string_user = "$(name) :$(dao)string|$(daotype)$(default)";
+const string daopar_string_plain = "$(name): $(dao)string$(default)";
+const string daopar_string_variant = "$(name): $(dao)string|$(daotype)$(default)";
 
-const string dao2cxx_mbs_class =
+const string dao2cxx_mbs_plain =
+"  char *__chars_$(name) = DaoValue_TryGetChars( _p[$(index)] );\n"
+"  $(cxxtype) $(name)( __chars_$(name) );\n";
+
+const string dao2cxx_wcs_plain =
+"  wchar_t *__chars_$(name) = DaoValue_TryGetWCString( _p[$(index)] );\n"
+"  $(cxxtype) $(name)( __chars_$(name) );\n";
+
+
+const string dao2cxx_mbs_variant =
 "  char *__chars_$(name) = DaoValue_TryGetChars( _p[$(index)] );\n"
 "  $(cxxtype) *__cdata_$(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _p[$(index)], dao_type_$(typer) );\n"
 "  $(cxxtype) __$(name)( __chars_$(name) ? __chars_$(name) : \"\" );\n"
 "  $(cxxtype) & $(name) = __cdata_$(name) ? *__cdata_$(name) : __$(name);\n";
 
-const string dao2cxx_wcs_class =
+const string dao2cxx_wcs_variant =
 "  wchar_t *__chars_$(name) = DaoValue_TryGetWCString( _p[$(index)] );\n"
 "  $(cxxtype) *__cdata_$(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _p[$(index)], dao_type_$(typer) );\n"
 "  $(cxxtype) __$(name)( __chars_$(name) ? __chars_$(name) : L\"\" );\n"
 "  $(cxxtype) & $(name) = __cdata_$(name) ? *__cdata_$(name) : __$(name);\n";
 
-const string cxx2dao_mbs_class = cxx2dao 
+const string cxx2dao_mbs_common = cxx2dao 
 + "String( _proc, (char*) $(name).$(tochars)(), strlen( (char*)$(name).$(tochars)() ) );\n";
-const string cxx2dao_wcs_class = cxx2dao 
+const string cxx2dao_wcs_common = cxx2dao 
 + "WCString( _proc, (wchar_t*) $(name).$(tochars)(), wcslen( (wchar_t*)$(name).$(tochars)() ) );\n";
 
-const string ctxput_mbs_class = ctxput + "Chars( _proc, (char*) $(name).$(tochars)() );\n";
-const string ctxput_wcs_class = ctxput + "WCString( _proc, (wchar_t*) $(name).$(tochars)() );\n";
+const string ctxput_mbs_common = ctxput + "Chars( _proc, (char*) $(name).$(tochars)() );\n";
+const string ctxput_wcs_common = ctxput + "WCString( _proc, (wchar_t*) $(name).$(tochars)() );\n";
 
-const string cache_mbs_class = cache + "String( _proc, (char*) $(name).$(tochars)(), -1 );\n";
-const string cache_wcs_class = cache + "WCString( _proc, (wchar_t*) $(name).$(tochars)(), -1 );\n";
+const string cache_mbs_common = cache + "String( _proc, (char*) $(name).$(tochars)(), -1 );\n";
+const string cache_wcs_common = cache + "WCString( _proc, (wchar_t*) $(name).$(tochars)(), -1 );\n";
 
-const string getres_mbs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
+const string getres_mbs_common = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGetChars( _res ) );\n";
-const string getres_wcs_class = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
+const string getres_wcs_common = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGetWCString( _res ) );\n";
 
-const string setter_mbs_class = "  self->$(name) = $(cxxtype)( DaoValue_TryGetChars(_p[1]) );\n";
-const string setter_wcs_class = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString(_p[1]) );\n";
+const string setter_mbs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetChars(_p[1]) );\n";
+const string setter_wcs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString(_p[1]) );\n";
 
 
 #if 0
@@ -421,6 +440,7 @@ const string qt_daolist_codes = "  Dao_Put$(qtype)_$(item)( _proc, $(name) );\n"
 const string qt_daolist_codes2 = "  Dao_Put$(qtype)P_$(item)( _proc, $(name) );\n";
 #endif
 
+const string parset_bool = "  DaoProcess_NewBoolean( _proc, (dao_boolean)$(name) );\n";
 const string parset_int = "  DaoProcess_NewInteger( _proc, (dao_integer)$(name) );\n";
 const string parset_float = "  DaoProcess_NewFloat( _proc, (dao_float)$(name) );\n";
 const string parset_double = "  DaoProcess_NewFloat( _proc, (dao_float)$(name) );\n";
@@ -510,6 +530,7 @@ const string getres_a = "  if(DaoValue_CastArray(_res))\n    $(name)=($(cxxtype)
 const string getres_p = "  if(DaoValue_CastCdata(_res,NULL)) $(name)=($(cxxtype)) ";
 const string getres_io = "  if(DaoValue_CastStream(_res)) $(name)=($(cxxtype))";
 
+const string getres_bool  = getres_i + "DaoValue_TryGetBoolean(_res);\n";
 const string getres_int  = getres_i + "DaoValue_TryGetInteger(_res);\n";
 const string getres_float = getres_f + "DaoValue_TryGetFloat(_res);\n";
 const string getres_double = getres_d + "DaoValue_TryGetFloat(_res);\n";
@@ -575,6 +596,7 @@ const string setitem_double2 =
 "  if( DaoValue_TryGetInteger(_p[1]) < 0 || DaoValue_TryGetInteger(_p[1]) >= $(size) ) return;\n\
   (*self)[DaoValue_TryGetInteger(_p[1])] = DaoValue_TryGetFloat(_p[2]);\n";
 
+const string setter_bool = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetBoolean(_p[1]);\n";
 const string setter_int = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetInteger(_p[1]);\n";
 const string setter_float = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetFloat(_p[1]);\n";
 const string setter_double = "  self->$(name) = ($(cxxtype)) DaoValue_TryGetFloat(_p[1]);\n";
@@ -645,6 +667,15 @@ struct CDaoVarTemplates
 	string set_item;
 
 	void Generate( CDaoVariable *var, map<string,string> & kvmap, int daopid, int cxxpid );
+	void SetupBoolScalar(){
+		daopar = daopar_bool;
+		dao2cxx = dao2cxx_bool;
+		cxx2dao = cxx2dao_bool;
+		ctxput = ctxput_bool;
+		cache = cache_bool;
+		getres = getres_bool;
+		setter = setter_bool;
+	}
 	void SetupIntScalar(){
 		daopar = daopar_int;
 		dao2cxx = dao2cxx_int;
@@ -690,43 +721,58 @@ struct CDaoVarTemplates
 		//parset = parset_wcs;
 		getres = getres_wcs;
 	}
-	void SetupNumber( const string & Number, const string & number, const string & tonumber ){
+	void SetupNumber( const string & Number, const string & number, const string & tonumber, bool variant = false ){
 		map<string,string> kvmap;
 		kvmap["Number"] = Number;
 		kvmap["number"] = number;
 		kvmap["tonumber"] = tonumber;
-		daopar = cdao_string_fill( daopar_number_user, kvmap );
-		dao2cxx = cdao_string_fill( dao2cxx_number_class, kvmap );
-		cxx2dao = cdao_string_fill( cxx2dao_number_class, kvmap );
-		ctxput = cdao_string_fill( ctxput_number_class, kvmap );
-		cache = cdao_string_fill( cache_number_class, kvmap );
+		if( variant ){
+			daopar = cdao_string_fill( daopar_number_variant, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_number_variant, kvmap );
+		}else{
+			daopar = cdao_string_fill( daopar_number_plain, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_number_plain, kvmap );
+		}
+		cxx2dao = cdao_string_fill( cxx2dao_number_common, kvmap );
+		ctxput = cdao_string_fill( ctxput_number_common, kvmap );
+		cache = cdao_string_fill( cache_number_common, kvmap );
 		//parset = cdao_string_fill( parset_number, kvmap );
-		getres = cdao_string_fill( getres_number_class, kvmap );
-		setter = setter_number_class;
+		getres = cdao_string_fill( getres_number_common, kvmap );
+		setter = setter_number_common;
 	}
-	void SetupMBString( const string & tochars ){
+	void SetupMBString( const string & tochars, bool variant = false ){
 		map<string,string> kvmap;
 		kvmap["tochars"] = tochars;
-		daopar = cdao_string_fill( daopar_string_user, kvmap );
-		dao2cxx = cdao_string_fill( dao2cxx_mbs_class, kvmap );
-		cxx2dao = cdao_string_fill( cxx2dao_mbs_class, kvmap );
-		ctxput = cdao_string_fill( ctxput_mbs_class, kvmap );
-		cache = cdao_string_fill( cache_mbs_class, kvmap );
+		if( variant ){
+			daopar = cdao_string_fill( daopar_string_variant, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_mbs_variant, kvmap );
+		}else{
+			daopar = cdao_string_fill( daopar_string_plain, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_mbs_plain, kvmap );
+		}
+		cxx2dao = cdao_string_fill( cxx2dao_mbs_common, kvmap );
+		ctxput = cdao_string_fill( ctxput_mbs_common, kvmap );
+		cache = cdao_string_fill( cache_mbs_common, kvmap );
 		//parset = cdao_string_fill( parset_mbs, kvmap );
-		getres = cdao_string_fill( getres_mbs_class, kvmap );
-		setter = setter_mbs_class;
+		getres = cdao_string_fill( getres_mbs_common, kvmap );
+		setter = setter_mbs_common;
 	}
-	void SetupWCString( const string & tochars ){
+	void SetupWCString( const string & tochars, bool variant = false ){
 		map<string,string> kvmap;
 		kvmap["tochars"] = tochars;
-		daopar = cdao_string_fill( daopar_string_user, kvmap );
-		dao2cxx = cdao_string_fill( dao2cxx_wcs_class, kvmap );
-		cxx2dao = cdao_string_fill( cxx2dao_wcs_class, kvmap );
-		ctxput = cdao_string_fill( ctxput_wcs_class, kvmap );
-		cache = cdao_string_fill( cache_wcs_class, kvmap );
+		if( variant ){
+			daopar = cdao_string_fill( daopar_string_variant, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_wcs_variant, kvmap );
+		}else{
+			daopar = cdao_string_fill( daopar_string_plain, kvmap );
+			dao2cxx = cdao_string_fill( dao2cxx_wcs_plain, kvmap );
+		}
+		cxx2dao = cdao_string_fill( cxx2dao_wcs_common, kvmap );
+		ctxput = cdao_string_fill( ctxput_wcs_common, kvmap );
+		cache = cdao_string_fill( cache_wcs_common, kvmap );
 		//parset = cdao_string_fill( parset_wcs, kvmap );
-		getres = cdao_string_fill( getres_wcs_class, kvmap );
-		setter = setter_wcs_class;
+		getres = cdao_string_fill( getres_wcs_common, kvmap );
+		setter = setter_wcs_common;
 	}
 };
 void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, int daopid, int cxxpid )
@@ -1124,9 +1170,9 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		cxxtype2 = UT->qname;
 		cxxtyper = UT->idname;
 		cxxcall = name;
-		if( daopar_index >= 0 ){
+//		if( daopar_index >= 0 ){
 			if( hostype != UT and UT->isMBString ){
-				tpl.SetupMBString( UT->toValue );
+				tpl.SetupMBString( UT->toValue, module->UseVariantString() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1135,7 +1181,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}else if( hostype != UT and UT->isWCString ){
-				tpl.SetupWCString( UT->toValue );
+				tpl.SetupWCString( UT->toValue, module->UseVariantString() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1146,7 +1192,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 			}else if( hostype != UT and UT->isNumber ){
 				string numbers[4] = {"","int","float","float"};
 				string Numbers[4] = {"","Integer","Float","Float"};
-				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue );
+				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue, module->UseVariantNumber() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = numbers[UT->isNumber];
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1155,7 +1201,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}
-		}
+//		}
 		cxxcall = "*" + name;
 		isObjectType = true;
 		if( daodefault.size() ){
@@ -1200,6 +1246,9 @@ int CDaoVariable::GenerateForBuiltin( int daopar_index, int cxxpar_index )
 		tpl.SetupIntScalar();
 		switch( canotype->getAs<BuiltinType>()->getKind() ){
 		case BuiltinType::Bool :
+			daotype = "bool";
+			tpl.SetupBoolScalar();
+			break;
 		case BuiltinType::Char_U :
 		case BuiltinType::UChar :
 		case BuiltinType::WChar_U :
@@ -1423,7 +1472,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			}
 			break;
 		case BuiltinType::UShort :
-		case BuiltinType::Bool :
+		case BuiltinType::Bool : // TODO;
 		case BuiltinType::UInt :
 		case BuiltinType::ULong :
 		case BuiltinType::ULongLong :
@@ -1589,6 +1638,12 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		isNullable = false;
 		tpl.SetupIntScalar();
 		switch( type->getKind() ){
+		case BuiltinType::Bool :
+			daotype = "bool";
+			extraReturn = true;
+			tpl.SetupBoolScalar();
+			tpl.parset = parset_bool;
+			break;
 		case BuiltinType::Char_U :
 		case BuiltinType::UChar :
 		case BuiltinType::Char_S :
@@ -1598,7 +1653,6 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		case BuiltinType::Char16 :
 		case BuiltinType::Char32 :
 		case BuiltinType::UShort :
-		case BuiltinType::Bool :
 		case BuiltinType::UInt :
 		case BuiltinType::ULong :
 		case BuiltinType::ULongLong :
@@ -1644,9 +1698,9 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		cxxtype2 = UT->qname;
 		cxxtyper = UT->idname;
 		cxxcall = name;
-		if( daopar_index >= 0 ){
+//		if( daopar_index >= 0 ){
 			if( hostype != UT and UT->isMBString ){
-				tpl.SetupMBString( UT->toValue );
+				tpl.SetupMBString( UT->toValue, module->UseVariantString() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1655,7 +1709,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}else if( hostype != UT and UT->isWCString ){
-				tpl.SetupWCString( UT->toValue );
+				tpl.SetupWCString( UT->toValue, module->UseVariantString() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1666,7 +1720,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 			}else if( hostype != UT and UT->isNumber ){
 				string numbers[4] = {"","int","float","float"};
 				string Numbers[4] = {"","Integer","Float","Float"};
-				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue );
+				tpl.SetupNumber( Numbers[UT->isNumber], numbers[UT->isNumber], UT->toValue, module->UseVariantNumber() );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = numbers[UT->isNumber];
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1675,7 +1729,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 				}
 				return 0;
 			}
-		}
+//		}
 		cxxcall = "*" + name;
 		tpl.daopar = daopar_user;
 		tpl.ctxput = ctxput_refcdata;

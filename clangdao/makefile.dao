@@ -54,6 +54,7 @@ clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerCore" )
 clangdao_exe.AddLinkingFlag( "-lclangStaticAnalyzerFrontend" )
 
 
+clangdao_objects.UseProject( llvm )
 clangdao.UseSharedLibrary( llvm )
 clangdao_exe.EnableDynamicLinking()
 

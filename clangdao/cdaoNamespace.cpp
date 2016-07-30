@@ -59,6 +59,7 @@ CDaoNamespace::CDaoNamespace( CDaoModule *mod, const NamespaceDecl *decl )
 void CDaoNamespace::HandleDeclaration( Decl *D )
 {
 	if( unsupported ) return;
+	if( module->WrapExplicit() and not module->IsFromMainModuleSource( D->getLocation() ) ) return;
 	if( LinkageSpecDecl *TUD = dyn_cast<LinkageSpecDecl>(D) ){
 		DeclContext::decl_iterator it, end;
 		for(it=TUD->decls_begin(),end=TUD->decls_end(); it!=end; it++){

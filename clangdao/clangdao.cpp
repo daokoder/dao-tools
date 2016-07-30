@@ -66,27 +66,33 @@ struct CDaoPPCallbacks : public PPCallbacks
 void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirective *MD)
 {
 	const MacroInfo *MI = MD->getMacroInfo();
+	SourceLocation loc = MI->getDefinitionLoc();
+	SourceManager & sourceman = compiler->getSourceManager();
 	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
+
+	if( not sourceman.isInMainFile( loc ) ) return;
+
 	if( MI->getNumTokens() < 1 ){ // number of expansion tokens;
-		if( MI->isObjectLike() && name == "CLANGDAO_SKIP_VIRTUAL" ){
+		if( MI->isObjectLike() && name == "CLANGDAO_WRAP_EXPLICIT" ){
+			module->wrapExplicit = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_VIRTUAL" ){
 			module->skipVirtual = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_PROTECTED" ){
 			module->skipProtected = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_NULLABLE_POINTERS" ){
 			module->nullPointers = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_VARIANT_NUMBER" ){
+			module->variantNumber = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_VARIANT_STRING" ){
+			module->variantString = true;
 		}
 		return;
 	}
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
 	}else if( MI->isObjectLike() && name == "module_onload" ){
-		SourceManager & sourceman = compiler->getSourceManager();
-		SourceLocation loc = MI->getDefinitionLoc();
-		if( sourceman.isInMainFile( loc ) ){
-			module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
-		}
+		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
-		SourceLocation loc = MI->getDefinitionLoc();
 		if( not module->IsFromMainModule(loc) ) return;
 		Token tok = *MI->tokens_begin();
 		if( tok.getKind() == tok::numeric_constant ){
@@ -119,6 +125,10 @@ struct CDaoASTConsumer : public ASTConsumer
 		compiler = cinst;
 		module = mod;
 	}
+	CDaoASTConsumer( const CDaoASTConsumer & other ){
+		compiler = other.compiler;
+		module = other.module;
+	}
 	bool HandleTopLevelDecl(DeclGroupRef group);
 	void HandleDeclaration( Decl *D );
 };
@@ -132,6 +142,7 @@ bool CDaoASTConsumer::HandleTopLevelDecl(DeclGroupRef group)
 }
 void CDaoASTConsumer::HandleDeclaration( Decl *D )
 {
+	if( not module->IsFromMainModuleSource(D->getLocation()) ) return;
 	if( LinkageSpecDecl *TUD = dyn_cast<LinkageSpecDecl>(D) ){
 		DeclContext::decl_iterator it, end;
 		for(it=TUD->decls_begin(),end=TUD->decls_end(); it!=end; it++){
@@ -461,7 +472,9 @@ int main(int argc, char *argv[] )
 	compiler.createSourceManager(compiler.getFileManager());
 	compiler.createPreprocessor( TU_Complete );
 	compiler.createASTContext();
-	compiler.setASTConsumer( new CDaoASTConsumer( & compiler, & module ) );
+
+	std::unique_ptr<ASTConsumer> astConsumer( new CDaoASTConsumer( & compiler, & module ) );
+	compiler.setASTConsumer( std::move(astConsumer) );
 	//XXX compiler.createSema(false, NULL);
 	//compiler.createSema(TU_Module, NULL);
 	compiler.createSema(TU_Prefix, NULL);
@@ -481,8 +494,9 @@ int main(int argc, char *argv[] )
 
 	//outs()<<builtinDefines<<"\n";
 
+	std::unique_ptr<PPCallbacks> ppCallbacks( new CDaoPPCallbacks( & compiler, & module ) );
 	pp.setPredefines( builtinDefines + "\n" + predefines );
-	pp.addPPCallbacks( new CDaoPPCallbacks( & compiler, & module ) );
+	pp.addPPCallbacks( std::move( ppCallbacks ) );
 
 	InputKind ik = FrontendOptions::getInputKindForExtension( main_input_file );
 	compiler.InitializeSourceManager( FrontendInputFile( main_input_file, ik ) );

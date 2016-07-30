@@ -125,9 +125,12 @@ extern string cdao_substitute_typenames( const string & qname );
 
 CDaoModule::CDaoModule( CompilerInstance *com, const string & path ) : topLevelScope( this )
 {
+	wrapExplicit = false;
 	skipVirtual = false;
 	skipProtected = false;
 	nullPointers = false;
+	variantNumber = false;
+	variantString = false;
 	finalGenerating = false;
 	writeStringListConversion = false;
 	compiler = com;
@@ -199,6 +202,9 @@ CDaoUserType* CDaoModule::HandleUserType( QualType qualtype, SourceLocation loc,
 	qualtype = qualtype.getLocalUnqualifiedType();
 	QualType canotype = qualtype.getCanonicalType();
 	const RecordType *record = dyn_cast<RecordType>( canotype.getTypePtr() );
+
+	if( wrapExplicit and not IsFromMainModuleSource( loc ) ) return NULL;
+
 	if( record == NULL ) return NULL;
 	if( const TypedefType *TDT = dyn_cast<TypedefType>( qualtype.getTypePtr() ) ){
 		TypedefDecl *TD2 = dyn_cast<TypedefDecl>( TDT->getDecl() );
@@ -515,6 +521,11 @@ bool CDaoModule::IsFromMainModule( SourceLocation loc )
 	FileEntry *e = (FileEntry*) sourceman.getFileEntryForID( fid );
 	return e == moduleInfo.entry or headers.find( e ) != headers.end();
 }
+bool CDaoModule::IsFromMainModuleSource( SourceLocation loc )
+{
+	SourceManager & sourceman = compiler->getSourceManager();
+	return sourceman.isInMainFile( loc );
+}
 bool CDaoModule::IsFromModuleSources( SourceLocation loc )
 {
 	SourceManager & sourceman = compiler->getSourceManager();
@@ -724,6 +735,7 @@ void CDaoModule::HandleEnum( EnumDecl *decl )
 }
 void CDaoModule::HandleFunction( FunctionDecl *funcdec )
 {
+	if( wrapExplicit and not IsFromMainModuleSource( funcdec->getLocation() ) ) return;
 	if( dyn_cast<CXXMethodDecl>( funcdec ) ) return; // inline C++ method;
 	//outs() << funcdec->getNameAsString() << " has "<< funcdec->param_size() << " parameters\n";
 	if( funcdec->getNameAsString().find( "dao_gcfields_breakref" ) == 0 ){
@@ -1175,8 +1187,6 @@ string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> 
 {
 	string idname = cdao_qname_to_idname( qname );
 	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
-	if( isCpp ) codes += "  {  \"true\", DAO_INTEGER, true },\n";
-	if( isCpp ) codes += "  {  \"false\", DAO_INTEGER, false },\n";
 	if( qname == "" ){
 		map<string,string>::iterator it, end = numericConsts.end();
 		for(it=numericConsts.begin(); it!=end; it++ ){
