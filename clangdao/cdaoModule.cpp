@@ -70,13 +70,13 @@ const string cxx_stringlist_conversion =
 const string add_number = "  { \"$(name)\", $(type), $(namespace)$(value) },\n";
 const string tpl_typedef = "\tDaoNamespace_DefineType( ns, \"$(old)\", \"$(new)\" );\n";
 const string add_ccdata = "  DaoNamespace_AddConstData( $(ns), \"$(name)\", "
-"(DaoValue*)DaoCdata_Wrap( dao_$(type)_Typer, ($(type)*) $(refer) $(name) ) );\n";
+"(DaoValue*)DaoCdata_Wrap( dao_$(type)_Core, ($(type)*) $(refer) $(name) ) );\n";
 
-const string ext_typer = "extern DaoTypeBase *dao_$(type)_Typer;\n";
+const string ext_typer = "extern DaoTypeCore *dao_$(type)_Core;\n";
 const string ext_dao_types = "extern DaoType *dao_type_$(type);\n";
 
 const string tpl_wraptype =
-"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Typer, DAO_CDATA, 0 );\n";
+"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Core, DAO_CDATA, 0 );\n";
 
 
 extern string cdao_qname_to_idname( const string & qname );
@@ -1018,13 +1018,13 @@ string CDaoModule::MakeSourceCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 	string codes, idname;
 	if( ns && ns->nsdecl ) idname = cdao_qname_to_idname( ns->nsdecl->getQualifiedNameAsString() );
 	//codes += ifdef_cpp_open;
-	codes += "static DaoTypeBase *dao_" + idname + "_Typers[] = \n{\n";
+	codes += "static DaoTypeCore *dao_" + idname + "_Cores[] = \n{\n";
 	for(i=0, n=usertypes.size(); i<n; i++){
 		CDaoUserType & utp = *usertypes[i];
 		//outs() << utp.GetQName() << " " << utp.IsFromMainModule() << " " << utp.unsupported << "\n";
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
-		codes += "\tdao_" + utp.idname + "_Typer,\n";
+		codes += "\tdao_" + utp.idname + "_Core,\n";
 	}
 	codes += "\tNULL\n};\n";
 	//codes += ifdef_cpp_close;
@@ -1098,7 +1098,7 @@ string CDaoModule::MakeOnLoad2Codes( vector<CDaoUserType*> & usertypes )
 		CDaoUserType & utp = *usertypes[i];
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
-		codes += "\tdao_type_" + utp.idname + " = DaoType_GetFromTypeStructure( dao_" + utp.idname + "_Typer );\n";
+		codes += "\tdao_type_" + utp.idname + " = DaoType_GetFromTypeStructure( dao_" + utp.idname + "_Core );\n";
 	}
 	return codes;
 }
@@ -1121,7 +1121,7 @@ string CDaoModule::MakeSourceCodes( vector<CDaoFunction*> & functions, CDaoNames
 	}
 	codes += ifdef_cpp_open;
 	codes += func_decl;
-	codes += "static DaoFuncItem dao_" + idname + "_Funcs[] = \n{\n" + rout_entry;
+	codes += "static DaoFunctionEntry dao_" + idname + "_Funcs[] = \n{\n" + rout_entry;
 	codes += "  { NULL, NULL }\n};\n";
 	codes += func_codes;
 	codes += ifdef_cpp_close;
@@ -1186,7 +1186,7 @@ string CDaoModule::MakeConstNumItems( vector<EnumDecl*> & enums, vector<VarDecl*
 string CDaoModule::MakeConstNumber( vector<EnumDecl*> & enums, vector<VarDecl*> & vars, const string & qname, bool isCpp )
 {
 	string idname = cdao_qname_to_idname( qname );
-	string codes = "static DaoNumItem dao_" + idname + "_Nums[] = \n{\n";
+	string codes = "static DaoNumberEntry dao_" + idname + "_Nums[] = \n{\n";
 	if( qname == "" ){
 		map<string,string>::iterator it, end = numericConsts.end();
 		for(it=numericConsts.begin(); it!=end; it++ ){

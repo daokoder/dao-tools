@@ -627,33 +627,35 @@ const string dao_set_pixel_proto =
 "  { dao_$(host_idname)_SETI_Pixel, \"[]=( self :$(daoname), value :int, i :int, j :int, pixel :enum<uint8,uint16,uint32>=$uint8 )\" },\n";
 
 const string numlist_code = 
-"\n\nstatic DaoNumItem dao_$(typer)_Nums[] = \n\
+"\n\nstatic DaoNumberEntry dao_$(typer)_Nums[] = \n\
 {\n$(nums)  { NULL, 0, 0 }\n};\n";
 
 const string methlist_code = numlist_code +
 "\n\n$(decls)\n\
-static DaoFuncItem dao_$(typer)_Meths[] = \n\
+static DaoFunctionEntry dao_$(typer)_Meths[] = \n\
 {\n$(meths)  { NULL, NULL }\n};\n";
 
 const string methlist_code2 = 
 "\n\n$(decls)\n";
 
 const string delete_struct = 
-"static void Dao_$(typer)_Delete( void *self )\n\
+"static void Dao_$(typer)_Delete( DaoValue *self )\n\
 {\n\
-	free( self );\n\
+	if( self->xCdata.data ) free( DaoValue_TryGetCdata( self ) );\n\
+	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
 const string delete_class = 
-"static void Dao_$(typer)_Delete( void *self )\n\
+"static void Dao_$(typer)_Delete( DaoValue *self )\n\
 {\n\
-	$(comment)delete ($(qname)*) self;\n\
+	$(comment)delete ($(qname)*) DaoValue_TryGetCdata( self );\n\
+	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
 const string get_gcfields =
-"static void Dao_$(typer)_GetGCFields( void *P, DList *VS, DList *AS, DList *MS, int RM )\n\
+"static void Dao_$(typer)_HandleGC( DaoValue *P, DList *VS, DList *AS, DList *MS, int RM )\n\
 {\n\
-	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) P;\n\
+	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
 	if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
 	if( RM ){\n\
 $(breakref)\
@@ -677,22 +679,60 @@ const string cast_to_parent_virtual_base =
 
 const string usertype_code =
 "$(cast_funcs)\n\
-static DaoTypeBase $(typer)_Typer = \n\
-{ \"$(daotypename)\", NULL,\n\
+static DaoTypeCore $(typer)_Core = \n\
+{\n\
+  \"$(daotypename)\",\n\
+  sizeof($(qname)),\n\
+  { $(parents)NULL },\n\
   dao_$(typer)_Nums,\n\
   dao_$(typer)_Meths,\n\
-  { $(parents)NULL },\n\
-  { $(casts)NULL },\n\
+  DaoCstruct_CheckGetField,    DaoCstruct_DoGetField,\n\
+  DaoCstruct_CheckSetField,    DaoCstruct_DoSetField,\n\
+  DaoCstruct_CheckGetItem,     DaoCstruct_DoGetItem,\n\
+  DaoCstruct_CheckSetItem,     DaoCstruct_DoSetItem,\n\
+  DaoCstruct_CheckUnary,       DaoCstruct_DoUnary,\n\
+  DaoCstruct_CheckBinary,      DaoCstruct_DoBinary,\n\
+  DaoCstruct_CheckConversion,  DaoCstruct_DoConversion,\n\
+  DaoCstruct_CheckForEach,     DaoCstruct_DoForEach,\n\
+  DaoCstruct_Print,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
   $(delete),\n\
   $(gcfields)\n\
 };\n\
-DaoTypeBase *dao_$(typer)_Typer = & $(typer)_Typer;\n\
+DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
 
 const string usertype_code_none =
-"static DaoTypeBase $(typer)_Typer = \n\
-{ \"$(daotypename)\", NULL, NULL, NULL, { NULL }, { NULL }, $(delete), NULL };\n\
-DaoTypeBase *dao_$(typer)_Typer = & $(typer)_Typer;\n\
+"static DaoTypeCore $(typer)_Core = \n\
+{\n\
+  \"$(daotypename)\",\n\
+  0,\n\
+  { NULL },\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  NULL,\n\
+  $(delete),\n\
+  NULL\n\
+};\n\
+\n\
+DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n\
 DaoType *dao_type_$(typer) = NULL;\n";
 
 const string cxx_get_pixel_codes =
@@ -924,18 +964,19 @@ int CDaoUserType::GenerateSimpleTyper()
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		sprintf( sindex, "%i", i );
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
-		set_bases += "\tdao_" + idname + "_Typer->supers[" + sindex + "] = dao_" + supname2 + "_Typer;\n";
+		set_bases += "\tdao_" + idname + "_Core->supers[" + sindex + "] = dao_" + supname2 + "_Core;\n";
 	}
 	if( n ){
 		sprintf( sindex, "%i", n );
-		set_bases += "\tdao_" + idname + "_Typer->supers[" + sindex + "] = NULL;\n";
+		set_bases += "\tdao_" + idname + "_Core->supers[" + sindex + "] = NULL;\n";
 	}
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.name );
 	kvmap[ "typer" ] = idname;
 	kvmap[ "name2" ] = name2;
 	kvmap[ "delete" ] = "NULL";
+	kvmap[ "qname" ] = qname;
 	kvmap[ "daotypename" ] = cdao_make_dao_template_type_name( qname ) + ss;
-	if( hintDelete.size() ) kvmap[ "delete" ] = "(FuncPtrDel)" + hintDelete;
+	if( hintDelete.size() ) kvmap[ "delete" ] = hintDelete;
 	typer_codes = cdao_string_fill( usertype_code_none, kvmap );
 	wrapType = CDAO_WRAP_TYPE_OPAQUE;
 	if( dummyTemplate ) used = true;
@@ -1251,7 +1292,7 @@ int CDaoUserType::Generate( RecordDecl *decl )
 	}
 #endif
 	if( hintDelete.size() ){
-		kvmap[ "delete" ] = "(FuncPtrDel)" + hintDelete;
+		kvmap[ "delete" ] = hintDelete;
 		typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
 	}else{
 		typer_codes = cdao_string_fill( usertype_code_struct2, kvmap );
@@ -1313,7 +1354,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		if( baseit->getAccessSpecifier() == AS_public and not sup->unsupported ){
 			string supname = sup->qname;
 			string supname2 = sup->idname;
-			parents += "dao_" + supname2 + "_Typer, ";
+			parents += "dao_" + supname2 + "_Core, ";
 			kvmap[ "parent" ] = supname;
 			kvmap[ "parent2" ] = supname2;
 			if( baseit->isVirtual() ){
@@ -1611,7 +1652,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
-		parents += "dao_" + supname2 + "_Typer, ";
+		parents += "dao_" + supname2 + "_Core, ";
 	}
 	kvmap[ "parents" ] = parents;
 
@@ -1801,7 +1842,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap[ "alloc" ] = alloc_default;
 	//if( utp.nested != 2 or utp.noDestructor ) return usertype_code_none.expand( kvmap );
 	kvmap["delete"] = "Dao_" + idname + "_Delete";
-	kvmap["gcfields"] = "Dao_" + idname + "_GetGCFields";
+	kvmap["gcfields"] = "Dao_" + idname + "_HandleGC";
 	if( name == "QApplication" or name == "QCoreApplication" ) kvmap[ "comment" ] = "//";
 	//if( isQWidget ) kvmap["if_parent"] = "if( ((" + utp.name2 + "*)self)->parentWidget() == NULL )";
 #if 0
