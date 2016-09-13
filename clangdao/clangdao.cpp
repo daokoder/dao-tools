@@ -70,9 +70,9 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirecti
 	SourceManager & sourceman = compiler->getSourceManager();
 	llvm::StringRef name = MacroNameTok.getIdentifierInfo()->getName();
 
-	if( not sourceman.isInMainFile( loc ) ) return;
 
 	if( MI->getNumTokens() < 1 ){ // number of expansion tokens;
+		if( not sourceman.isInMainFile( loc ) ) return;
 		if( MI->isObjectLike() && name == "CLANGDAO_WRAP_EXPLICIT" ){
 			module->wrapExplicit = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_SKIP_VIRTUAL" ){
@@ -91,6 +91,7 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirecti
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
 	}else if( MI->isObjectLike() && name == "module_onload" ){
+		if( not sourceman.isInMainFile( loc ) ) return;
 		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
 	}else if( MI->isObjectLike() && MI->getNumTokens() == 1 ){
 		if( not module->IsFromMainModule(loc) ) return;

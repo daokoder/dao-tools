@@ -1305,7 +1305,7 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 		cxxcall = name;
 		cxxtype = "char**";
 		cxxpar = "char **" + name;
-		daopar = name + ":list<string>";
+		daopar = name + ": list<string>";
 		dao2cxx = "  static char **__" + name + " = NULL;\n";
 		dao2cxx += "  " + cxxpar + " = __" + name + " ? __" + name + " : (__" + name;
 		dao2cxx = dao2cxx + " = DaoStringList_ToStaticCStringArray( " + lpar + " ));\n";

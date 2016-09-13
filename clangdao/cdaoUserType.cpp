@@ -609,22 +609,22 @@ const string cxx_gs_user =
 "  $(host_qname) *self = ($(host_qname)*)DaoValue_TryCastCdata(_p[0],dao_type_$(typer));\n";
 
 const string dao_getter_proto = 
-"  { dao_$(host_idname)_GETF_$(name), \".$(name)( self :$(daoname) )=>$(ftype)\" },\n";
+"  { dao_$(host_idname)_GETF_$(name), \".$(name)( self: $(daoname) )=>$(ftype)\" },\n";
 
 const string dao_setter_proto = 
-"  { dao_$(host_idname)_SETF_$(name), \".$(name)=( self :$(daoname), $(name) :$(ftype) )\" },\n";
+"  { dao_$(host_idname)_SETF_$(name), \".$(name)=( self: $(daoname), $(name): $(ftype) )\" },\n";
 
 const string dao_get_item_proto = 
-"  { dao_$(host_idname)_GETI_$(name), \"[]( self :$(daoname), i :int )=>$(itype)\" },\n";
+"  { dao_$(host_idname)_GETI_$(name), \"[]( self: $(daoname), i: int )=>$(itype)\" },\n";
 
 const string dao_set_item_proto = 
-"  { dao_$(host_idname)_SETI_$(name), \"[]=( self :$(daoname), i :int, value :$(itype) )\" },\n";
+"  { dao_$(host_idname)_SETI_$(name), \"[]=( self: $(daoname), i: int, value: $(itype) )\" },\n";
 
 const string dao_get_pixel_proto = 
-"  { dao_$(host_idname)_GETI_Pixel, \"[]( self :$(daoname), i :int, j :int, pixel :enum<uint8,uint16,uint32>=$uint8 )=>int\" },\n";
+"  { dao_$(host_idname)_GETI_Pixel, \"[]( self: $(daoname), i: int, j: int, pixel: enum<uint8,uint16,uint32>=$uint8 )=>int\" },\n";
 
 const string dao_set_pixel_proto = 
-"  { dao_$(host_idname)_SETI_Pixel, \"[]=( self :$(daoname), value :int, i :int, j :int, pixel :enum<uint8,uint16,uint32>=$uint8 )\" },\n";
+"  { dao_$(host_idname)_SETI_Pixel, \"[]=( self: $(daoname), value: int, i: int, j: int, pixel: enum<uint8,uint16,uint32>=$uint8 )\" },\n";
 
 const string numlist_code = 
 "\n\nstatic DaoNumberEntry dao_$(typer)_Nums[] = \n\
@@ -641,7 +641,7 @@ const string methlist_code2 =
 const string delete_struct = 
 "static void Dao_$(typer)_Delete( DaoValue *self )\n\
 {\n\
-	if( self->xCdata.data ) free( DaoValue_TryGetCdata( self ) );\n\
+	if( DaoValue_TryGetCdata( self ) ) free( DaoValue_TryGetCdata( self ) );\n\
 	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
