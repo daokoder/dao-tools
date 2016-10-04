@@ -33,7 +33,7 @@ if( daojs_with_decorator  == $ON ) daojs.AddDefinition( "DAO_WITH_DECORATOR" )
 if( daojs_with_thread     == $ON ) daojs.AddDefinition( "DAO_WITH_THREAD" )
 if( daojs_with_concurrent == $ON ) daojs.AddDefinition( "DAO_WITH_CONCURRENT" )
 
-changeset = io.read( DaoMake::MakePath( DaoMake::SourcePath(), "../../manifest.uuid" ), 1 )
+changeset = DaoMake::ReadFile( DaoMake::MakePath( DaoMake::SourcePath(), "../../manifest.uuid" ), 1 )
 if( % changeset ) daojs.AddDefinition( "CHANGESET_ID", "\\\"FOS." + changeset[:11] + "\\\"" )
 
 
@@ -69,7 +69,7 @@ daojs_kernel_headers =
 	"../../kernel/daoStream.h" ,
 	"../../kernel/daoString.h" ,
 	"../../kernel/daoThread.h" ,
-	"../../kernel/daoPlatforms.h" ,
+	"../../kernel/daoPlatform.h" ,
 	"../../kernel/daoInterface.h" ,
 	"../../kernel/daoType.h" ,
 	"../../kernel/daoValue.h" ,
@@ -104,7 +104,7 @@ daojs_kernel_sources =
 	"../../kernel/daoStream.c" ,
 	"../../kernel/daoString.c" ,
 	"../../kernel/daoThread.c" ,
-	"../../kernel/daoPlatforms.c" ,
+	"../../kernel/daoPlatform.c" ,
 	"../../kernel/daoVmcode.c" ,
 	"../../kernel/daoVmspace.c" 
 }
@@ -149,6 +149,8 @@ ems_export += @[]'_DaoStream_WriteChars',@[]
 
 daojs_modules = daojs.AddObjects( { "../../kernel/daoMain.c", "dao_webdemo.c" }, daojs_kernel_headers );
 
+daojs_modules.AddIncludePath( "../../modules/auxlib" )
+
 if( DaoMake::IsDir( "../../modules/bigint" ) ){
 	daojs_modules.AddSources( "../../modules/bigint/dao_bigint.c" )
 	ems_export += @[]'_DaoBigint_OnLoad',@[]
@@ -179,12 +181,6 @@ if( DaoMake::IsDir( "../../modules/dataframe" ) ){
 	ems_export += @[]'_DaoDataframe_OnLoad',@[]
 }
 
-if( DaoMake::IsDir( "../../modules/macro" ) ){
-	daojs_modules.AddIncludePath( "../../modules/macro" )
-	daojs_modules.AddSources( "../../modules/macro/dao_macro.c" )
-	ems_export += @[]'_DaoMacro_OnLoad',@[]
-}
-
 if( DaoMake::IsDir( "../../modules/math" ) ){
 	daojs_modules.AddIncludePath( "../../modules/math" )
 	daojs_modules.AddSources( "../../modules/math/dao_math.c" )
@@ -194,12 +190,6 @@ if( DaoMake::IsDir( "../../modules/math" ) ){
 if( DaoMake::IsDir( "../../modules/meta" ) ){
 	daojs_modules.AddIncludePath( "../../modules/meta" )
 	daojs_modules.AddSources( "../../modules/meta/dao_meta.c" )
-	ems_export += @[]'_DaoMeta_OnLoad',@[]
-}
-
-if( DaoMake::IsDir( "../../modules/protobject" ) ){
-	daojs_modules.AddIncludePath( "../../modules/protobject" )
-	daojs_modules.AddSources( "../../modules/protobject/dao_protobject.c" )
 	ems_export += @[]'_DaoMeta_OnLoad',@[]
 }
 

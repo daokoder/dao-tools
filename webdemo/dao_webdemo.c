@@ -6,10 +6,8 @@ extern int DaoBinary_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoCoroutine_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoCrypto_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoDataframe_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
-extern int DaoMacro_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoMath_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoMeta_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
-extern int DaoProtobject_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoSerializer_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoStatistics_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoFormat_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
@@ -22,17 +20,15 @@ extern int DaoImage_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoCanvas_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 extern int DaoZip_OnLoad( DaoVmSpace *vms, DaoNamespace *ns );
 
-DaoVModule dao_virtual_modules[] =
+DaoVirtualModule dao_virtual_modules[] =
 {
   { "$(CMD_DIR)/lib/dao/modules/libdao_bigint.so", 0, NULL, DaoBigint_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_binary.so", 0, NULL, DaoBinary_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_coroutine.so", 0, NULL, DaoCoroutine_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_crypto.so", 0, NULL, DaoCrypto_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_dataframe.so", 0, NULL, DaoDataframe_OnLoad },
-  { "$(CMD_DIR)/lib/dao/modules/libdao_macro.so", 0, NULL, DaoMacro_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_math.so", 0, NULL, DaoMath_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_meta.so", 0, NULL, DaoMeta_OnLoad },
-  { "$(CMD_DIR)/lib/dao/modules/libdao_protobject.so", 0, NULL, DaoProtobject_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_serializer.so", 0, NULL, DaoSerializer_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/libdao_statistics.so", 0, NULL, DaoStatistics_OnLoad },
   { "$(CMD_DIR)/lib/dao/modules/string/libdao_format.so", 0, NULL, DaoFormat_OnLoad },
