@@ -144,7 +144,10 @@ if( DaoMake::IsPlatform( "UNIX" ) ){
 #
 ###########################################################################
 ems_export  = @[]"['_DaoInit','_DaoQuit',@[]
-ems_export += @[]'_DaoVmSpace_Eval','_DaoVmSpace_StdioStream',@[]
+ems_export += @[]'_DaoVmSpace_AcquireProcess',@[]
+ems_export += @[]'_DaoVmSpace_GetNamespace',@[]
+ems_export += @[]'_DaoVmSpace_StdioStream',@[]
+ems_export += @[]'_DaoProcess_Eval',@[]
 ems_export += @[]'_DaoStream_WriteChars',@[]
 
 daojs_modules = daojs.AddObjects( { "../../kernel/daoMain.c", "dao_webdemo.c" }, daojs_kernel_headers );

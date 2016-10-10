@@ -1,7 +1,8 @@
 (function () {
-  var daoVmSpace, daoStdio;
   var DaoInit, DaoQuit;
-  var DaoVmSpace_Eval, DaoVmSpace_StdioStream, DaoStream_WriteChars;
+  var DaoVmSpace_AcquireProcess, DaoVmSpace_GetNS;
+  var DaoVmSpace_StdioStream, DaoProcess_Eval, DaoStream_WriteChars;
+  var daoVmSpace, daoNamespace, daoProcess, daoStdio;
   var demos = { "HelloWorld" : "io.writeln( \"Hello World!\" )" };
   var demo_dups = { "HelloWorld" : 0 };
   var printed = false;
@@ -23,7 +24,9 @@
   jQuery(document).ready(function() {
     DaoInit = Module.cwrap("DaoInit", "number", ["string"]);
     DaoQuit = Module.cwrap("DaoQuit", "number");
-    DaoVmSpace_Eval = Module.cwrap("DaoVmSpace_Eval", "number", ["number", "string"]);
+    DaoVmSpace_AcquireProcess = Module.cwrap("DaoVmSpace_AcquireProcess", "number", ["number"]);
+    DaoVmSpace_GetNS = Module.cwrap("DaoVmSpace_GetNamespace", "number", ["number", "string"]);
+    DaoProcess_Eval = Module.cwrap("DaoProcess_Eval", "number", ["number", "number", "string"]);
 	DaoVmSpace_StdioStream = Module.cwrap( "DaoVmSpace_StdioStream", "number", ["number"] );
 	DaoStream_WriteChars = Module.cwrap( "DaoStream_WriteChars", "number", ["number", "string"] );
 
@@ -31,10 +34,11 @@
 
     daoVmSpace = DaoInit("");
 	daoStdio = DaoVmSpace_StdioStream( daoVmSpace );
+	daoProcess = DaoVmSpace_AcquireProcess( daoVmSpace );
 	DaoWebDemo_AddModules( daoVmSpace );
 
 	var demo = "hello.dao";
-    jQuery.get('/projects/Dao/doc/tip/demo/' + demo, function(data) {
+    jQuery.get('/projects.cgi/Dao/doc/tip/demo/' + demo, function(data) {
 		demos[ demo ] = data;
 		demo_dups[ demo ] = 0;
 		editor.setValue( data );
@@ -47,7 +51,9 @@
 	  if( jQuery("#checkResetOutput").is(':checked') ) terminal.setValue( '' );
 	  printed = false;
 
-      DaoVmSpace_Eval(daoVmSpace, editor.getValue());
+      var now = new Date().toLocaleString();
+      daoNamespace = DaoVmSpace_GetNS( daoVmSpace, "Run: " + now );
+      DaoProcess_Eval( daoProcess, daoNamespace, editor.getValue() );
 	  if( printed == false ) DaoStream_WriteChars( daoStdio, "\n" );
     });
 
@@ -64,7 +70,7 @@
 			editor.session.setScrollTop(0);
 			return;
 		}
-        jQuery.get('/projects/Dao/doc/tip/demo/' + demo, function(data) {
+        jQuery.get('/projects.cgi/Dao/doc/tip/demo/' + demo, function(data) {
 			demos[ demo ] = data;
 			demo_dups[ demo ] = 0;
 			editor.setValue( data );
