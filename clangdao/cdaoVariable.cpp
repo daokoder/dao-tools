@@ -281,7 +281,7 @@ const string cache_number_common = cache + "$(Number)( _proc, $(name).$(tonumber
 const string getres_number_common = "  if(DaoValue_Cast$(Number)(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGet$(Number)( _res ) );\n";
 
-const string setter_number_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGet$(Number)(_p[1]) );\n";
+const string setter_number_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGet$(Number)( _p[1] ) );\n";
 
 
 
@@ -325,8 +325,8 @@ const string getres_mbs_common = "  if(DaoValue_CastString(_res)) $(name)=$(cxxt
 const string getres_wcs_common = "  if(DaoValue_CastString(_res)) $(name)=$(cxxtype)("
 " DaoValue_TryGetWCString( _res ) );\n";
 
-const string setter_mbs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetChars(_p[1]) );\n";
-const string setter_wcs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString(_p[1]) );\n";
+const string setter_mbs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetChars( _p[1] ) );\n";
+const string setter_wcs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString( _p[1] ) );\n";
 
 
 #if 0

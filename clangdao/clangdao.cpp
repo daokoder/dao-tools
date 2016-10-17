@@ -46,6 +46,8 @@
 using namespace llvm;
 using namespace clang;
 
+static bool clangdao_colons_conversion_simple = true;
+
 struct CDaoPPCallbacks : public PPCallbacks
 {
 	CompilerInstance *compiler;
@@ -85,11 +87,15 @@ void CDaoPPCallbacks::MacroDefined(const Token &MacroNameTok, const MacroDirecti
 			module->variantNumber = true;
 		}else if( MI->isObjectLike() && name == "CLANGDAO_VARIANT_STRING" ){
 			module->variantString = true;
+		}else if( MI->isObjectLike() && name == "CLANGDAO_UNIQUE_NAME" ){
+			clangdao_colons_conversion_simple = false;
 		}
 		return;
 	}
 	if( MI->isObjectLike() && name == "module_name" ){
 		module->HandleModuleDeclaration( MI );
+	}else if( MI->isObjectLike() && name == "module_alias" ){
+		module->HandleModuleAlias( MI );
 	}else if( MI->isObjectLike() && name == "module_onload" ){
 		if( not sourceman.isInMainFile( loc ) ) return;
 		module->onload = MI->getReplacementToken( 0 ).getIdentifierInfo()->getName();
@@ -324,7 +330,7 @@ string cdao_make_dao_template_type_name( const string & name0 )
 string cdao_substitute_typenames( const string & name0 )
 {
 	map<string,string>::const_iterator it;
-	string name = name0;//normalize_type_name( name0 );
+	string name = normalize_type_name( name0 );
 	string result, part;
 	int i, n;
 	for(i=0, n = name.size(); i<n; i++){
@@ -382,11 +388,13 @@ string cdao_qname_to_idname( const string & qname )
 	for(i=0; conversions2[i]; i++){
 		size_t p = 0;
 		string s = "_" + utostr( 30+i ) + "_";
+		if( clangdao_colons_conversion_simple ) s = "_";
 		while( (p = idname.find( conversions2[i], p )) != string::npos ) idname.replace( p, 2, s );
 	}
 	for(i=0; conversions[i]; i++){
 		size_t p = 0;
 		string s = "_" + utostr( i ) + "_";
+		if( clangdao_colons_conversion_simple ) s = "_";
 		while( (p = idname.find( conversions[i], p )) != string::npos ) idname.replace( p, 1+(i==0), s );
 	}
 	return idname;
@@ -496,7 +504,7 @@ int main(int argc, char *argv[] )
 	//outs()<<builtinDefines<<"\n";
 
 	std::unique_ptr<PPCallbacks> ppCallbacks( new CDaoPPCallbacks( & compiler, & module ) );
-	pp.setPredefines( builtinDefines + "\n" + predefines );
+	pp.setPredefines( builtinDefines + "\n" + predefines + "\n#define __CLANGDAO__\n" );
 	pp.addPPCallbacks( std::move( ppCallbacks ) );
 
 	InputKind ik = FrontendOptions::getInputKindForExtension( main_input_file );

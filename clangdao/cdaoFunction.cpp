@@ -439,7 +439,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 	signature = funcDecl->getNameAsString() + proto;
 
 	map<string,vector<string> >::iterator it = module->functionHints.find( sig );
-	outs() << "searching hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
+	//outs() << "searching hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
 	if( it != module->functionHints.end() ){
 		SetHints( it->second, sig );
 		return;
@@ -456,7 +456,7 @@ void CDaoFunction::SetDeclaration( FunctionDecl *decl )
 	}
 	sig = fname + proto;
 	it = module->functionHints.find( sig );
-	outs() << "searching hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
+	//outs() << "searching hints for: " << sig << " " << (it != module->functionHints.end()) << "\n";
 	if( it != module->functionHints.end() ){
 		SetHints( it->second, sig );
 		return;

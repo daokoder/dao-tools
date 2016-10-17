@@ -6,6 +6,7 @@
   var demos = { "HelloWorld" : "io.writeln( \"Hello World!\" )" };
   var demo_dups = { "HelloWorld" : 0 };
   var printed = false;
+  var index = 0;
 
   window.Module = {};
   window.Module['print'] = function (x) {
@@ -51,8 +52,8 @@
 	  if( jQuery("#checkResetOutput").is(':checked') ) terminal.setValue( '' );
 	  printed = false;
 
-      var now = new Date().toLocaleString();
-      daoNamespace = DaoVmSpace_GetNS( daoVmSpace, "Run: " + now );
+      index += 1;
+      daoNamespace = DaoVmSpace_GetNS( daoVmSpace, "Run" + index.toString() );
       DaoProcess_Eval( daoProcess, daoNamespace, editor.getValue() );
 	  if( printed == false ) DaoStream_WriteChars( daoStdio, "\n" );
     });

@@ -53,6 +53,7 @@ extern string cdao_qname_to_idname( const string & qname );
 struct CDaoModuleInfo
 {
 	string      name;
+	string      alias;
 	string      path;
 	FileEntry  *entry;
 	CDaoModuleInfo(){ entry = NULL; }
@@ -164,6 +165,7 @@ struct CDaoModule
 	string GetFileName( SourceLocation );
 
 	void HandleModuleDeclaration( const MacroInfo *macro );
+	void HandleModuleAlias( const MacroInfo *macro );
 	void HandleHeaderInclusion( SourceLocation loc, const string & name, const FileEntry *file );
 	void HandleHintDefinition( const string & name, const MacroInfo *macro );
 	void HandleNumericConstant( const string & name, const Token token );

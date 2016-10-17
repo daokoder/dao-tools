@@ -56,31 +56,31 @@
   <div id="code-form">
   	<table width="100%">
 	<tr><td>
-    <b>Select a demo</b>
+    <b>选择示例</b>
 	<select id="select-demo">
 	<option value="hello.dao">Hello Dao!</option>
-	<option value="numbers.dao">Numbers</option>
-	<option value="strings.dao">Strings</option>
-	<option value="verbatim.dao">Verbatim Strings</option>
-	<option value="enums.dao">Enum Symbols</option>
-	<option value="arrays.dao">Numeric Arrays</option>
-	<option value="lists.dao">Lists</option>
-	<option value="maps.dao">Maps</option>
-	<option value="tuples.dao">Tuples</option>
-	<option value="disjoint_union.dao">Variant Types</option>
-	<option value="routines.dao">Routines (Functions)</option>
-	<option value="classes.dao">Classes</option>
-	<option value="interface.dao">Interfaces</option>
+	<option value="numbers.dao">数字</option>
+	<option value="strings.dao">字符串</option>
+	<option value="verbatim.dao">Verbatim 字符串</option>
+	<option value="enums.dao">枚举符号</option>
+	<option value="arrays.dao">数值数组</option>
+	<option value="lists.dao">列表</option>
+	<option value="maps.dao">关联表</option>
+	<option value="tuples.dao">元组</option>
+	<option value="disjoint_union.dao">Variant类型</option>
+	<option value="routines.dao">函数</option>
+	<option value="classes.dao">类</option>
+	<option value="interface.dao">接口</option>
 	<option value="mixins.dao">Mixins</option>
-	<option value="closures.dao">Closures</option>
-	<option value="defers.dao">Defer Blocks</option>
-	<option value="errors.dao">Error Handling</option>
+	<option value="closures.dao">函数闭包</option>
+	<option value="defers.dao">延迟代码块</option>
+	<option value="errors.dao">错误处理</option>
 	</select>
-    <b>Or enter some code and</b>
-	<input type='button' value='Submit' id='submit-button'/>
-	<input type="checkbox" checked=true id=checkResetOutput>Reset Output</input>
-	<input type='button' value='Duplicate Demo' id='duplicate-demo'/>
-	<td><a href="/document.html" target="view_window"><b>Help</b></a>
+    <b>或输入代码</b>
+	<input type='button' value='运行' id='submit-button'/>
+	<input type="checkbox" checked=true id=checkResetOutput>重置输出</input>
+	<input type='button' value='复制' id='duplicate-demo'/>
+	<td><a href="/document_zh.html" target="view_window"><b>帮助</b></a>
 	</table>
   	<table width="100%">
 	<tr>
@@ -96,8 +96,7 @@
 	   <td><img id="canvas_display" src="" height="400" style="display: none;"></img>
 	</table>
 	<td width="15%" style="vertical-align: top">
-	<b>Loadable</b><br/>
-	<b>Modules:</b><br/>
+	<b>可载入模块:</b><br/>
 	<ul>
 	<li>bigint
 	<li>binary
@@ -137,8 +136,8 @@
   <hr>
   <table width="100%">
   <tr><td width="99%">
-  Powered by Dao Virtual Machine compiled with <a href="http://emscripten.org">Emscripten</a>.
-  Note: concurrent programming is not supported!
+  使用由<a href="http://emscripten.org">Emscripten</a>编译的Dao语言虚拟机驱动。
+  注：不支持并行编程！
   <td width="1%">
   </table>
 </body>

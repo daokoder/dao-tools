@@ -615,6 +615,7 @@ bool CDaoModule::CheckHeaderDependency()
 	}
 	return true;
 }
+
 void CDaoModule::HandleModuleDeclaration( const MacroInfo *macro )
 {
 	SourceManager & sourceman = compiler->getSourceManager();
@@ -625,6 +626,7 @@ void CDaoModule::HandleModuleDeclaration( const MacroInfo *macro )
 	if( sourceman.isInMainFile( loc ) ){
 		if( moduleInfo.name.size() ) return;
 		moduleInfo.name = name;
+		moduleInfo.alias = name;
 		moduleInfo.entry = entry;
 		outs() << "main module \"" << moduleInfo.path << "\" is named as " << name << "\n";
 		return;
@@ -632,10 +634,28 @@ void CDaoModule::HandleModuleDeclaration( const MacroInfo *macro )
 		CDaoModuleInfo & mod = requiredModules[ entry ];
 		CDaoModuleInfo & mod2 = requiredModules2[ entry ];
 		mod.name = mod2.name = name;
+		mod.alias = mod2.alias = name;
 		mod.entry = mod2.entry = entry;
 		outs() << "module \"" << mod.path << "\" is named as " << name << "\n";
 	}
 }
+
+void CDaoModule::HandleModuleAlias( const MacroInfo *macro )
+{
+	SourceManager & sourceman = compiler->getSourceManager();
+	SourceLocation loc = macro->getDefinitionLoc();
+	FileID fid = sourceman.getFileID( loc );
+	FileEntry *entry = (FileEntry*) sourceman.getFileEntryForID( fid );
+	string alias = macro->getReplacementToken( 0 ).getIdentifierInfo()->getName();
+	if( sourceman.isInMainFile( loc ) ){
+		moduleInfo.alias = alias;
+	}else if( requiredModules2.find( entry ) != requiredModules2.end() ){
+		CDaoModuleInfo & mod = requiredModules[ entry ];
+		CDaoModuleInfo & mod2 = requiredModules2[ entry ];
+		mod.alias = mod2.alias = alias;
+	}
+}
+
 void CDaoModule::HandleHeaderInclusion( SourceLocation loc, const string & name, const FileEntry *file )
 {
 	SourceManager & sourceman = compiler->getSourceManager();
@@ -933,11 +953,11 @@ CDaoUserTypeDef* CDaoModule::MakeTypeDefine( TypedefDecl *TD, const string &name
 }
 extern string UppercaseString( const string & s );
 
-const char *ifdef_cpp_open = "#ifdef __cplusplus\nextern \"C\"{\n#endif\n";
-const char *ifdef_cpp_close = "#ifdef __cplusplus\n}\n#endif\n";
+const char *ifdef_cpp_open = "\n#ifdef __cplusplus\nextern \"C\"{\n#endif\n\n";
+const char *ifdef_cpp_close = "\n#ifdef __cplusplus\n}\n#endif\n\n";
 void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 {
-	string name_macro = UppercaseString( moduleInfo.name );
+	string name_macro = UppercaseString( moduleInfo.alias );
 	int i;
 
 	fout_header << "#ifndef __DAO_" << name_macro << "_H__\n";
@@ -947,8 +967,8 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#include<string.h>\n";
 	fout_header << "#include<dao.h>\n\n";
 	fout_header << ifdef_cpp_open;
-	fout_header << "#include<modules/auxlib/dao_aux.h>\n\n";
-	fout_header << "#include<modules/stream/dao_stream.h>\n\n";
+	fout_header << "#include<modules/auxlib/dao_aux.h>\n";
+	fout_header << "#include<modules/stream/dao_stream.h>\n";
 	fout_header << "#include<daoList.h>\n\n";
 	fout_header << ifdef_cpp_close;
 
@@ -959,32 +979,32 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "\n";
 	map<FileEntry*,CDaoModuleInfo>::iterator it2, end2 = requiredModules.end();
 	for(it2=requiredModules.begin(); it2 != end2; it2++){
-		string name_macro2 = UppercaseString( it2->second.name );
+		string name_macro2 = UppercaseString( it2->second.alias );
 		fout_header << "#ifndef DAO_" << name_macro2 << "_STATIC\n";
-		fout_header << "#define DAO_DLL_" << name_macro2 << " DAO_DLL_IMPORT\n";
+		fout_header << "#define DAO_" << name_macro2 << "_DLL DAO_DLL_IMPORT\n";
 		fout_header << "#ifdef WIN32\n";
-		fout_header << "#define DAO_DLL2_" << name_macro2 << " DAO_DLL_IMPORT\n";
+		fout_header << "#define DAO_" << name_macro2 << "_DLLT DAO_DLL_IMPORT\n";
 		fout_header << "#else\n";
-		fout_header << "#define DAO_DLL2_" << name_macro2 << "\n";
+		fout_header << "#define DAO_" << name_macro2 << "_DLLT\n";
 		fout_header << "#endif\n\n";
 		fout_header << "#include\"dao_" << it2->second.name << ".h\"\n";
 		fout_header << "#else\n";
-		fout_header << "#define DAO_DLL_" << name_macro2 << "\n";
-		fout_header << "#define DAO_DLL2_" << name_macro2 << "\n";
+		fout_header << "#define DAO_" << name_macro2 << "_DLL\n";
+		fout_header << "#define DAO_" << name_macro2 << "_DLLT\n";
 		fout_header << "#include\"dao_" << it2->second.name + ".h\"\n";
 		fout_header << "#endif\n";
 	}
 	fout_header << "\n#ifndef DAO_" << name_macro << "_STATIC\n";
-	fout_header << "#ifndef DAO_DLL_" << name_macro << "\n";
-	fout_header << "#define DAO_DLL_" << name_macro << " DAO_DLL_EXPORT\n";
+	fout_header << "#ifndef DAO_" << name_macro << "_DLL\n";
+	fout_header << "#define DAO_" << name_macro << "_DLL DAO_DLL_EXPORT\n";
 	fout_header << "#endif\n";
 	fout_header << "#else\n";
-	fout_header << "#define DAO_DLL_" << name_macro << "\n";
+	fout_header << "#define DAO_" << name_macro << "_DLL\n";
 	fout_header << "#endif\n\n";
 	fout_header << "#ifdef WIN32\n";
-	fout_header << "#define DAO_DLL2_" << name_macro << " DAO_DLL_" << name_macro << "\n";
+	fout_header << "#define DAO_" << name_macro << "_DLLT DAO_" << name_macro << "_DLL\n";
 	fout_header << "#else\n";
-	fout_header << "#define DAO_DLL2_" << name_macro << "\n";
+	fout_header << "#define DAO_" << name_macro << "_DLLT\n";
 	fout_header << "#endif\n\n";
 	fout_header << "extern DaoVmSpace *__daoVmSpace;\n";
 }
@@ -1008,7 +1028,7 @@ string CDaoModule::MakeHeaderCodes( vector<CDaoUserType*> & usertypes )
 		CDaoUserType & utp = *usertypes[i];
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
-		if( utp.type_decls.size() ) codes += cdao_string_fill( utp.type_decls, kvmap );
+		if( utp.type_decls.size() ) codes += cdao_string_fill( utp.type_decls, kvmap ) + "\n";
 	}
 	return codes;
 }
@@ -1122,7 +1142,7 @@ string CDaoModule::MakeSourceCodes( vector<CDaoFunction*> & functions, CDaoNames
 	codes += ifdef_cpp_open;
 	codes += func_decl;
 	codes += "static DaoFunctionEntry dao_" + idname + "_Funcs[] = \n{\n" + rout_entry;
-	codes += "  { NULL, NULL }\n};\n";
+	codes += "  { NULL, NULL }\n};\n\n";
 	codes += func_codes;
 	codes += ifdef_cpp_close;
 	return codes;

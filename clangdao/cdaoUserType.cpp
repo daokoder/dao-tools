@@ -162,7 +162,7 @@ class DaoQtObject : public QObjectUserData\n\
 
 const string daoss_class =
 "\n\
-class DAO_DLL2_$(module) DaoSS_$(idname) : $(ss_parents)\n\
+class DAO_$(module)_TYPE DaoSS_$(idname) : $(ss_parents)\n\
 { Q_OBJECT\n\
 public:\n\
 	DaoSS_$(idname)() $(init_parents) {}\n\
@@ -426,7 +426,7 @@ const string dao_proto =
 const string cxx_wrap_proto 
 = "static void dao_$(host_idname)_$(cxxname)$(overload)( DaoProcess *_proc, DaoValue *_p[], int _n )";
 
-const string tpl_struct = "DAO_DLL_$(module) $(qname)* Dao_$(idname)_New();\n";
+const string tpl_struct = "DAO_$(module)_DLL $(qname)* Dao_$(idname)_New();\n";
 
 const string tpl_struct_alloc =
 "$(qname)* Dao_$(idname)_New()\n{\n\
@@ -441,13 +441,13 @@ const string tpl_struct_alloc2 =
 
 const string tpl_struct_daoc = 
 "typedef struct Dao_$(idname) Dao_$(idname);\n\
-struct DAO_DLL2_$(module) Dao_$(idname)\n\
+struct DAO_$(module)_DLLT Dao_$(idname)\n\
 {\n\
 	$(qname)  nested;\n\
 	$(qname) *object;\n\
 	DaoCdata *_cdata;\n\
 };\n\
-DAO_DLL_$(module) Dao_$(idname)* Dao_$(idname)_New();\n";
+DAO_$(module)_DLL Dao_$(idname)* Dao_$(idname)_New();\n";
 
 const string tpl_struct_daoc_alloc =
 "Dao_$(idname)* Dao_$(idname)_New()\n\
@@ -488,15 +488,15 @@ const string cxx_wrap_alloc2 =
 }\n";
 
 const string tpl_class_def = 
-"class DAO_DLL2_$(module) DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
+"class DAO_$(module)_DLLT DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
 	public:\n\
 	DaoCxxVirt_$(idname)(){ _cdata = 0; }\n\
 	void DaoInitWrapper( DaoCdata *d );\n\n\
 	DaoCdata *_cdata;\n\
 \n$(virtuals)\n\
 $(qt_virt_emit)\n\
-};\n\
-class DAO_DLL2_$(module) DaoCxx_$(idname) : public $(qname), public DaoCxxVirt_$(idname)\n\
+};\n\n\
+class DAO_$(module)_DLLT DaoCxx_$(idname) :\n\tpublic $(qname), public DaoCxxVirt_$(idname)\n\
 { $(Q_OBJECT)\n\n\
 \tpublic:\n\
 $(constructors)\n\
@@ -530,7 +530,7 @@ void DaoCxx_$(idname)::DaoInitWrapper()\n\
 $(qt_make_linker)\
 }\n";
 const string tpl_class_init_qtss = 
-"DAO_DLL_$(module) void Dao_$(idname)_InitSS( $(qname) *p )\n\
+"DAO_$(module)_DLL void Dao_$(idname)_InitSS( $(qname) *p )\n\
 {\n\
    if( p->userData(0) == NULL ){\n\
 		DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
@@ -539,7 +539,7 @@ const string tpl_class_init_qtss =
 	}\n\
 }\n";
 const string tpl_class_copy = tpl_class_init +
-"DAO_DLL_$(module) $(qname)* Dao_$(idname)_Copy( const $(qname) &p )\n\
+"DAO_$(module)_DLL $(qname)* Dao_$(idname)_Copy( const $(qname) &p )\n\
 {\n\
 	$(qname) *object = new $(qname)( p );\n\
 $(qt_make_linker3)\n\
@@ -549,21 +549,21 @@ const string tpl_class_decl_constru =
 "	DaoCxx_$(idname)( $(parlist) ) : $(qname)( $(parcall) ){}\n";
 
 const string tpl_class_new =
-"\nDAO_DLL_$(module) DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) );\n";
+"\nDAO_$(module)_DLL DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) );\n";
 const string tpl_class_new_novirt =
-"\nDAO_DLL_$(module) $(qname)* Dao_$(idname)_New( $(parlist) );\n";
+"\nDAO_$(module)_DLL $(qname)* Dao_$(idname)_New( $(parlist) );\n";
 const string tpl_class_init_qtss_decl =
-"\nDAO_DLL_$(module) void Dao_$(idname)_InitSS( $(qname) *p );\n";
+"\nDAO_$(module)_DLL void Dao_$(idname)_InitSS( $(qname) *p );\n";
 
 const string tpl_class_noderive =
-"\nDAO_DLL_$(module) $(qname)* Dao_$(idname)_New( $(parlist) )\n\
+"\n$(qname)* Dao_$(idname)_New( $(parlist) )\n\
 {\n\
 	$(qname) *__object = new $(qname)( $(parcall) );\n\
 $(qt_make_linker3)\n\
 	return __object;\n\
 }\n";
 const string tpl_class_init2 =
-"\nDAO_DLL_$(module) DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) )\n\
+"\nDaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) )\n\
 {\n\
 	DaoCxx_$(idname) *self = new DaoCxx_$(idname)( $(parcall) );\n\
 	self->DaoInitWrapper();\n\
@@ -970,7 +970,7 @@ int CDaoUserType::GenerateSimpleTyper()
 		sprintf( sindex, "%i", n );
 		set_bases += "\tdao_" + idname + "_Core->supers[" + sindex + "] = NULL;\n";
 	}
-	kvmap[ "module" ] = UppercaseString( module->moduleInfo.name );
+	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
 	kvmap[ "typer" ] = idname;
 	kvmap[ "name2" ] = name2;
 	kvmap[ "delete" ] = "NULL";
@@ -1094,7 +1094,7 @@ int CDaoUserType::Generate()
 }
 void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 {
-	kvmap[ "module" ] = UppercaseString( module->moduleInfo.name );
+	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
 	kvmap[ "host_qname" ] = qname;
 	kvmap[ "host_idname" ] = idname;
 	kvmap[ "qname" ] = qname;
@@ -1329,7 +1329,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	string class_decl;
 	string parents, casts, cast_funcs;
 
-	outs() << "generating: " << qname << "\n";
+	//outs() << "generating: " << qname << "\n";
 	SetupDefaultMapping( kvmap );
 
 	map<CXXMethodDecl*,CDaoUserType*>::iterator imd, emd;
@@ -1375,11 +1375,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		}
 		kvmap[ "super" ] = supname;
 		if( virt_supers.size() ){
-			daoc_supers += ',';
-			virt_supers += ',';
+			daoc_supers += ", ";
+			virt_supers += ", ";
 		}
-		daoc_supers += " public DaoCxx_" + supname;
-		virt_supers += " public DaoCxxVirt_" + supname;
+		daoc_supers += "public DaoCxx_" + supname;
+		virt_supers += "public DaoCxxVirt_" + supname;
 		init_supers += cdao_string_fill( tpl_init_super, kvmap );
 		if( sup->isQObject ){
 			if( ss_supers.size() ){
@@ -1762,8 +1762,8 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	if( isQObjectBase ){
 		ss_supers += "public QObject, public DaoQtObject";
 	}
-	if( daoc_supers.size() ) daoc_supers = " :" + daoc_supers;
-	if( virt_supers.size() ) virt_supers = " :" + virt_supers;
+	if( daoc_supers.size() ) daoc_supers = " :\n\t" + daoc_supers;
+	if( virt_supers.size() ) virt_supers = " :\n\t" + virt_supers;
 	if( init_supers.size() ) init_supers += "\n";
 
 	kvmap[ "virt_supers" ] = virt_supers;
