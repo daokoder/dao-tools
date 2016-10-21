@@ -1264,6 +1264,8 @@ string CDaoModule::MakeConstStruct( vector<VarDecl*> & vars, const string & ns, 
 
 int CDaoModule::Generate( const string & output )
 {
+	string name_macro = UppercaseString( moduleInfo.alias );
+
 	finalGenerating = true;
 	if( CheckHeaderDependency() == false ) return 1;
 
@@ -1360,12 +1362,10 @@ int CDaoModule::Generate( const string & output )
 		fout_header << func->cxxWrapperVirtProto;
 		fout_source3 << func->cxxWrapperVirt;
 	}
-	fout_header << ifdef_cpp_close;
 
 	fout_source << topLevelScope.source;
 	fout_source2 << topLevelScope.source2;
 	fout_source3 << topLevelScope.source3;
-	fout_header << "#endif\n";
 
 	fout_source << ifdef_cpp_open;
 	string onload = this->onload.size() ? this->onload : "DaoOnLoad";
@@ -1373,6 +1373,11 @@ int CDaoModule::Generate( const string & output )
 	fout_source << "\t__daoVmSpace = vms;\n";
 	fout_source << "\tDaoNamespace *aux = DaoVmSpace_LinkModule( vms, ns, \"aux\" );\n";
 	fout_source << "\tif( aux == NULL ) return 1;\n";
+
+	fout_header << "DAO_" << name_macro << "_DLL int " << onload << "( DaoVmSpace *vms, DaoNamespace *ns );\n\n";
+
+	fout_header << ifdef_cpp_close;
+	fout_header << "#endif\n";
 
 #if 0
 	map<string,string>::iterator ssit, ssend = daoTypedefs.end();

@@ -524,7 +524,7 @@ DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 }\n\
 void DaoCxx_$(idname)::DaoInitWrapper()\n\
 {\n\
-	_cdata = DaoCdata_New( dao_type_$(idname), this );\n\
+	_cdata = DaoCdata_New( dao_type_$(idname), ($(qname)*) this );\n\
 	DaoGC_IncRC( (DaoValue*)_cdata );\n\
 	DaoCxxVirt_$(idname)::DaoInitWrapper( _cdata );\n\
 $(qt_make_linker)\
@@ -873,6 +873,7 @@ void CDaoUserType::SearchHints()
 		isNumber = var.isNumber;
 		if( isMBString or isWCString or isNumber ) toValue = var.names[0];
 		if( var.hasBaseHint ) baseFromHint = var.names;
+		if( var.hasMacroHint ) hintMacro = var.hintMacro;
 		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
@@ -1094,6 +1095,12 @@ int CDaoUserType::Generate()
 }
 void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 {
+	string macroHeader = "";
+
+	if( hintMacro.size() ){
+		macroHeader = hintMacro + "(DaoCxx_" + idname + ");";
+	}
+
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
 	kvmap[ "host_qname" ] = qname;
 	kvmap[ "host_idname" ] = idname;
@@ -1115,7 +1122,7 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 	kvmap[ "parlist" ] = "";
 	kvmap[ "parcall" ] = "";
 
-	kvmap[ "Q_OBJECT" ] = "";
+	kvmap[ "Q_OBJECT" ] = macroHeader;
 	kvmap[ "qt_signal_slot" ] = "";
 	kvmap[ "qt_init" ] = "";
 	kvmap[ "ss_parents" ] = "public QObject";
@@ -1371,7 +1378,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		if( sup->wrapType != CDAO_WRAP_TYPE_PROXY ) continue;
 
 		for(imd=sup->virtualMethods.begin(),emd=sup->virtualMethods.end(); imd!=emd; imd++){
-			virtualMethods[imd->first] = imd->second;
+		//	virtualMethods[imd->first] = imd->second;
 		}
 		kvmap[ "super" ] = supname;
 		if( virt_supers.size() ){

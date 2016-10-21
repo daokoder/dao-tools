@@ -86,8 +86,10 @@ struct CDaoUserType
 	string  qname; // qualified name: std::vector<int>, SomeNamespace::SomeClass;
 	string  idname; // identification name: std_0_vector_1_int_2_, SomeNamespace_0_SomeClass;
 
+	string  macroHeader;
 	string  toValue;
 	string  gcfields;
+	string  hintMacro;
 	string  hintDelete;
 
 	string  set_fields;

@@ -923,7 +923,8 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" ){
+			bool hasMacro = false;
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
 			string hintype = hint;
@@ -953,6 +954,8 @@ void CDaoVariable::SetHints( const string & hints )
 				isNew = true;
 			}else if( hint == "base" ){
 				hasBaseHint = true;
+			}else if( hint == "macro" ){
+				hasMacroHint = true;
 			}else if( hint == "delete" ){
 				hasDeleteHint = true;
 			}
@@ -1031,6 +1034,9 @@ void CDaoVariable::SetHints( const string & hints )
 				hintCxxType = names[0];
 				hintDaoType = names[0];
 				hasDaoTypeHint = true;
+				names.clear();
+			}else if( hintype == "macro" && names.size() ){
+				hintMacro = names[0];
 				names.clear();
 			}else if( hintype == "delete" && names.size() ){
 				hintDelete = names[0];
