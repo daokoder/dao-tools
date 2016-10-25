@@ -385,16 +385,18 @@ string cdao_qname_to_idname( const string & qname )
 {
 	string idname = normalize_type_name( qname );
 	int i;
+	if( clangdao_colons_conversion_simple ){
+		size_t p = 0;
+		while( (p = idname.find( "::", p )) != string::npos ) idname.replace( p, 2, "_" );
+	}
 	for(i=0; conversions2[i]; i++){
 		size_t p = 0;
 		string s = "_" + utostr( 30+i ) + "_";
-		if( clangdao_colons_conversion_simple ) s = "_";
 		while( (p = idname.find( conversions2[i], p )) != string::npos ) idname.replace( p, 2, s );
 	}
 	for(i=0; conversions[i]; i++){
 		size_t p = 0;
 		string s = "_" + utostr( i ) + "_";
-		if( clangdao_colons_conversion_simple ) s = "_";
 		while( (p = idname.find( conversions[i], p )) != string::npos ) idname.replace( p, 1+(i==0), s );
 	}
 	return idname;

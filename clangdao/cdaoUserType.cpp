@@ -587,6 +587,24 @@ const string tpl_raise_call_protected =
     return;\n\
   }\n";
 
+const string cxx_check_getitem =
+"extern DaoType* $(item_meth)_CheckGetItem( DaoType *self, DaoType *index[], int N, DaoRoutine *rout );\n";
+const string cxx_do_getitem =
+"extern DaoValue* $(item_meth)_DoGetItem( DaoValue *self, DaoValue *index[], int N, DaoProcess *proc );\n";
+const string cxx_check_setitem =
+"extern int $(item_meth)_CheckSetItem( DaoType *self, DaoType *index[], int N, DaoType *value, DaoRoutine *rout );\n";
+const string cxx_do_setitem =
+"extern int $(item_meth)_DoSetItem( DaoValue *self, DaoValue *index[], int N, DaoValue *value, DaoProcess *proc );\n";
+
+const string cxx_check_unary =
+"extern DaoType* $(arith_meth)_CheckUnary( DaoType *self, DaoVmCode *op, DaoRoutine *rout );\n";
+const string cxx_do_unary =
+"extern DaoValue* $(arith_meth)_DoUnary( DaoValue *self, DaoVmCode *op, DaoProcess *proc );\n";
+const string cxx_check_binary =
+"extern DaoType* $(arith_meth)_CheckBinary( DaoType *self, DaoVmCode *op, DaoType *operands[2], DaoRoutine *rout );\n";
+const string cxx_do_binary =
+"extern DaoValue* $(arith_meth)_DoBinary( DaoValue *self, DaoVmCode *op, DaoValue *operands[2], DaoProcess *proc );\n";
+
 const string cxx_getter_proto = 
 "static void dao_$(host_idname)_GETF_$(name)( DaoProcess *_proc, DaoValue *_p[], int _n )";
 
@@ -688,10 +706,10 @@ static DaoTypeCore $(typer)_Core = \n\
   dao_$(typer)_Meths,\n\
   DaoCstruct_CheckGetField,    DaoCstruct_DoGetField,\n\
   DaoCstruct_CheckSetField,    DaoCstruct_DoSetField,\n\
-  DaoCstruct_CheckGetItem,     DaoCstruct_DoGetItem,\n\
-  DaoCstruct_CheckSetItem,     DaoCstruct_DoSetItem,\n\
-  DaoCstruct_CheckUnary,       DaoCstruct_DoUnary,\n\
-  DaoCstruct_CheckBinary,      DaoCstruct_DoBinary,\n\
+  $(item_meth)_CheckGetItem,     $(item_meth)_DoGetItem,\n\
+  $(item_meth)_CheckSetItem,     $(item_meth)_DoSetItem,\n\
+  $(arith_meth)_CheckUnary,       $(arith_meth)_DoUnary,\n\
+  $(arith_meth)_CheckBinary,      $(arith_meth)_DoBinary,\n\
   DaoCstruct_CheckConversion,  DaoCstruct_DoConversion,\n\
   DaoCstruct_CheckForEach,     DaoCstruct_DoForEach,\n\
   DaoCstruct_Print,\n\
@@ -815,6 +833,8 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	isRedundant = true;
 	isRedundant2 = false;
 	forceOpaque = false;
+	userItemOper = false;
+	userArithOper = false;
 	dummyTemplate = false;
 	isQObject = isQObjectBase = false;
 	isMBString = isWCString = false;
@@ -977,6 +997,10 @@ int CDaoUserType::GenerateSimpleTyper()
 	kvmap[ "delete" ] = "NULL";
 	kvmap[ "qname" ] = qname;
 	kvmap[ "daotypename" ] = cdao_make_dao_template_type_name( qname ) + ss;
+	kvmap[ "item_meth" ] = "DaoCstruct";
+	kvmap[ "arith_meth" ] = "DaoCstruct";
+	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
+	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 	if( hintDelete.size() ) kvmap[ "delete" ] = hintDelete;
 	typer_codes = cdao_string_fill( usertype_code_none, kvmap );
 	wrapType = CDAO_WRAP_TYPE_OPAQUE;
@@ -1298,6 +1322,10 @@ int CDaoUserType::Generate( RecordDecl *decl )
 		return usertype_code_class2.expand( kvmap );
 	}
 #endif
+	kvmap[ "item_meth" ] = "DaoCstruct";
+	kvmap[ "arith_meth" ] = "DaoCstruct";
+	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
+	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 	if( hintDelete.size() ){
 		kvmap[ "delete" ] = hintDelete;
 		typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
@@ -1548,6 +1576,21 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		const CXXMethodDecl *mdec = dyn_cast<CXXMethodDecl>( meth.funcDecl );
 		if( ctor ) continue;
 		meth.Generate();
+		if( meth.cxxName == "operator[]" or meth.cxxName == "operator[]=" ){
+			userItemOper = meth.userWrapper;
+			kvmap[ "item_meth" ] = "dao_" + idname;
+			meth_decls += cdao_string_fill( cxx_check_getitem, kvmap );
+			meth_decls += cdao_string_fill( cxx_do_getitem, kvmap );
+			meth_decls += cdao_string_fill( cxx_check_setitem, kvmap );
+			meth_decls += cdao_string_fill( cxx_do_setitem, kvmap );
+		}else if( meth.cxxName == "operator+" ){
+			userArithOper = meth.userWrapper;
+			kvmap[ "arith_meth" ] = "dao_" + idname;
+			meth_decls += cdao_string_fill( cxx_check_unary, kvmap );
+			meth_decls += cdao_string_fill( cxx_do_unary, kvmap );
+			meth_decls += cdao_string_fill( cxx_check_binary, kvmap );
+			meth_decls += cdao_string_fill( cxx_do_binary, kvmap );
+		}
 		if( not meth.generated ) continue;
 		if( mdec->getAccess() == AS_protected && not mdec->isPure() && not mdec->isOverloadedOperator() ){
 			if( wrapType == CDAO_WRAP_TYPE_PROXY ){
@@ -1681,6 +1724,10 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 				type_decls += cdao_string_fill( tpl_class_new_novirt, kvmap );
 			}
 		}
+		kvmap[ "item_meth" ] = "DaoCstruct";
+		kvmap[ "arith_meth" ] = "DaoCstruct";
+		if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
+		if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 		typer_codes = cdao_string_fill( usertype_code_class, kvmap );
 		return 0;
 	}
@@ -1843,6 +1890,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	type_decls += cdao_string_fill( tpl_class_def, kvmap ) + class_new;
 	type_codes += cdao_string_fill( tpl_class_init, kvmap );
 	type_codes += cxxWrapperVirt;
+
+	kvmap[ "item_meth" ] = "DaoCstruct";
+	kvmap[ "arith_meth" ] = "DaoCstruct";
+	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
+	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 
 	kvmap[ "casts" ] = casts;
 	kvmap[ "cast_funcs" ] = cast_funcs;

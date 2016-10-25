@@ -56,6 +56,7 @@ struct CDaoFunction
 	bool  excluded;
 	bool  generated;
 	bool  constQualified;
+	bool  userWrapper;
 
 	string  signature;
 	string  signature2;

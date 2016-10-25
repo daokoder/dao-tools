@@ -399,6 +399,7 @@ CDaoFunction::CDaoFunction( CDaoModule *mod, FunctionDecl *decl, int idx )
 	excluded = false;
 	generated = false;
 	constQualified = false;
+	userWrapper = false;
 	index = idx;
 	retype.module = module;
 	if( decl ) SetDeclaration( decl );
@@ -522,6 +523,7 @@ void CDaoFunction::SetHints( const vector<string> & hints, const string & sig )
 	int i, n;
 	if( hints.size() == 0 ) return;
 	retype.SetHints( hints[0] );
+	userWrapper = retype.useUserWrapper;
 	if( retype.unsupported ){
 		excluded = true;
 		return;
@@ -562,6 +564,7 @@ int CDaoFunction::Generate()
 {
 	DeclaratorDecl *decl = funcDecl;
 	if( decl == NULL ) decl = fieldDecl;
+	if( decl ) cxxName = decl->getNameAsString();
 	if( decl && not module->IsFromModules( location ) ) return 0;
 	if( not module->IsFromMainModule(location) ) return 0;
 	if( excluded ) return 1;
@@ -648,6 +651,7 @@ int CDaoFunction::Generate()
 	retype.hostype = hostype;
 	retype.location = location;
 	retcode |= retype.Generate( VAR_INDEX_RETURN );
+	userWrapper = retype.useUserWrapper;
 	if( retype.unsupported and (retype.useUserWrapper == false) ){
 		excluded = true;
 		return 1;
