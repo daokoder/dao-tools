@@ -77,6 +77,7 @@ struct CDaoUserType
 	bool   isQObjectBase;
 	bool   userItemOper;
 	bool   userArithOper;
+	bool   userCopy;
 	bool   useTypeTag;
 	bool   used;
 	bool   isMBString;
@@ -93,6 +94,7 @@ struct CDaoUserType
 	string  gcfields;
 	string  hintMacro;
 	string  hintDelete;
+	string  hintCxxBase;
 
 	string  set_fields;
 	string  type_decls;

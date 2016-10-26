@@ -788,6 +788,12 @@ void CDaoVarTemplates::Generate( CDaoVariable *var, map<string,string> & kvmap, 
 	if( var->daotype.find( "std::" ) == 0 ) var->daotype.replace( 0, 5, "_std::" );
 	if( var->daotype.find( "io::" ) == 0 ) var->daotype.replace( 0, 4, "_io::" );
 
+	if( var->hintImplicit.size() ){
+		daopar = "";
+		dao2cxx = "  $(cxxtype)* $(name) = " + var->hintImplicit + "( _proc );\n";
+		var->ignore = true;
+	}
+
 	kvmap[ "dao" ] = "";
 	kvmap[ "daotype" ] = var->daotype;
 	kvmap[ "cxxtype" ] = var->cxxtype2;
@@ -923,7 +929,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "cxxbase" || hint == "implicit" ){
 			bool hasMacro = false;
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
@@ -954,6 +960,8 @@ void CDaoVariable::SetHints( const string & hints )
 				isNew = true;
 			}else if( hint == "base" ){
 				hasBaseHint = true;
+			}else if( hint == "cxxbase" ){
+			}else if( hint == "implicit" ){
 			}else if( hint == "macro" ){
 				hasMacroHint = true;
 			}else if( hint == "delete" ){
@@ -1035,11 +1043,17 @@ void CDaoVariable::SetHints( const string & hints )
 				hintDaoType = names[0];
 				hasDaoTypeHint = true;
 				names.clear();
+			}else if( hintype == "cxxbase" && names.size() ){
+				hintCxxBase = names[0];
+				names.clear();
 			}else if( hintype == "macro" && names.size() ){
 				hintMacro = names[0];
 				names.clear();
 			}else if( hintype == "delete" && names.size() ){
 				hintDelete = names[0];
+				names.clear();
+			}else if( hintype == "implicit" && names.size() ){
+				hintImplicit = names[0];
 				names.clear();
 			}else if( hintype == "wraptype" ){
 				if( names[0] == "opaque" ){

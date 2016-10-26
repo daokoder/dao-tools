@@ -95,6 +95,31 @@ const string cxx_call_static2_d3 =
 ;
 
 
+const string cxx_stack_init = 
+"  $(host_qname) _self$(stack_parlist);\n\
+  DaoProcess_PutCdata( _proc, & _self, dao_type_$(host_idname) );\n"
+;
+const string cxx_stack_init_d1 = 
+"  if(_n<=$(n1)){\n\
+    $(host_qname) _self$(stack_parlist1);\n\
+    DaoProcess_PutCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+  }\n"
+;
+const string cxx_stack_init_d2 = 
+"  else if(_n<=$(n%i)){\n\
+    $(host_qname) _self$(stack_parlist%i);\n\
+    DaoProcess_PutCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+  }\n"
+;
+const string cxx_stack_init_d3 = 
+"  else{\n\
+    $(host_qname) _self$(stack_parlist);\n\
+    DaoProcess_PutCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+  }\n"
+;
+
+
+
 const string cxx_call_new = 
 "  $(host_qname) *_self = new $(host_qname)( $(parlist) );\n\
   DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
@@ -110,6 +135,7 @@ const string cxx_call_new_d3 =
 "  else _self = new $(host_qname)( $(parlist) );\n\
   DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
 ;
+
 
 const string cxx_call_new2 = 
 "  DaoCxx_$(host_idname) *_self = new DaoCxx_$(host_idname)( $(parlist) );\n\
@@ -901,10 +927,13 @@ int CDaoFunction::Generate()
 	kvmap[ "retype" ] = retype.cxxtype;
 	kvmap[ "name" ] = retype.name;
 	kvmap[ "parlist" ] = cxxCallParam;
+	kvmap[ "stack_parlist" ] = cxxCallParam;
 	kvmap[ "pointer" ] = "";
 	kvmap[ "reference" ] = "";
 	kvmap[ "prefix" ] = "";
 	kvmap[ "retype2" ] = retype.cxxtype;
+
+	if( cxxCallParam.size() ) kvmap[ "stack_parlist" ] = "(" + cxxCallParam + ")";
 
 	string pointer_to_ref = "";
 	if( retype.qualtype->isReferenceType() ){
@@ -932,6 +961,8 @@ int CDaoFunction::Generate()
 		IntString & tup2 = unusedDefaults[i-1];
 		kvmap[ "n" + utostr(i) ] = utostr( tup2.i );
 		kvmap[ "parlist" + utostr(i) ] = tup2.s;
+		kvmap[ "stack_parlist" + utostr(i) ] = tup2.s;
+		if( tup2.s.size() ) kvmap[ "stack_parlist" + utostr(i) ] = "(" + tup2.s + ")";
 	}
 	if( hostype && ctordecl != NULL and not excluded ){
 		//kvmap[ 'parlist' ] = ''; // XXX disable parameters at the moment
@@ -942,6 +973,15 @@ int CDaoFunction::Generate()
 				string tmp = cxx_call_new2_d1;
 				tmp += cdao_make_temp( cxx_call_new2_d2, dd );
 				tmp += cxx_call_new2_d3;
+				cxxCallCodes = cdao_string_fill( tmp, kvmap );
+			}
+		}else if( hostype->wrapType == CDAO_WRAP_TYPE_DIRECT and hostype->userCopy ){
+			if( dd == 0 ){
+				cxxCallCodes = cdao_string_fill( cxx_stack_init, kvmap );
+			}else{
+				string tmp = cxx_stack_init_d1;
+				tmp += cdao_make_temp( cxx_stack_init_d2, dd );
+				tmp += cxx_stack_init_d3;
 				cxxCallCodes = cdao_string_fill( tmp, kvmap );
 			}
 		}else if( hostype->wrapType == CDAO_WRAP_TYPE_DIRECT ){

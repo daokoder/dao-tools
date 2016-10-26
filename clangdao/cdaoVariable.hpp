@@ -87,8 +87,10 @@ struct CDaoVariable
 	string  name;
 	string  cxxdefault;
 	string  daodefault;
+	string  hintImplicit;
 	string  hintDaoType;
 	string  hintCxxType;
+	string  hintCxxBase;
 	string  hintCodeBlock;
 	string  hintMacro;
 	string  hintDelete;

@@ -694,6 +694,20 @@ const string cast_to_parent_virtual_base =
 	return dynamic_cast<$(parent)*>(($(child)*)data);\n\
 }\n";
 
+const string tpl_core_copy = 
+"static DaoValue* dao_$(typer)_Copy( DaoValue *self, DaoValue *target )\n\
+{\n\
+	$(qname)* src = ($(qname)*) DaoValue_TryCastCdata( self, dao_type_$(typer) );\n\
+	$(qname)* dest;\n\
+	if( target ){\n\
+		dest = ($(qname)*) DaoValue_TryCastCdata( target, dao_type_$(typer) );\n\
+		*dest = *src;\n\
+		return target;\n\
+	}\n\
+	dest = new $(qname)( *src );\n\
+	return (DaoValue*) DaoCdata_New( dao_type_$(typer), dest );\n\
+}\n";
+
 
 const string usertype_code =
 "$(cast_funcs)\n\
@@ -717,7 +731,7 @@ static DaoTypeCore $(typer)_Core = \n\
   NULL,\n\
   NULL,\n\
   NULL,\n\
-  NULL,\n\
+  $(copy_meth),\n\
   $(delete),\n\
   $(gcfields)\n\
 };\n\
@@ -835,6 +849,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	forceOpaque = false;
 	userItemOper = false;
 	userArithOper = false;
+	userCopy = false;
 	dummyTemplate = false;
 	isQObject = isQObjectBase = false;
 	isMBString = isWCString = false;
@@ -887,6 +902,7 @@ void CDaoUserType::SearchHints()
 			unsupported = true;
 			isRedundant2 = true;
 		}
+		hintCxxBase = var.hintCxxBase;
 		useTypeTag = var.useTypeTag;
 		isMBString = var.isMBS;
 		isWCString = var.isWCS;
@@ -985,11 +1001,11 @@ int CDaoUserType::GenerateSimpleTyper()
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		sprintf( sindex, "%i", i );
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
-		set_bases += "\tdao_" + idname + "_Core->supers[" + sindex + "] = dao_" + supname2 + "_Core;\n";
+		set_bases += "\tdao_" + idname + "_Core->bases[" + sindex + "] = dao_" + supname2 + "_Core;\n";
 	}
 	if( n ){
 		sprintf( sindex, "%i", n );
-		set_bases += "\tdao_" + idname + "_Core->supers[" + sindex + "] = NULL;\n";
+		set_bases += "\tdao_" + idname + "_Core->bases[" + sindex + "] = NULL;\n";
 	}
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
 	kvmap[ "typer" ] = idname;
@@ -999,6 +1015,8 @@ int CDaoUserType::GenerateSimpleTyper()
 	kvmap[ "daotypename" ] = cdao_make_dao_template_type_name( qname ) + ss;
 	kvmap[ "item_meth" ] = "DaoCstruct";
 	kvmap[ "arith_meth" ] = "DaoCstruct";
+	kvmap[ "copy_meth" ] = "NULL";
+	if( userCopy ) kvmap[ "copy_meth" ] = "dao_" + idname + "_Copy";
 	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 	if( hintDelete.size() ) kvmap[ "delete" ] = hintDelete;
@@ -1324,8 +1342,10 @@ int CDaoUserType::Generate( RecordDecl *decl )
 #endif
 	kvmap[ "item_meth" ] = "DaoCstruct";
 	kvmap[ "arith_meth" ] = "DaoCstruct";
+	kvmap[ "copy_meth" ] = "NULL";
 	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
+	if( userCopy ) kvmap[ "copy_meth" ] = "dao_" + idname + "_Copy";
 	if( hintDelete.size() ){
 		kvmap[ "delete" ] = hintDelete;
 		typer_codes = cdao_string_fill( usertype_code_struct, kvmap );
@@ -1425,6 +1445,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			ss_init_sup += " DaoSS_" + supname + "()";
 		}
 	}
+	if( hintCxxBase.size() ){
+		if( virt_supers.size() ) virt_supers += ", ";
+		virt_supers += "public " + hintCxxBase;
+	}
+
 	CXXRecordDecl::decl_iterator dit, dend;
 	for(dit=decl->decls_begin(),dend=decl->decls_end(); dit!=dend; dit++){
 		EnumDecl *edec = dyn_cast<EnumDecl>( *dit );
@@ -1473,6 +1498,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	bool has_public_destructor = true;
 	bool has_private_destructor = false;
 	bool has_non_public_copy_ctor = false;
+	bool has_exp_public_copy_ctor = false;
 	CXXRecordDecl::ctor_iterator ctorit, ctorend = decl->ctor_end();
 	for(ctorit=decl->ctor_begin(); ctorit!=ctorend; ctorit++){
 		string name = ctorit->getNameAsString();
@@ -1487,12 +1513,17 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			if( ctorit->getAccess() == AS_public ) has_public_ctor = true;
 			if( ctorit->isCopyConstructor() && ctorit->getAccess() != AS_public )
 				has_non_public_copy_ctor = true;
+			if( ctorit->isCopyConstructor() && ctorit->getAccess() == AS_public ){
+				has_exp_public_copy_ctor = true;
+				userCopy = true;
+			}
 			if( ctorit->param_size() == 0 ){
 				has_explicit_default_ctor = true;
 				if( ctorit->getAccess() == AS_private ) has_private_ctor_only = true;
 			}
 		//}
 		if( ctorit->getAccess() == AS_private ) continue;
+		if( ctorit->isCopyConstructor() ) continue;
 		constructors.push_back( CDaoFunction( module, *ctorit, ++overloads[name] ) );
 		constructors.back().location = location;
 	}
@@ -1679,6 +1710,10 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		type_decls += cdao_string_fill( daoss_class, kvmap );
 	} // isQObject
 
+	if( has_exp_public_copy_ctor ){
+		meth_decls += cdao_string_fill( tpl_core_copy, kvmap );
+	}
+
 	if( has_implicit_default_ctor ){
 		kvmap[ "daoname" ] = name;
 		dao_meths = cdao_string_fill( dao_proto, kvmap ) + dao_meths;
@@ -1726,6 +1761,8 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		}
 		kvmap[ "item_meth" ] = "DaoCstruct";
 		kvmap[ "arith_meth" ] = "DaoCstruct";
+		kvmap[ "copy_meth" ] = "NULL";
+		if( userCopy ) kvmap[ "copy_meth" ] = "dao_" + idname + "_Copy";
 		if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 		if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 		typer_codes = cdao_string_fill( usertype_code_class, kvmap );
@@ -1779,7 +1816,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 				TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
 				string source = module->ExtractSource( typeloc.getSourceRange(), true );
 				//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
-				kmethods += "\t" + source + "{/*XXX 1*/}\n";
+				kmethods += "\t" + source + ";\n";//"{/*XXX 1*/}\n";
 			}
 			continue;
 		}
@@ -1792,7 +1829,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			TypeLoc typeloc = mdec->getTypeSourceInfo()->getTypeLoc();
 			string source = module->ExtractSource( typeloc.getSourceRange(), true );
 			//module->ExtractSource( mdec->getSourceRange(), true ); //with no return type
-			kmethods += "\t" + source + "{/*XXX 1*/}\n";
+			kmethods += "\t" + source + ";\n"; //"{/*XXX 1*/}\n";
 		}
 		if( mdec->isVirtual() && meth.cxxWrapperVirt2.size() ){
 			kmethods += cdao_string_fill( tpl_meth_decl2, kvmap );
@@ -1893,6 +1930,8 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 	kvmap[ "item_meth" ] = "DaoCstruct";
 	kvmap[ "arith_meth" ] = "DaoCstruct";
+	kvmap[ "copy_meth" ] = "NULL";
+	if( userCopy ) kvmap[ "copy_meth" ] = "dao_" + idname + "_Copy";
 	if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 	if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
 
