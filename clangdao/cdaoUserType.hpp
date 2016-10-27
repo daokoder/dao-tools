@@ -75,6 +75,7 @@ struct CDaoUserType
 	bool   isRedundant2;
 	bool   isQObject;
 	bool   isQObjectBase;
+	bool   userFieldOper;
 	bool   userItemOper;
 	bool   userArithOper;
 	bool   userCopy;

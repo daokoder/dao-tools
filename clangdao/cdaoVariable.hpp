@@ -70,6 +70,7 @@ struct CDaoVariable
 	bool    useTypeTag;
 	bool    useDaoString;
 	bool    useUserWrapper;
+	bool    userFieldCB;
 	bool    argvLike;
 	bool    ignore;
 	bool    readonly; // readonly field;
