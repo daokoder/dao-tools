@@ -683,12 +683,13 @@ int CDaoFunction::Generate()
 		return 1;
 	}
 
-	int i, n = parlist.size();
-	for(i=0; i<n; i++){
+	int i, k, n = parlist.size();
+	for(i=0,k=0; i<n; i++){
 		CDaoVariable & var = parlist[i];
 		var.location = location;
 		var.hostype = hostype;
-		retcode |= var.Generate( i, i-autoself );
+		retcode |= var.Generate( k, i-autoself );
+		k += var.ignore == false;
 		if( var.unsupported and (retype.useUserWrapper == false) ){
 			excluded = true;
 			return 1;
@@ -725,7 +726,7 @@ int CDaoFunction::Generate()
 		pps.push_back( & vo );
 		//outs() << vo.name << vo.unsupported << "-----------------\n";
 		if( vo.ignore == false ){
-			if( i ) daoprotpars += ", ";
+			if( daoprotpars.size() ) daoprotpars += ", ";
 			daoprotpars += vo.daopar;
 		}
 		parsetcodes += vo.parset;
