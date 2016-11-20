@@ -80,6 +80,7 @@ struct CDaoVariable
 	bool    hasCodeBlockHint;
 	bool    hasBaseHint;
 	bool    hasMacroHint;
+	bool    hasMacro2Hint;
 	bool    hasDeleteHint;
 	bool    isMBS;
 	bool    isWCS;
@@ -94,6 +95,7 @@ struct CDaoVariable
 	string  hintCxxBase;
 	string  hintCodeBlock;
 	string  hintMacro;
+	string  hintMacro2;
 	string  hintDelete;
 
 	string  daotype;

@@ -94,6 +94,7 @@ struct CDaoUserType
 	string  toValue;
 	string  gcfields;
 	string  hintMacro;
+	string  hintMacro2;
 	string  hintDelete;
 	string  hintCxxBase;
 

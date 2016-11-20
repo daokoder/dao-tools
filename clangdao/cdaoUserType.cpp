@@ -922,6 +922,7 @@ void CDaoUserType::SearchHints()
 		if( isMBString or isWCString or isNumber ) toValue = var.names[0];
 		if( var.hasBaseHint ) baseFromHint = var.names;
 		if( var.hasMacroHint ) hintMacro = var.hintMacro;
+		if( var.hasMacro2Hint ) hintMacro2 = var.hintMacro2;
 		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
@@ -1155,6 +1156,9 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 
 	if( hintMacro.size() ){
 		macroHeader = hintMacro + "(DaoCxx_" + idname + ");";
+	}
+	if( hintMacro2.size() ){
+		macroHeader = hintMacro2 + "(DaoCxx_" + idname + "," + qname + ");";
 	}
 
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );

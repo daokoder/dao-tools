@@ -930,7 +930,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "macro2" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" ){
 			bool hasMacro = false;
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
@@ -965,6 +965,8 @@ void CDaoVariable::SetHints( const string & hints )
 			}else if( hint == "implicit" ){
 			}else if( hint == "macro" ){
 				hasMacroHint = true;
+			}else if( hint == "macro2" ){
+				hasMacro2Hint = true;
 			}else if( hint == "fieldcb" ){
 				userFieldCB = true;
 			}else if( hint == "delete" ){
@@ -1051,6 +1053,9 @@ void CDaoVariable::SetHints( const string & hints )
 				names.clear();
 			}else if( hintype == "macro" && names.size() ){
 				hintMacro = names[0];
+				names.clear();
+			}else if( hintype == "macro2" && names.size() ){
+				hintMacro2 = names[0];
 				names.clear();
 			}else if( hintype == "delete" && names.size() ){
 				hintDelete = names[0];
