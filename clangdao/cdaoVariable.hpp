@@ -81,6 +81,7 @@ struct CDaoVariable
 	bool    hasBaseHint;
 	bool    hasMacroHint;
 	bool    hasMacro2Hint;
+	bool    hasRefCountHint;
 	bool    hasDeleteHint;
 	bool    isMBS;
 	bool    isWCS;
@@ -96,6 +97,7 @@ struct CDaoVariable
 	string  hintCodeBlock;
 	string  hintMacro;
 	string  hintMacro2;
+	string  hintRefCount;
 	string  hintDelete;
 
 	string  daotype;

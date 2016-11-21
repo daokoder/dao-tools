@@ -95,6 +95,7 @@ struct CDaoUserType
 	string  gcfields;
 	string  hintMacro;
 	string  hintMacro2;
+	string  hintRefCount;
 	string  hintDelete;
 	string  hintCxxBase;
 

@@ -680,6 +680,13 @@ const string delete_class =
 	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
+const string delete_refcount = 
+"static void Dao_$(typer)_Delete( DaoValue *self )\n\
+{\n\
+	$(shared_pointer)<$(qname)> x( ($(qname)*) DaoValue_TryGetCdata( self ) );\n\
+	DaoCstruct_Delete( (DaoCstruct*) self );\n\
+}\n";
+
 const string get_gcfields =
 "static void Dao_$(typer)_HandleGC( DaoValue *P, DList *VS, DList *AS, DList *MS, int RM )\n\
 {\n\
@@ -839,6 +846,8 @@ const string usertype_code_struct = methlist_code + usertype_code;
 const string usertype_code_struct2 = methlist_code + delete_struct + usertype_code;
 const string usertype_code_class = methlist_code + delete_class + usertype_code;
 const string usertype_code_class2 = methlist_code + delete_class + get_gcfields + usertype_code;
+const string usertype_code_refcount = methlist_code + delete_refcount + usertype_code;
+const string usertype_code_refcount2 = methlist_code + delete_refcount + usertype_code;
 
 extern string cdao_string_fill( const string & tpl, const map<string,string> & subs );
 extern string normalize_type_name( const string & name );
@@ -923,6 +932,7 @@ void CDaoUserType::SearchHints()
 		if( var.hasBaseHint ) baseFromHint = var.names;
 		if( var.hasMacroHint ) hintMacro = var.hintMacro;
 		if( var.hasMacro2Hint ) hintMacro2 = var.hintMacro2;
+		if( var.hasRefCountHint ) hintRefCount = var.hintRefCount;
 		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
@@ -1426,6 +1436,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 		string supname = sup->idname;
 		sup->Generate();
+		if( sup->hintRefCount.size() ) hintRefCount = sup->hintRefCount;
 		if( module->finalGenerating == false ) return 0;
 
 		if( baseit->getAccessSpecifier() == AS_public and not sup->unsupported ){
@@ -1764,6 +1775,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap[ "meths" ] = dao_meths;
 	kvmap["constructors"] = "";
 	kvmap[ "comment" ] = has_public_destructor ? "" : "//";
+	kvmap[ "shared_pointer" ] = hintRefCount;
 
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
@@ -1797,7 +1809,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		if( userFieldOper ) kvmap[ "field_meth" ] = "dao_" + idname;
 		if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 		if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
-		typer_codes = cdao_string_fill( usertype_code_class, kvmap );
+		if( hintRefCount.size() ){
+			typer_codes = cdao_string_fill( usertype_code_refcount, kvmap );
+		}else{
+			typer_codes = cdao_string_fill( usertype_code_class, kvmap );
+		}
 		return 0;
 	}
 
@@ -1984,7 +2000,13 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		return usertype_code_class2.expand( kvmap );
 	}
 #endif
+	kvmap[ "shared_pointer" ] = hintRefCount;
 	kvmap["breakref"] = gcfields == "" ? "" : "\t\t" + gcfields + "\n";
-	typer_codes = cdao_string_fill( usertype_code_class2, kvmap );
+	if( hintRefCount.size() ){
+		kvmap["gcfields"] = "NULL";
+		typer_codes = cdao_string_fill( usertype_code_refcount2, kvmap );
+	}else{
+		typer_codes = cdao_string_fill( usertype_code_class2, kvmap );
+	}
 	return 0;
 }
