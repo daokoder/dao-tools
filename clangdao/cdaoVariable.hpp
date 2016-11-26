@@ -82,6 +82,7 @@ struct CDaoVariable
 	bool    hasMacroHint;
 	bool    hasMacro2Hint;
 	bool    hasRefCountHint;
+	bool    hasExternalUseHint;
 	bool    hasDeleteHint;
 	bool    isMBS;
 	bool    isWCS;
@@ -98,6 +99,7 @@ struct CDaoVariable
 	string  hintMacro;
 	string  hintMacro2;
 	string  hintRefCount;
+	string  hintExternalUse;
 	string  hintDelete;
 
 	string  daotype;

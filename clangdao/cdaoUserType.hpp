@@ -96,6 +96,7 @@ struct CDaoUserType
 	string  hintMacro;
 	string  hintMacro2;
 	string  hintRefCount;
+	string  hintExternalUse;
 	string  hintDelete;
 	string  hintCxxBase;
 

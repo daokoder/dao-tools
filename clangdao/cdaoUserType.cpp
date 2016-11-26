@@ -517,10 +517,12 @@ $(qt_init)\
 }\n\
 DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 {\n\
+	Dao_$(module2)_LockHandleGC();\n\
 	if( _cdata ){\n\
 		DaoCdata_SetData( _cdata, NULL );\n\
 		DaoGC_DecRC( (DaoValue*) _cdata );\n\
 	} \n\
+	Dao_$(module2)_UnlockHandleGC();\n\
 }\n\
 void DaoCxx_$(idname)::DaoInitWrapper()\n\
 {\n\
@@ -680,23 +682,53 @@ const string delete_class =
 	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
-const string delete_refcount = 
+/*
+// For C/C++ object with potential external use, the cdata can be deleted
+// before or after the deletion of the C/C++ object. If it is after, the
+// wrapped data of the cdata must have been set to null. If it is before
+// it can only happen when the C/C++ object no longer has external use.
+*/
+const string delete_extuse = 
 "static void Dao_$(typer)_Delete( DaoValue *self )\n\
 {\n\
-	$(shared_pointer)<$(qname)> x( ($(qname)*) DaoValue_TryGetCdata( self ) );\n\
+	$(qname) *obj = ($(qname)*) DaoValue_TryGetCdata( self );\n\
+	if( obj != NULL ) delete obj;\n\
 	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
+/*
+// The type core HandleGC() callback will be called only for cdata containing
+// instances of customized wrapping classes. This is guaranteed by ClangDao
+// by creating such instances in the wrapped costructors!
+*/
 const string get_gcfields =
 "static void Dao_$(typer)_HandleGC( DaoValue *P, DList *VS, DList *AS, DList *MS, int RM )\n\
 {\n\
+	Dao_$(module2)_LockHandleGC();\n\
 	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
 	if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
 	if( RM ){\n\
 $(breakref)\
 		self->_cdata = NULL;\n\
 	}\n\
+	Dao_$(module2)_UnlockHandleGC();\n\
 }\n";
+
+const string get_gcfields_extuse =
+"static void Dao_$(typer)_HandleGC( DaoValue *P, DList *VS, DList *AS, DList *MS, int RM )\n\
+{\n\
+	Dao_$(module2)_LockHandleGC();\n\
+	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
+	if( self != NULL && ! $(extuse)( self ) ){\n\
+		if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
+		if( RM ){\n\
+$(breakref)\
+			self->_cdata = NULL;\n\
+		}\n\
+	}\n\
+	Dao_$(module2)_UnlockHandleGC();\n\
+}\n";
+
 
 const string cast_to_parent = 
 "void* dao_cast_$(typer)_$(parent2)( void *data, int down )\n\
@@ -846,8 +878,8 @@ const string usertype_code_struct = methlist_code + usertype_code;
 const string usertype_code_struct2 = methlist_code + delete_struct + usertype_code;
 const string usertype_code_class = methlist_code + delete_class + usertype_code;
 const string usertype_code_class2 = methlist_code + delete_class + get_gcfields + usertype_code;
-const string usertype_code_refcount = methlist_code + delete_refcount + usertype_code;
-const string usertype_code_refcount2 = methlist_code + delete_refcount + usertype_code;
+const string usertype_code_extuse = methlist_code + delete_extuse + get_gcfields_extuse + usertype_code;
+const string usertype_code_extuse2 = methlist_code + delete_extuse + get_gcfields_extuse + usertype_code;
 
 extern string cdao_string_fill( const string & tpl, const map<string,string> & subs );
 extern string normalize_type_name( const string & name );
@@ -933,6 +965,7 @@ void CDaoUserType::SearchHints()
 		if( var.hasMacroHint ) hintMacro = var.hintMacro;
 		if( var.hasMacro2Hint ) hintMacro2 = var.hintMacro2;
 		if( var.hasRefCountHint ) hintRefCount = var.hintRefCount;
+		if( var.hasExternalUseHint ) hintExternalUse = var.hintExternalUse;
 		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
@@ -1031,6 +1064,7 @@ int CDaoUserType::GenerateSimpleTyper()
 		set_bases += "\tdao_" + idname + "_Core->bases[" + sindex + "] = NULL;\n";
 	}
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
+	kvmap[ "module2" ] = module->moduleInfo.alias;
 	kvmap[ "typer" ] = idname;
 	kvmap[ "name2" ] = name2;
 	kvmap[ "delete" ] = "NULL";
@@ -1172,6 +1206,7 @@ void CDaoUserType::SetupDefaultMapping( map<string,string> & kvmap )
 	}
 
 	kvmap[ "module" ] = UppercaseString( module->moduleInfo.alias );
+	kvmap[ "module2" ] = module->moduleInfo.alias;
 	kvmap[ "host_qname" ] = qname;
 	kvmap[ "host_idname" ] = idname;
 	kvmap[ "qname" ] = qname;
@@ -1437,6 +1472,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		string supname = sup->idname;
 		sup->Generate();
 		if( sup->hintRefCount.size() ) hintRefCount = sup->hintRefCount;
+		if( sup->hintExternalUse.size() ) hintExternalUse = sup->hintExternalUse;
 		if( module->finalGenerating == false ) return 0;
 
 		if( baseit->getAccessSpecifier() == AS_public and not sup->unsupported ){
@@ -1776,6 +1812,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap["constructors"] = "";
 	kvmap[ "comment" ] = has_public_destructor ? "" : "//";
 	kvmap[ "shared_pointer" ] = hintRefCount;
+	kvmap[ "extuse" ] = hintExternalUse;
 
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
@@ -1809,8 +1846,8 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		if( userFieldOper ) kvmap[ "field_meth" ] = "dao_" + idname;
 		if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 		if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
-		if( hintRefCount.size() ){
-			typer_codes = cdao_string_fill( usertype_code_refcount, kvmap );
+		if( hintExternalUse.size() ){
+			typer_codes = cdao_string_fill( usertype_code_extuse, kvmap );
 		}else{
 			typer_codes = cdao_string_fill( usertype_code_class, kvmap );
 		}
@@ -2001,10 +2038,10 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	}
 #endif
 	kvmap[ "shared_pointer" ] = hintRefCount;
+	kvmap[ "extuse" ] = hintExternalUse;
 	kvmap["breakref"] = gcfields == "" ? "" : "\t\t" + gcfields + "\n";
-	if( hintRefCount.size() ){
-		kvmap["gcfields"] = "NULL";
-		typer_codes = cdao_string_fill( usertype_code_refcount2, kvmap );
+	if( hintExternalUse.size() ){
+		typer_codes = cdao_string_fill( usertype_code_extuse2, kvmap );
 	}else{
 		typer_codes = cdao_string_fill( usertype_code_class2, kvmap );
 	}
