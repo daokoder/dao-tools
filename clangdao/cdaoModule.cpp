@@ -48,7 +48,13 @@ const string cxx_get_object_method =
   if( meth == NULL ) return NULL;\n\
   if( DaoRoutine_IsWrapper( meth ) ) return NULL; /*do not call C function*/\n\
   return meth;\n\
-}\n";
+}\n\n\
+DaoVmSpace* Dao_Get_Object_VmSpace( DaoObject *obj )\n\
+{\n\
+  DaoClass *klass = obj != NULL ? DaoObject_GetClass( obj ) : NULL;\n\
+  DaoNamespace *ns = klass != NULL ? DaoClass_GetNamespace( klass ) : NULL;\n\
+  return ns != NULL ? DaoNamespace_GetVmSpace( ns ) : NULL;\n\
+}\n\n";
 const string cxx_stringlist_conversion_decl = 
 "extern char** DaoStringList_ToStaticCStringArray( DaoList *slist );\n";
 
