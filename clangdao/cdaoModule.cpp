@@ -82,7 +82,7 @@ const string ext_typer = "extern DaoTypeCore *dao_$(type)_Core;\n";
 const string ext_dao_types = "extern DaoType *dao_type_$(type);\n";
 
 const string tpl_wraptype =
-"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Core, DAO_CDATA, 0 );\n";
+"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Core, DAO_CDATA, $(trait) );\n";
 
 
 extern string cdao_qname_to_idname( const string & qname );
@@ -1110,6 +1110,8 @@ string CDaoModule::MakeOnLoadCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
 		kvmap[ "idname" ] = utp.idname;
+		kvmap[ "trait" ] = "0";
+		if( utp.useUniThread ) kvmap[ "trait" ] = "DAO_CTYPE_UNITHREAD";
 		codes += utp.set_bases;
 		codes += cdao_string_fill( tpl_wraptype, kvmap );
 	}

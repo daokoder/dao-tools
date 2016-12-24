@@ -80,6 +80,7 @@ struct CDaoUserType
 	bool   userArithOper;
 	bool   userCopy;
 	bool   useTypeTag;
+	bool   useUniThread;
 	bool   used;
 	bool   isMBString;
 	bool   isWCString;

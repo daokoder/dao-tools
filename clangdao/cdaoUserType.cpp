@@ -639,19 +639,19 @@ const string cxx_gs_user =
 "  $(host_qname) *self = ($(host_qname)*)DaoValue_TryCastCdata(_p[0],dao_type_$(typer));\n";
 
 const string dao_getter_proto = 
-"  { dao_$(host_idname)_GETF_$(name), \".$(name)( self: $(daoname) )=>$(ftype)\" },\n";
+"  { dao_$(host_idname)_GETF_$(name), \".$(name) ( self: $(daoname) )=>$(ftype)\" },\n";
 
 const string dao_setter_proto = 
 "  { dao_$(host_idname)_SETF_$(name), \".$(name)=( self: $(daoname), $(name): $(ftype) )\" },\n";
 
 const string dao_get_item_proto = 
-"  { dao_$(host_idname)_GETI_$(name), \"[]( self: $(daoname), i: int )=>$(itype)\" },\n";
+"  { dao_$(host_idname)_GETI_$(name), \"[] ( self: $(daoname), i: int )=>$(itype)\" },\n";
 
 const string dao_set_item_proto = 
 "  { dao_$(host_idname)_SETI_$(name), \"[]=( self: $(daoname), i: int, value: $(itype) )\" },\n";
 
 const string dao_get_pixel_proto = 
-"  { dao_$(host_idname)_GETI_Pixel, \"[]( self: $(daoname), i: int, j: int, pixel: enum<uint8,uint16,uint32>=$uint8 )=>int\" },\n";
+"  { dao_$(host_idname)_GETI_Pixel, \"[] ( self: $(daoname), i: int, j: int, pixel: enum<uint8,uint16,uint32>=$uint8 )=>int\" },\n";
 
 const string dao_set_pixel_proto = 
 "  { dao_$(host_idname)_SETI_Pixel, \"[]=( self: $(daoname), value: int, i: int, j: int, pixel: enum<uint8,uint16,uint32>=$uint8 )\" },\n";
@@ -893,6 +893,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	module = mod;
 	used = false;
 	useTypeTag = false;
+	useUniThread = false;
 	typedefed = false;
 	unsupported = false;
 	isRedundant = true;
@@ -967,6 +968,7 @@ void CDaoUserType::SearchHints()
 		if( var.hasRefCountHint ) hintRefCount = var.hintRefCount;
 		if( var.hasExternalUseHint ) hintExternalUse = var.hintExternalUse;
 		if( var.hasDeleteHint ) hintDelete = var.hintDelete;
+		if( var.hasUniThreadHint ) useUniThread = var.hasUniThreadHint;
 		if( var.wrapOpaque ){
 			forceOpaque = true;
 			wrapTypeHint = CDAO_WRAP_TYPE_OPAQUE;
@@ -1471,6 +1473,7 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 
 		string supname = sup->idname;
 		sup->Generate();
+		if( sup->useUniThread ) useUniThread = sup->useUniThread;
 		if( sup->hintRefCount.size() ) hintRefCount = sup->hintRefCount;
 		if( sup->hintExternalUse.size() ) hintExternalUse = sup->hintExternalUse;
 		if( module->finalGenerating == false ) return 0;

@@ -855,6 +855,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	useDefault = true;
 	hasBaseHint = false;
 	hasDeleteHint = false;
+	hasUniThreadHint = false;
 	hasDaoTypeHint = false;
 	hasCodeBlockHint = false;
 	hasMacroHint = false;
@@ -933,7 +934,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "macro2" || hint == "refcount" || hint == "extuse" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "macro2" || hint == "refcount" || hint == "extuse" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" || hint == "unithread" ){
 			bool hasMacro = false;
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
@@ -978,6 +979,8 @@ void CDaoVariable::SetHints( const string & hints )
 				userFieldCB = true;
 			}else if( hint == "delete" ){
 				hasDeleteHint = true;
+			}else if( hint == "unithread" ){
+				hasUniThreadHint = true;
 			}
 
 			hint = "";

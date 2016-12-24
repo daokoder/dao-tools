@@ -84,6 +84,7 @@ struct CDaoVariable
 	bool    hasRefCountHint;
 	bool    hasExternalUseHint;
 	bool    hasDeleteHint;
+	bool    hasUniThreadHint;
 	bool    isMBS;
 	bool    isWCS;
 	bool    isNew;
