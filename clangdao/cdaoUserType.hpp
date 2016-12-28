@@ -71,6 +71,7 @@ struct CDaoUserType
 	bool   typedefed;
 	bool   dummyTemplate;
 	bool   unsupported;
+	bool   isImported;
 	bool   isRedundant;
 	bool   isRedundant2;
 	bool   isQObject;

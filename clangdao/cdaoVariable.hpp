@@ -64,6 +64,7 @@ struct CDaoVariable
 	bool    hasArrayHint;
 	bool    unsupported;
 	bool    wrapNone;
+	bool    wrapImport;
 	bool    wrapOpaque;
 	bool    wrapDirect;
 	bool    useDefault;

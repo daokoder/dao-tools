@@ -896,6 +896,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	useUniThread = false;
 	typedefed = false;
 	unsupported = false;
+	isImported = false;
 	isRedundant = true;
 	isRedundant2 = false;
 	forceOpaque = false;
@@ -954,6 +955,8 @@ void CDaoUserType::SearchHints()
 		if( var.wrapNone ){
 			unsupported = true;
 			isRedundant2 = true;
+		}else if( var.wrapImport ){
+			isImported = true;
 		}
 		hintCxxBase = var.hintCxxBase;
 		useTypeTag = var.useTypeTag;
@@ -1166,7 +1169,7 @@ int CDaoUserType::Generate()
 		return 0;
 	}
 	isRedundant = isRedundant2;
-	if( isRedundant || unsupported ) return 0;
+	if( isRedundant || unsupported || isImported ) return 0;
 	if( name.find( "__" ) == 0 || qname.find( "__" ) == 0 ){
 		forceOpaque = true;
 	}

@@ -38,7 +38,7 @@
 #include "cdaoModule.hpp"
 
 const string cxx_get_object_method = 
-"DaoRoutine* Dao_Get_Object_Method( DaoCdata *cd, DaoObject **obj, const char *name )\n\
+"static DaoRoutine* Dao_Get_Object_Method( DaoCdata *cd, DaoObject **obj, const char *name )\n\
 {\n\
   DaoRoutine *meth;\n\
   if( cd == NULL ) return NULL;\n\
@@ -49,7 +49,7 @@ const string cxx_get_object_method =
   if( DaoRoutine_IsWrapper( meth ) ) return NULL; /*do not call C function*/\n\
   return meth;\n\
 }\n\n\
-DaoVmSpace* Dao_Get_Object_VmSpace( DaoObject *obj )\n\
+static DaoVmSpace* Dao_Get_Object_VmSpace( DaoObject *obj )\n\
 {\n\
   DaoClass *klass = obj != NULL ? DaoObject_GetClass( obj ) : NULL;\n\
   DaoNamespace *ns = klass != NULL ? DaoClass_GetNamespace( klass ) : NULL;\n\
@@ -1012,7 +1012,6 @@ void CDaoModule::WriteHeaderIncludes( std::ostream & fout_header )
 	fout_header << "#else\n";
 	fout_header << "#define DAO_" << name_macro << "_DLLT\n";
 	fout_header << "#endif\n\n";
-	fout_header << "extern DaoVmSpace *__daoVmSpace;\n";
 }
 
 string CDaoModule::MakeHeaderCodes( vector<CDaoUserType*> & usertypes )
@@ -1109,6 +1108,7 @@ string CDaoModule::MakeOnLoadCodes( vector<CDaoUserType*> & usertypes, CDaoNames
 		}
 		if( utp.isRedundant || utp.IsFromRequiredModules() ) continue;
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
+		if( utp.isImported ) continue;
 		kvmap[ "idname" ] = utp.idname;
 		kvmap[ "trait" ] = "0";
 		if( utp.useUniThread ) kvmap[ "trait" ] = "DAO_CTYPE_UNITHREAD";
@@ -1296,7 +1296,6 @@ int CDaoModule::Generate( const string & output )
 	fout_source << "#include\"" << fname_header << "\"\n";
 	fout_source2 << "#include\"" << fname_header << "\"\n";
 	fout_source3 << "#include\"" << fname_header << "\"\n";
-	fout_source << "\nDaoVmSpace *__daoVmSpace = NULL;\n";
 
 	vector<CDaoUserType*>  sorted;
 	map<CDaoUserType*,int> check;
@@ -1317,7 +1316,7 @@ int CDaoModule::Generate( const string & output )
 
 	map<FileEntry*,CDaoModuleInfo>::iterator it2, end2 = requiredModules.end();
 	for(it2=requiredModules.begin(); it2 != end2; it2++){
-		string mod = it2->second.name;
+		string mod = it2->second.alias;
 		topLevelScope.onload += "\tDaoNamespace *" + mod + " = ";
 		topLevelScope.onload += "DaoVmSpace_LinkModule( vms, ns, \"" + mod + "\" );\n";
 		topLevelScope.onload += "\tif( " + mod + " == NULL ) return 1;\n";
@@ -1378,7 +1377,6 @@ int CDaoModule::Generate( const string & output )
 	fout_source << ifdef_cpp_open;
 	string onload = this->onload.size() ? this->onload : "DaoOnLoad";
 	fout_source << "int " << onload << "( DaoVmSpace *vms, DaoNamespace *ns )\n{\n";
-	fout_source << "\t__daoVmSpace = vms;\n";
 	fout_source << "\tDaoNamespace *aux = DaoVmSpace_LinkModule( vms, ns, \"aux\" );\n";
 	fout_source << "\tif( aux == NULL ) return 1;\n";
 
