@@ -765,6 +765,7 @@ static DaoTypeCore $(typer)_Core = \n\
   \"$(daotypename)\",\n\
   sizeof($(qname)),\n\
   { $(parents)NULL },\n\
+  { $(casts)NULL },\n\
   dao_$(typer)_Nums,\n\
   dao_$(typer)_Meths,\n\
   $(field_meth)_CheckGetField,    $(field_meth)_DoGetField,\n\
@@ -792,6 +793,7 @@ const string usertype_code_none =
 {\n\
   \"$(daotypename)\",\n\
   0,\n\
+  { NULL },\n\
   { NULL },\n\
   NULL,\n\
   NULL,\n\
