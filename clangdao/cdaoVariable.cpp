@@ -862,6 +862,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	hasMacroHint = false;
 	hasMacro2Hint = false;
 	hasRefCountHint = false;
+	hasExternalUseHint = false;
 	isArithmeticType = false;
 	isObjectType = false;
 	isPointerType = false;

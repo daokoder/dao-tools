@@ -140,7 +140,7 @@ const string cxx_call_new_d3 =
 const string cxx_call_new2 = 
 "  DaoCxx_$(host_idname) *_self = new DaoCxx_$(host_idname)( $(parlist) );\n\
   _self->DaoInitWrapper();\n\
-  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->dao_cdata );\n";
 ;
 const string cxx_call_new2_d1 = 
 "  DaoCxx_$(host_idname) *_self = NULL;\n\
@@ -152,7 +152,7 @@ const string cxx_call_new2_d2 =
 const string cxx_call_new2_d3 = 
 "  else _self = new DaoCxx_$(host_idname)( $(parlist) );\n\
   _self->DaoInitWrapper();\n\
-  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n";
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->dao_cdata );\n";
 ;
 
 
@@ -171,7 +171,7 @@ const string cxx_virt_struct =
 {\n\
   Dao_$(host_idname) *_self = (Dao_$(host_idname)*) $(userdata);\n\
   $(host_qname) *_self2 = _self->object;\n\
-  DaoCdata *_cdata = _self->_cdata;\n";
+  DaoCdata *dao_cdata = _self->dao_cdata;\n";
 
 const string c_callback_proto =
 "$(retype) Dao_$(cxxname)( $(parlist) );\n";
@@ -222,13 +222,13 @@ const string qt_get_wrapper2 =
   DaoValue *dbase = NULL;\n\
   // no need to map to DaoObject, because it will always be mapped back to\n\
   // DaoCdata when passed to Dao codes.\n\
-  if( user_data ) dbase = (DaoValue*) user_data->_cdata;\n\
+  if( user_data ) dbase = (DaoValue*) user_data->dao_cdata;\n\
   return dbase;\n\
 }\n";
 
 const string cxx_virt_call_00 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   DaoVmSpace *_vms = Dao_Get_Object_VmSpace( _obj );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
   _ro = DaoRoutine_ResolveByValue( _ro, (DaoValue*) _obj, NULL, 0 );\n\
@@ -240,14 +240,14 @@ const string cxx_virt_call_00 =
 
 const string cxx_virt_call_01 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro == NULL || _obj == NULL ) return;\n\
   $(proxy_name)( & _cs, _ro, _obj, $(parcall) );\n\
 }\n";
 
 const string cxx_virt_call_10 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   $(vareturn)\n\
   if( _ro == NULL || _obj == NULL ) return $(return);\n\
   return ($(retype))$(proxy_name)( & _cs, _ro, _obj );\n\
@@ -255,7 +255,7 @@ const string cxx_virt_call_10 =
 
 const string cxx_virt_call_11 =
 "  DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   $(vareturn)\n\
   if( _ro == NULL || _obj == NULL ) return $(return);\n\
   return ($(retype))$(proxy_name)( & _cs, _ro, _obj, $(parcall) );\n\
@@ -336,7 +336,7 @@ const string cxx_virt_class3 =
 "$(retype) DaoCxx_$(host_idname)::$(cxxname)( $(parlist) )$(const)\n{\n\
   int _cs = 1;\n\
   DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro && _obj ){\n\
     ((DaoCxxVirt_$(host_idname)*)this)->DaoCxxVirt_$(host_idname)::$(cxxname)( _cs$(comma) $(parcall) );\n\
     if( _cs == 0 ) return;\n\
@@ -348,7 +348,7 @@ const string cxx_virt_class4 =
 "$(retype) DaoCxx_$(host_idname)::$(cxxname)( $(parlist) )$(const)\n{\n\
   int _cs = 1;\n\
   DaoObject *_obj = NULL;\n\
-  DaoRoutine *_ro = Dao_Get_Object_Method( _cdata, & _obj, \"$(cxxname)\" );\n\
+  DaoRoutine *_ro = Dao_Get_Object_Method( dao_cdata, & _obj, \"$(cxxname)\" );\n\
   if( _ro && _obj ){\n\
     $(vareturn) = ((DaoCxxVirt_$(host_idname)*)this)->DaoCxxVirt_$(host_idname)::$(cxxname)( _cs$(comma) $(parcall) );\n\
     if( _cs == 0 ) return $(vareturn2);\n\
@@ -759,7 +759,7 @@ int CDaoFunction::Generate()
 			cxxprotpars += "DaoValue *" + vo.name;
 			cxx2daocodes += "  DaoProcess_CacheValue( _proc, " + vo.name + " );\n";
 			if( fieldDecl ){
-				cxxCallParamV += "(DaoValue*)_cdata";
+				cxxCallParamV += "(DaoValue*)dao_cdata";
 			}else{
 				cxxCallParamV += "DaoTuple_GetItem( _dao_cbd, 1 )";
 			}

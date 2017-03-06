@@ -122,9 +122,9 @@ class DaoQtObject : public QObjectUserData\n\
 	\n\
 	QList<DaoQtSlot*>  daoSlots;\n\
 	\n\
-	DaoCdata  *_cdata;\n\
+	DaoCdata  *dao_cdata;\n\
 	\n\
-	void Init( DaoCdata *d ){ _cdata = d; }\n\
+	void Init( DaoCdata *d ){ dao_cdata = d; }\n\
 	static unsigned int RotatingHash( const QByteArray & key ){\n\
 		int i, n = key.size();\n\
 		unsigned long long hash = n;\n\
@@ -148,12 +148,12 @@ class DaoQtObject : public QObjectUserData\n\
 		return NULL;\n\
 	}\n\
 	DaoQtSlot* Add( void *sender, const QString & signal, DaoRoutine *slot ){\n\
-		DaoQtSlot *daoslot = new DaoQtSlot( sender, _cdata, signal, slot );\n\
+		DaoQtSlot *daoslot = new DaoQtSlot( sender, dao_cdata, signal, slot );\n\
 		daoSlots.append( daoslot );\n\
 		return daoslot;\n\
 	}\n\
 	DaoQtSlot* Add( void *sender, void *signal, DaoRoutine *slot ){\n\
-		DaoQtSlot *daoslot = new DaoQtSlot( sender, _cdata, signal, slot );\n\
+		DaoQtSlot *daoslot = new DaoQtSlot( sender, dao_cdata, signal, slot );\n\
 		daoSlots.append( daoslot );\n\
 		return daoslot;\n\
 	}\n\
@@ -189,7 +189,7 @@ const string qt_init = "";
 const string qt_make_linker =
 "   DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
    setUserData( 0, linker );\n\
-   linker->Init( _cdata );\n";
+   linker->Init( dao_cdata );\n";
 
 const string qt_make_linker3 =
 "  DaoSS_$(idname) *linker = new DaoSS_$(idname)();\n\
@@ -358,7 +358,7 @@ const string qt_application_func =
   DString_SetMBS( str, argv );\n\
   argv = DString_GetData( str );\n\
   DaoCxx_QApplication *_self = DaoCxx_QApplication_New( argc, & argv, QT_VERSION );\n\
-  DaoProcess_PutValue( _proc, (DaoValue*) _self->_cdata );\n\
+  DaoProcess_PutValue( _proc, (DaoValue*) _self->dao_cdata );\n\
 }\n";
 
 const string qt_qstream_decl =
@@ -445,7 +445,7 @@ struct DAO_$(module)_DLLT Dao_$(idname)\n\
 {\n\
 	$(qname)  nested;\n\
 	$(qname) *object;\n\
-	DaoCdata *_cdata;\n\
+	DaoCdata *dao_cdata;\n\
 };\n\
 DAO_$(module)_DLL Dao_$(idname)* Dao_$(idname)_New();\n";
 
@@ -454,7 +454,7 @@ const string tpl_struct_daoc_alloc =
 {\n\
 	Dao_$(idname) *wrap = calloc( 1, sizeof(Dao_$(idname)) );\n\
 	$(qname) *self = ($(qname)*) wrap;\n\
-	wrap->_cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
+	wrap->dao_cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
 	wrap->object = self;\n\
 $(callbacks)$(selfields)\treturn wrap;\n\
 }\n";
@@ -472,13 +472,13 @@ const string c_wrap_new =
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	Dao_$(host_idname) *self = Dao_$(host_idname)_New();\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) self->_cdata );\n\
+	DaoProcess_PutValue( _proc, (DaoValue*) self->dao_cdata );\n\
 }\n";
 const string cxx_wrap_new = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	DaoCxx_$(host_idname) *self = DaoCxx_$(host_idname)_New();\n\
-	DaoProcess_PutValue( _proc, (DaoValue*) self->_cdata );\n\
+	DaoProcess_PutValue( _proc, (DaoValue*) self->dao_cdata );\n\
 }\n";
 const string cxx_wrap_alloc2 = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
@@ -487,12 +487,12 @@ const string cxx_wrap_alloc2 =
 	DaoProcess_PutCdata( _proc, self, dao_type_$(host_idname) );\n\
 }\n";
 
-const string tpl_class_def = 
+const string tpl_class_def_base = 
 "class DAO_$(module)_DLLT DaoCxxVirt_$(idname) $(virt_supers)\n{\n\
 	public:\n\
-	DaoCxxVirt_$(idname)(){ _cdata = 0; }\n\
+	DaoCxxVirt_$(idname)(){ dao_cdata = 0; }\n\
 	void DaoInitWrapper( DaoCdata *d );\n\n\
-	DaoCdata *_cdata;\n\
+	DaoCdata *dao_cdata;\n\
 \n$(virtuals)\n\
 $(qt_virt_emit)\n\
 };\n\n\
@@ -501,34 +501,38 @@ class DAO_$(module)_DLLT DaoCxx_$(idname) :\n\tpublic $(qname), public DaoCxxVir
 \tpublic:\n\
 $(constructors)\n\
 	~DaoCxx_$(idname)();\n\
-	void DaoInitWrapper();\n\n\
-$(methods)\n\
-};\n";
+	void DaoInitWrapper();\n\
+";
 
-const string tpl_class2 = 
-tpl_class_def + "$(qname)* Dao_$(idname)_Copy( const $(qname) &p );\n";
+const string tpl_class_def = tpl_class_def_base + "\n$(methods)\n};\n";
+
+const string tpl_class_def_refcount = tpl_class_def_base 
+	+ "\n\t$(shared_pointer)<$(qname)> dao_ref;\n$(methods)\n};\n";
+
+//const string tpl_class2 = 
+//tpl_class_def + "$(qname)* Dao_$(idname)_Copy( const $(qname) &p );\n";
 
 const string tpl_class_init =
 "void DaoCxxVirt_$(idname)::DaoInitWrapper( DaoCdata *d )\n\
 {\n\
-	_cdata = d;\n\
+	dao_cdata = d;\n\
 $(init_supers)\
 $(qt_init)\
 }\n\
 DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 {\n\
 	Dao_$(module2)_LockHandleGC();\n\
-	if( _cdata ){\n\
-		DaoCdata_SetData( _cdata, NULL );\n\
-		DaoGC_DecRC( (DaoValue*) _cdata );\n\
+	if( dao_cdata ){\n\
+		DaoCdata_SetData( dao_cdata, NULL );\n\
+		DaoGC_DecRC( (DaoValue*) dao_cdata );\n\
 	} \n\
 	Dao_$(module2)_UnlockHandleGC();\n\
 }\n\
 void DaoCxx_$(idname)::DaoInitWrapper()\n\
 {\n\
-	_cdata = DaoCdata_New( dao_type_$(idname), ($(qname)*) this );\n\
-	DaoGC_IncRC( (DaoValue*)_cdata );\n\
-	DaoCxxVirt_$(idname)::DaoInitWrapper( _cdata );\n\
+	dao_cdata = DaoCdata_New( dao_type_$(idname), ($(qname)*) this );\n\
+	DaoGC_IncRC( (DaoValue*)dao_cdata );\n\
+	DaoCxxVirt_$(idname)::DaoInitWrapper( dao_cdata );\n\
 $(qt_make_linker)\
 }\n";
 const string tpl_class_init_qtss = 
@@ -547,8 +551,9 @@ const string tpl_class_copy = tpl_class_init +
 $(qt_make_linker3)\n\
 	return object;\n\
 }\n";
+
 const string tpl_class_decl_constru = 
-"	DaoCxx_$(idname)( $(parlist) ) : $(qname)( $(parcall) ){}\n";
+"	DaoCxx_$(idname)( $(parlist) ) : $(qname)( $(parcall) ){$(dao_ref_init)}\n";
 
 const string tpl_class_new =
 "\nDAO_$(module)_DLL DaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) );\n";
@@ -696,6 +701,14 @@ const string delete_extuse =
 	DaoCstruct_Delete( (DaoCstruct*) self );\n\
 }\n";
 
+const string delete_refcount_extuse = 
+"static void Dao_$(typer)_Delete( DaoValue *self )\n\
+{\n\
+	DaoCxx_$(typer) *obj = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( self );\n\
+	if( obj != NULL ){ obj->dao_ref = NULL; }\n\
+	DaoCstruct_Delete( (DaoCstruct*) self );\n\
+}\n";
+
 /*
 // The type core HandleGC() callback will be called only for cdata containing
 // instances of customized wrapping classes. This is guaranteed by ClangDao
@@ -706,10 +719,10 @@ const string get_gcfields =
 {\n\
 	Dao_$(module2)_LockHandleGC();\n\
 	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
-	if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
+	if( self->dao_cdata ) DList_Append( VS, (void*) self->dao_cdata );\n\
 	if( RM ){\n\
 $(breakref)\
-		self->_cdata = NULL;\n\
+		self->dao_cdata = NULL;\n\
 	}\n\
 	Dao_$(module2)_UnlockHandleGC();\n\
 }\n";
@@ -720,10 +733,26 @@ const string get_gcfields_extuse =
 	Dao_$(module2)_LockHandleGC();\n\
 	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
 	if( self != NULL && ! $(extuse)( self ) ){\n\
-		if( self->_cdata ) DList_Append( VS, (void*) self->_cdata );\n\
+		if( self->dao_cdata ) DList_Append( VS, (void*) self->dao_cdata );\n\
 		if( RM ){\n\
 $(breakref)\
-			self->_cdata = NULL;\n\
+			self->dao_cdata = NULL;\n\
+		}\n\
+	}\n\
+	Dao_$(module2)_UnlockHandleGC();\n\
+}\n";
+
+const string get_gcfields_refcount_extuse =
+"static void Dao_$(typer)_HandleGC( DaoValue *P, DList *VS, DList *AS, DList *MS, int RM )\n\
+{\n\
+	Dao_$(module2)_LockHandleGC();\n\
+	DaoCxx_$(typer) *self = (DaoCxx_$(typer)*) DaoValue_TryGetCdata( P );\n\
+	if( self != NULL && ! $(extuse)( self ) ){\n\
+		if( self->dao_cdata ) DList_Append( VS, (void*) self->dao_cdata );\n\
+		if( RM ){\n\
+$(breakref)\
+			self->dao_ref = NULL;\n\
+			self->dao_cdata = NULL;\n\
 		}\n\
 	}\n\
 	Dao_$(module2)_UnlockHandleGC();\n\
@@ -882,6 +911,9 @@ const string usertype_code_class = methlist_code + delete_class + usertype_code;
 const string usertype_code_class2 = methlist_code + delete_class + get_gcfields + usertype_code;
 const string usertype_code_extuse = methlist_code + delete_extuse + get_gcfields_extuse + usertype_code;
 const string usertype_code_extuse2 = methlist_code + delete_extuse + get_gcfields_extuse + usertype_code;
+
+const string usertype_code_refcount_extuse = methlist_code + delete_refcount_extuse + get_gcfields_refcount_extuse + usertype_code;
+const string usertype_code_refcount_extuse2 = methlist_code + delete_refcount_extuse + get_gcfields_refcount_extuse + usertype_code;
 
 extern string cdao_string_fill( const string & tpl, const map<string,string> & subs );
 extern string normalize_type_name( const string & name );
@@ -1821,6 +1853,8 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap[ "comment" ] = has_public_destructor ? "" : "//";
 	kvmap[ "shared_pointer" ] = hintRefCount;
 	kvmap[ "extuse" ] = hintExternalUse;
+	kvmap[ "dao_ref_init" ] = "";
+	if( hintRefCount.size() ) kvmap[ "dao_ref_init" ] = " dao_ref = this; ";
 
 	for(i=0,n=baseFromHint.size(); i<n; i++){
 		string supname2 = cdao_qname_to_idname( baseFromHint[i] );
@@ -1854,7 +1888,9 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 		if( userFieldOper ) kvmap[ "field_meth" ] = "dao_" + idname;
 		if( userItemOper ) kvmap[ "item_meth" ] = "dao_" + idname;
 		if( userArithOper ) kvmap[ "arith_meth" ] = "dao_" + idname;
-		if( hintExternalUse.size() ){
+		if( hintRefCount.size() and hintExternalUse.size() ){
+			typer_codes = cdao_string_fill( usertype_code_refcount_extuse, kvmap );
+		}else if( hintExternalUse.size() ){
 			typer_codes = cdao_string_fill( usertype_code_extuse, kvmap );
 		}else{
 			typer_codes = cdao_string_fill( usertype_code_class, kvmap );
@@ -2017,7 +2053,11 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 			CDaoProxyFunction::Use( meth.signature2 );
 		}
 	}
-	type_decls += cdao_string_fill( tpl_class_def, kvmap ) + class_new;
+	if( hintRefCount.size() ){
+		type_decls += cdao_string_fill( tpl_class_def_refcount, kvmap ) + class_new;
+	}else{
+		type_decls += cdao_string_fill( tpl_class_def, kvmap ) + class_new;
+	}
 	type_codes += cdao_string_fill( tpl_class_init, kvmap );
 	type_codes += cxxWrapperVirt;
 
@@ -2048,7 +2088,9 @@ int CDaoUserType::Generate( CXXRecordDecl *decl )
 	kvmap[ "shared_pointer" ] = hintRefCount;
 	kvmap[ "extuse" ] = hintExternalUse;
 	kvmap["breakref"] = gcfields == "" ? "" : "\t\t" + gcfields + "\n";
-	if( hintExternalUse.size() ){
+	if( hintRefCount.size() and hintExternalUse.size() ){
+		typer_codes = cdao_string_fill( usertype_code_refcount_extuse2, kvmap );
+	}else if( hintExternalUse.size() ){
 		typer_codes = cdao_string_fill( usertype_code_extuse2, kvmap );
 	}else{
 		typer_codes = cdao_string_fill( usertype_code_class2, kvmap );
