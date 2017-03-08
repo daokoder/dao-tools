@@ -507,7 +507,7 @@ $(constructors)\n\
 const string tpl_class_def = tpl_class_def_base + "\n$(methods)\n};\n";
 
 const string tpl_class_def_refcount = tpl_class_def_base 
-	+ "\n\t$(shared_pointer)<$(qname)> dao_ref;\n$(methods)\n};\n";
+	+ "\n\t$(shared_pointer)<$(qname)> dao_ref;\n\n$(methods)\n};\n";
 
 //const string tpl_class2 = 
 //tpl_class_def + "$(qname)* Dao_$(idname)_Copy( const $(qname) &p );\n";

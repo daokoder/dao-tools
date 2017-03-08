@@ -187,6 +187,8 @@ const string cxx2dao_qstring = cxx2dao+"String( _proc, (char*) $(name).toLocal8B
 
 const string ctxput = "  DaoProcess_Put";
 
+const string ctxput_none = ctxput + "None( _proc );\n";
+
 const string ctxput_bool = ctxput + "Boolean( _proc, (dao_boolean) $(name) );\n";
 const string ctxput_int = ctxput + "Integer( _proc, (dao_integer) $(name) );\n";
 const string ctxput_float = ctxput + "Float( _proc, (dao_float) $(name) );\n";
@@ -207,6 +209,20 @@ const string ctxput_voidp = ctxput + "Cdata( _proc, (void*) $(name), dao_type_$(
 const string ctxput_voidp2 = ctxput + "Cdata( _proc, (void*) $(name), NULL );\n";
 const string ctxput_user = "  DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n";
 const string ctxput_user2 = "  DaoProcess_WrapCdata( _proc, (void*) $(name), NULL );\n";
+
+const string ctxput_nullable_user =
+"  if( $(name) ){\n"
+"    DaoProcess_WrapCdata( _proc, (void*) $(name), dao_type_$(typer) );\n"
+"  }else{\n"
+"    DaoProcess_PutNone( _proc );\n"
+"  }\n";
+
+const string ctxput_nullable_user2 =
+"  if( $(name) ){\n"
+"    DaoProcess_WrapCdata( _proc, (void*) $(name), NULL );\n"
+"  }else{\n"
+"    DaoProcess_PutNone( _proc );\n"
+"  }\n";
 
 const string ctxput_daovalue = ctxput + "Value( _proc, (DaoValue*) $(name) );\n";
 
@@ -1600,6 +1616,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.getres = getres_user;
 			tpl.dao2cxx = dao2cxx_user2;
 			tpl.cxx2dao = cxx2dao_user;
+			if( daopar_index < 0 and isNullable ){
+				daotype = daotype + "|none";
+				tpl.ctxput = ctxput_nullable_user;
+			}
 			if( daodefault == "0" || daodefault == "NULL" ){
 				daodefault = "none";
 				isNullable = true;
@@ -1629,6 +1649,10 @@ int CDaoVariable::GenerateForPointer( int daopar_index, int cxxpar_index )
 			tpl.cxx2dao = cxx2dao_voidp;
 			tpl.ctxput = isNew ? ctxput_voidp2 : ctxput_user2;
 			tpl.cache = cache_voidp;
+			if( daopar_index < 0 and isNullable ){
+				daotype = daotype + "|none";
+				tpl.ctxput = ctxput_nullable_user2;
+			}
 			if( hasDaoTypeHint && hintDaoType.find( "array" ) == 0 ){
 				daotype = hintDaoType;
 				tpl.daopar = "$(name):" + daotype + "$(default)";
