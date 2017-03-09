@@ -447,14 +447,14 @@ struct DAO_$(module)_DLLT Dao_$(idname)\n\
 	$(qname) *object;\n\
 	DaoCdata *dao_cdata;\n\
 };\n\
-DAO_$(module)_DLL Dao_$(idname)* Dao_$(idname)_New();\n";
+DAO_$(module)_DLL Dao_$(idname)* Dao_$(idname)_New( DaoVmSpace *vmspace );\n";
 
 const string tpl_struct_daoc_alloc =
-"Dao_$(idname)* Dao_$(idname)_New()\n\
+"Dao_$(idname)* Dao_$(idname)_New( DaoVmSpace *vmspace )\n\
 {\n\
 	Dao_$(idname) *wrap = calloc( 1, sizeof(Dao_$(idname)) );\n\
 	$(qname) *self = ($(qname)*) wrap;\n\
-	wrap->dao_cdata = DaoCdata_New( dao_type_$(idname), wrap );\n\
+	wrap->dao_cdata = DaoCdata_New( vmspace, dao_type_$(idname), wrap );\n\
 	wrap->object = self;\n\
 $(callbacks)$(selfields)\treturn wrap;\n\
 }\n";
@@ -471,7 +471,7 @@ const string c_nowrap_new =
 const string c_wrap_new = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
-	Dao_$(host_idname) *self = Dao_$(host_idname)_New();\n\
+	Dao_$(host_idname) *self = Dao_$(host_idname)_New( DaoProcess_GetVmSpace(_proc) );\n\
 	DaoProcess_PutValue( _proc, (DaoValue*) self->dao_cdata );\n\
 }\n";
 const string cxx_wrap_new = 
@@ -501,7 +501,7 @@ class DAO_$(module)_DLLT DaoCxx_$(idname) :\n\tpublic $(qname), public DaoCxxVir
 \tpublic:\n\
 $(constructors)\n\
 	~DaoCxx_$(idname)();\n\
-	void DaoInitWrapper();\n\
+	void DaoInitWrapper( DaoVmSpace *vmspace );\n\
 ";
 
 const string tpl_class_def = tpl_class_def_base + "\n$(methods)\n};\n";
@@ -528,9 +528,9 @@ DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 	} \n\
 	Dao_$(module2)_UnlockHandleGC();\n\
 }\n\
-void DaoCxx_$(idname)::DaoInitWrapper()\n\
+void DaoCxx_$(idname)::DaoInitWrapper( DaoVmSpace *vmspace )\n\
 {\n\
-	dao_cdata = DaoCdata_New( dao_type_$(idname), ($(qname)*) this );\n\
+	dao_cdata = DaoCdata_New( vmspace, dao_type_$(idname), ($(qname)*) this );\n\
 	DaoGC_IncRC( (DaoValue*)dao_cdata );\n\
 	DaoCxxVirt_$(idname)::DaoInitWrapper( dao_cdata );\n\
 $(qt_make_linker)\
@@ -573,7 +573,7 @@ const string tpl_class_init2 =
 "\nDaoCxx_$(idname)* DaoCxx_$(idname)_New( $(parlist) )\n\
 {\n\
 	DaoCxx_$(idname) *self = new DaoCxx_$(idname)( $(parcall) );\n\
-	self->DaoInitWrapper();\n\
+	self->DaoInitWrapper( NULL );\n\
 	return self;\n\
 }\n";
 
@@ -775,6 +775,7 @@ const string cast_to_parent_virtual_base =
 const string tpl_core_copy = 
 "static DaoValue* dao_$(typer)_Copy( DaoValue *self, DaoValue *target )\n\
 {\n\
+	DaoCdata *cdata = (DaoCdata*) self;\n\
 	$(qname)* src = ($(qname)*) DaoValue_TryCastCdata( self, dao_type_$(typer) );\n\
 	$(qname)* dest;\n\
 	if( target ){\n\
@@ -783,7 +784,7 @@ const string tpl_core_copy =
 		return target;\n\
 	}\n\
 	dest = new $(qname)( *src );\n\
-	return (DaoValue*) DaoCdata_New( dao_type_$(typer), dest );\n\
+	return (DaoValue*) DaoCdata_New( DaoCdata_GetVmSpace(cdata), dao_type_$(typer), dest );\n\
 }\n";
 
 

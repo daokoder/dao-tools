@@ -139,7 +139,7 @@ const string cxx_call_new_d3 =
 
 const string cxx_call_new2 = 
 "  DaoCxx_$(host_idname) *_self = new DaoCxx_$(host_idname)( $(parlist) );\n\
-  _self->DaoInitWrapper();\n\
+  _self->DaoInitWrapper( DaoProcess_GetVmSpace(_proc) );\n\
   DaoProcess_PutValue( _proc, (DaoValue*) _self->dao_cdata );\n";
 ;
 const string cxx_call_new2_d1 = 
@@ -151,7 +151,7 @@ const string cxx_call_new2_d2 =
 ;
 const string cxx_call_new2_d3 = 
 "  else _self = new DaoCxx_$(host_idname)( $(parlist) );\n\
-  _self->DaoInitWrapper();\n\
+  _self->DaoInitWrapper( DaoProcess_GetVmSpace(_proc) );\n\
   DaoProcess_PutValue( _proc, (DaoValue*) _self->dao_cdata );\n";
 ;
 

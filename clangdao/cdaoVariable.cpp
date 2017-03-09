@@ -121,11 +121,6 @@ const string dao2cxx_user =
 const string dao2cxx_user2 = 
 "  $(cxxtype)* $(name) = ($(cxxtype)*) DaoValue_TryCastCdata( _p[$(index)], dao_type_$(typer) );\n";
 
-const string dao2cxx_user3 =
-"  $(cxxtype)** $(name) = ($(cxxtype)**) DaoValue_TryGetCdata2( _p[$(index)] );\n";
-
-const string dao2cxx_user4 = 
-"  $(cxxtype)* $(name) = ($(cxxtype)*) DaoValue_TryGetCdata2( _p[$(index)] );\n";
 
 const string dao2cxx_callback =
 "  DaoTuple *_$(name) = (DaoTuple*) _p[$(index)];\n\
