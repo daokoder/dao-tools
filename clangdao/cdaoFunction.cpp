@@ -2,7 +2,7 @@
 // ClangDao: the C/C++ library binding tool for Dao
 // http://www.daovm.net
 //
-// Copyright (c) 2011-2014, Limin Fu
+// Copyright (c) 2011-2017, Limin Fu
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -97,24 +97,24 @@ const string cxx_call_static2_d3 =
 
 const string cxx_stack_init = 
 "  $(host_qname) _self$(stack_parlist);\n\
-  DaoProcess_CopyCdata( _proc, & _self, dao_type_$(host_idname) );\n"
+  DaoProcess_CopyCdataTC( _proc, & _self, dao_$(host_idname)_Core );\n"
 ;
 const string cxx_stack_init_d1 = 
 "  if(_n<=$(n1)){\n\
     $(host_qname) _self$(stack_parlist1);\n\
-    DaoProcess_CopyCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+    DaoProcess_CopyCdataTC( _proc, & _self, dao_$(host_idname)_Core );\n\
   }\n"
 ;
 const string cxx_stack_init_d2 = 
 "  else if(_n<=$(n%i)){\n\
     $(host_qname) _self$(stack_parlist%i);\n\
-    DaoProcess_CopyCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+    DaoProcess_CopyCdataTC( _proc, & _self, dao_$(host_idname)_Core );\n\
   }\n"
 ;
 const string cxx_stack_init_d3 = 
 "  else{\n\
     $(host_qname) _self$(stack_parlist);\n\
-    DaoProcess_CopyCdata( _proc, & _self, dao_type_$(host_idname) );\n\
+    DaoProcess_CopyCdataTC( _proc, & _self, dao_$(host_idname)_Core );\n\
   }\n"
 ;
 
@@ -122,7 +122,7 @@ const string cxx_stack_init_d3 =
 
 const string cxx_call_new = 
 "  $(host_qname) *_self = new $(host_qname)( $(parlist) );\n\
-  DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
+  DaoProcess_PutCdataTC( _proc, _self, dao_$(host_idname)_Core );\n"
 ;
 const string cxx_call_new_d1 = 
 "  $(host_qname) *_self = NULL;\n\
@@ -133,7 +133,7 @@ const string cxx_call_new_d2 =
 ;
 const string cxx_call_new_d3 = 
 "  else _self = new $(host_qname)( $(parlist) );\n\
-  DaoProcess_PutCdata( _proc, _self, dao_type_$(host_idname) );\n"
+  DaoProcess_PutCdataTC( _proc, _self, dao_$(host_idname)_Core );\n"
 ;
 
 

@@ -2,7 +2,7 @@
 // ClangDao: the C/C++ library binding tool for Dao
 // http://www.daovm.net
 //
-// Copyright (c) 2011-2014, Limin Fu
+// Copyright (c) 2011-2017, Limin Fu
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -76,13 +76,12 @@ const string cxx_stringlist_conversion =
 const string add_number = "  { \"$(name)\", $(type), $(namespace)$(value) },\n";
 const string tpl_typedef = "\tDaoNamespace_DefineType( ns, \"$(old)\", \"$(new)\" );\n";
 const string add_ccdata = "  DaoNamespace_AddConstData( $(ns), \"$(name)\", "
-"(DaoValue*)DaoCdata_Wrap( dao_$(type)_Core, ($(type)*) $(refer) $(name) ) );\n";
+"(DaoValue*)DaoCdata_Wrap( vms, dao_$(type)_Core, ($(type)*) $(refer) $(name) ) );\n";
 
 const string ext_typer = "extern DaoTypeCore *dao_$(type)_Core;\n";
-const string ext_dao_types = "extern DaoType *dao_type_$(type);\n";
 
 const string tpl_wraptype =
-"\tdao_type_$(idname) = DaoNamespace_WrapType( $(ns), dao_$(idname)_Core, DAO_CDATA, $(trait) );\n";
+"\tDaoNamespace_WrapType( $(ns), dao_$(idname)_Core, DAO_CDATA, $(trait) );\n";
 
 
 extern string cdao_qname_to_idname( const string & qname );
@@ -1026,7 +1025,6 @@ string CDaoModule::MakeHeaderCodes( vector<CDaoUserType*> & usertypes )
 		if( utp.wrapType == CDAO_WRAP_TYPE_OPAQUE && not utp.used ) continue;
 		kvmap[ "type" ] = utp.idname;
 		codes += cdao_string_fill( ext_typer, kvmap );
-		codes2 += cdao_string_fill( ext_dao_types, kvmap );
 	}
 	codes += codes2 + ifdef_cpp_close;
 	for(i=0, n=usertypes.size(); i<n; i++){
@@ -1255,13 +1253,13 @@ string CDaoModule::MakeConstStruct( vector<VarDecl*> & vars, const string & ns, 
 
 		if( qtype.getCVRQualifiers() & Qualifiers::Const ){
 			codes += "\tDaoNamespace_AddConstValue( " + ns + ", \"" + item;
-			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
+			codes += "\", (DaoValue*) DaoCdata_Wrap( vms, dao_type_" + UT->idname + ", ";
 			codes += "(" + UT->qname + "*) ";
 			if( not ispointer ) codes += "& ";
 			codes += qname2 + item + " ) );\n";
 		}else{
 			codes += "\tDaoNamespace_AddValue( " + ns + ", \"" + item;
-			codes += "\", (DaoValue*) DaoCdata_Wrap( dao_type_" + UT->idname + ", ";
+			codes += "\", (DaoValue*) DaoCdata_Wrap( vms, dao_type_" + UT->idname + ", ";
 			codes += "(" + UT->qname + "*) ";
 			if( not ispointer ) codes += "& ";
 			codes += qname2 + item + " ), NULL );\n";

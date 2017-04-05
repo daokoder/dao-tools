@@ -2,7 +2,7 @@
 // ClangDao: the C/C++ library binding tool for Dao
 // http://www.daovm.net
 //
-// Copyright (c) 2011-2014, Limin Fu
+// Copyright (c) 2011-2017, Limin Fu
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -322,7 +322,7 @@ const string qt_qobject_cast_func =
 {\n\
   QObject *from = (QObject*)DaoValue_TryCastCdata( _p[0], dao_type_QObject );\n\
   $(host) *to = qobject_cast<$(host)*>( from );\n\
-  DaoProcess_WrapCdata( _proc, to, dao_type_$(host) );\n\
+  DaoProcess_WrapCdataTC( _proc, to, dao_$(host)_Core );\n\
 }\n";
 
 const string qt_qobject_cast_func2 =
@@ -335,7 +335,7 @@ const string qt_qobject_cast_func2 =
     return;\n\
   }\n\
   $(host) *to2 = qobject_cast<$(host)*>( from );\n\
-  DaoProcess_WrapCdata( _proc, to2, dao_type_$(host) );\n\
+  DaoProcess_WrapCdataTC( _proc, to2, dao_$(host)_Core );\n\
 }\n";
 
 const string qt_application_decl =
@@ -454,7 +454,7 @@ const string tpl_struct_daoc_alloc =
 {\n\
 	Dao_$(idname) *wrap = calloc( 1, sizeof(Dao_$(idname)) );\n\
 	$(qname) *self = ($(qname)*) wrap;\n\
-	wrap->dao_cdata = DaoCdata_New( vmspace, dao_type_$(idname), wrap );\n\
+	wrap->dao_cdata = DaoCdata_NewTC( vmspace, dao_$(idname)_Core, wrap );\n\
 	wrap->object = self;\n\
 $(callbacks)$(selfields)\treturn wrap;\n\
 }\n";
@@ -466,7 +466,7 @@ const string c_nowrap_new =
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	$(qname) *self = Dao_$(idname)_New();\n\
-	DaoProcess_WrapCdata( _proc, self, dao_type_$(host_idname) );\n\
+	DaoProcess_WrapCdataTC( _proc, self, dao_$(host_idname)_Core );\n\
 }\n";
 const string c_wrap_new = 
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
@@ -484,7 +484,7 @@ const string cxx_wrap_alloc2 =
 "static void dao_$(host_idname)_$(cxxname)( DaoProcess *_proc, DaoValue *_p[], int _n )\n\
 {\n\
 	$(host_qname) *self = Dao_$(host_idname)_New();\n\
-	DaoProcess_PutCdata( _proc, self, dao_type_$(host_idname) );\n\
+	DaoProcess_PutCdataTC( _proc, self, dao_$(host_idname)_Core );\n\
 }\n";
 
 const string tpl_class_def_base = 
@@ -530,7 +530,7 @@ DaoCxx_$(idname)::~DaoCxx_$(idname)()\n\
 }\n\
 void DaoCxx_$(idname)::DaoInitWrapper( DaoVmSpace *vmspace )\n\
 {\n\
-	dao_cdata = DaoCdata_New( vmspace, dao_type_$(idname), ($(qname)*) this );\n\
+	dao_cdata = DaoCdata_NewTC( vmspace, dao_$(idname)_Core, ($(qname)*) this );\n\
 	DaoGC_IncRC( (DaoValue*)dao_cdata );\n\
 	DaoCxxVirt_$(idname)::DaoInitWrapper( dao_cdata );\n\
 $(qt_make_linker)\
@@ -641,7 +641,7 @@ const string cxx_set_pixel_proto =
 "static void dao_$(host_idname)_SETI_Pixel( DaoProcess *_proc, DaoValue *_p[], int _n )";
 
 const string cxx_gs_user =
-"  $(host_qname) *self = ($(host_qname)*)DaoValue_TryCastCdata(_p[0],dao_type_$(typer));\n";
+"  $(host_qname) *self = ($(host_qname)*)DaoValue_TryCastCdataTC(_p[0],dao_$(typer)_Core);\n";
 
 const string dao_getter_proto = 
 "  { dao_$(host_idname)_GETF_$(name), \".$(name) ( self: $(daoname) )=>$(ftype)\" },\n";
@@ -776,15 +776,15 @@ const string tpl_core_copy =
 "static DaoValue* dao_$(typer)_Copy( DaoValue *self, DaoValue *target )\n\
 {\n\
 	DaoCdata *cdata = (DaoCdata*) self;\n\
-	$(qname)* src = ($(qname)*) DaoValue_TryCastCdata( self, dao_type_$(typer) );\n\
+	$(qname)* src = ($(qname)*) DaoValue_TryCastCdataTC( self, dao_$(typer)_Core );\n\
 	$(qname)* dest;\n\
 	if( target ){\n\
-		dest = ($(qname)*) DaoValue_TryCastCdata( target, dao_type_$(typer) );\n\
+		dest = ($(qname)*) DaoValue_TryCastCdataTC( target, dao_$(typer)_Core );\n\
 		*dest = *src;\n\
 		return target;\n\
 	}\n\
 	dest = new $(qname)( *src );\n\
-	return (DaoValue*) DaoCdata_New( DaoCdata_GetVmSpace(cdata), dao_type_$(typer), dest );\n\
+	return (DaoValue*) DaoCdata_NewTC( DaoCdata_GetVmSpace(cdata), dao_$(typer)_Core, dest );\n\
 }\n";
 
 
@@ -815,8 +815,7 @@ static DaoTypeCore $(typer)_Core = \n\
   $(delete),\n\
   $(gcfields)\n\
 };\n\
-DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n\
-DaoType *dao_type_$(typer) = NULL;\n";
+DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n";
 
 const string usertype_code_none =
 "static DaoTypeCore $(typer)_Core = \n\
@@ -845,8 +844,7 @@ const string usertype_code_none =
   NULL\n\
 };\n\
 \n\
-DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n\
-DaoType *dao_type_$(typer) = NULL;\n";
+DaoTypeCore *dao_$(typer)_Core = & $(typer)_Core;\n";
 
 const string cxx_get_pixel_codes =
 "  daoint i = DaoValue_TryGetInteger( _p[1] );\n\
