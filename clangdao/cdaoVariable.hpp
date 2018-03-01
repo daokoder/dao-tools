@@ -86,6 +86,7 @@ struct CDaoVariable
 	bool    hasExternalUseHint;
 	bool    hasDeleteHint;
 	bool    hasUniThreadHint;
+	bool    useLength;
 	bool    isMBS;
 	bool    isWCS;
 	bool    isNew;
@@ -97,6 +98,8 @@ struct CDaoVariable
 	string  hintDaoType;
 	string  hintCxxType;
 	string  hintCxxBase;
+	string  hintGetValue;
+	string  hintGetLength;
 	string  hintCodeBlock;
 	string  hintMacro;
 	string  hintMacro2;

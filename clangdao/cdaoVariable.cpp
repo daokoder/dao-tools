@@ -238,7 +238,7 @@ const string ctxput_copycdata =
 const string ctxput_newcdata =
 "  DaoProcess_PutCdataTC( _proc, (void*)new $(cxxtype)( $(name) ), dao_$(typer)_Core );\n";
 const string ctxput_refcdata =
-"  DaoProcess_WrapCdataTC( _proc, (void*)&$(name), dao_$(typer)_Core );\n";
+"  DaoProcess_CopyCdataTC( _proc, (void*)&$(name), dao_$(typer)_Core );\n";
 
 const string cache = "  DaoProcess_New";
 
@@ -338,6 +338,37 @@ const string getres_wcs_common = "  if(DaoValue_CastString(_res)) $(name)=$(cxxt
 
 const string setter_mbs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetChars( _p[1] ) );\n";
 const string setter_wcs_common = "  self->$(name) = $(cxxtype)( DaoValue_TryGetWCString( _p[1] ) );\n";
+
+
+
+const string dao2cxx_mbs_plain_len =
+"  DString *__str_$(name) = DaoValue_TryGetString( _p[$(index)] );\n"
+"  $(cxxtype) $(name)( DString_GetData( __str_$(name) ), DString_Size( __str_$(name) ) );\n";
+
+const string dao2cxx_mbs_variant_len =
+"  DString *__str_$(name) = DaoValue_TryGetString( _p[$(index)] );\n"
+"  $(cxxtype) *__cdata_$(name) = ($(cxxtype)*) DaoValue_TryCastCdataTC( _p[$(index)], dao_$(typer)_Core );\n"
+"  $(cxxtype) __$(name)( __str_$(name) ? DString_GetData(__str_$(name)) : \"\", DString_Size( __str_$(name) ) );\n"
+"  $(cxxtype) & $(name) = __cdata_$(name) ? *__cdata_$(name) : __$(name);\n";
+
+const string cxx2dao_mbs_common_len = cxx2dao 
++ "String( _proc, (char*) $(name).$(tochars)(), $(name).$(tolength)() );\n";
+
+const string ctxput_mbs_common_len = ctxput + "Bytes( _proc, (char*) $(name).$(tochars)(), $(name).$(tolength)() );\n";
+
+const string cache_mbs_common_len = cache + "String( _proc, (char*) $(name).$(tochars)(), $(name).$(tolength)() );\n";
+
+const string getres_mbs_common_len = 
+"  if(DaoValue_CastString(_res)){\n"
+"    DString *__str = DaoValue_TryGetString( _res );\n"
+"    $(name) = $(cxxtype)( DString_GetData(__str), DString_Size(__str) );\n"
+"  }\n";
+
+const string setter_mbs_common_len = 
+"  if(DaoValue_CastString( _p[1] )){\n"
+"    DString *__str = DaoValue_TryGetString( _p[1] );\n"
+"    self->$(name) = $(cxxtype)( DString_GetData(__str), DString_Size(__str) );\n"
+"  }\n";
 
 
 #if 0
@@ -751,22 +782,39 @@ struct CDaoVarTemplates
 		getres = cdao_string_fill( getres_number_common, kvmap );
 		setter = setter_number_common;
 	}
-	void SetupMBString( const string & tochars, bool variant = false ){
+	void SetupMBString( const string & tochars, bool variant = false, const string & tolen = "" ){
 		map<string,string> kvmap;
 		kvmap["tochars"] = tochars;
-		if( variant ){
-			daopar = cdao_string_fill( daopar_string_variant, kvmap );
-			dao2cxx = cdao_string_fill( dao2cxx_mbs_variant, kvmap );
+		kvmap["tolength"] = tolen;
+		if( tolen == "" ){
+			if( variant ){
+				daopar = cdao_string_fill( daopar_string_variant, kvmap );
+				dao2cxx = cdao_string_fill( dao2cxx_mbs_variant, kvmap );
+			}else{
+				daopar = cdao_string_fill( daopar_string_plain, kvmap );
+				dao2cxx = cdao_string_fill( dao2cxx_mbs_plain, kvmap );
+			}
+			cxx2dao = cdao_string_fill( cxx2dao_mbs_common, kvmap );
+			ctxput = cdao_string_fill( ctxput_mbs_common, kvmap );
+			cache = cdao_string_fill( cache_mbs_common, kvmap );
+			//parset = cdao_string_fill( parset_mbs, kvmap );
+			getres = cdao_string_fill( getres_mbs_common, kvmap );
+			setter = setter_mbs_common;
 		}else{
-			daopar = cdao_string_fill( daopar_string_plain, kvmap );
-			dao2cxx = cdao_string_fill( dao2cxx_mbs_plain, kvmap );
+			if( variant ){
+				daopar = cdao_string_fill( daopar_string_variant, kvmap );
+				dao2cxx = cdao_string_fill( dao2cxx_mbs_variant_len, kvmap );
+			}else{
+				daopar = cdao_string_fill( daopar_string_plain, kvmap );
+				dao2cxx = cdao_string_fill( dao2cxx_mbs_plain_len, kvmap );
+			}
+			cxx2dao = cdao_string_fill( cxx2dao_mbs_common_len, kvmap );
+			ctxput = cdao_string_fill( ctxput_mbs_common_len, kvmap );
+			cache = cdao_string_fill( cache_mbs_common_len, kvmap );
+			//parset = cdao_string_fill( parset_mbs, kvmap );
+			getres = cdao_string_fill( getres_mbs_common_len, kvmap );
+			setter = setter_mbs_common_len;
 		}
-		cxx2dao = cdao_string_fill( cxx2dao_mbs_common, kvmap );
-		ctxput = cdao_string_fill( ctxput_mbs_common, kvmap );
-		cache = cdao_string_fill( cache_mbs_common, kvmap );
-		//parset = cdao_string_fill( parset_mbs, kvmap );
-		getres = cdao_string_fill( getres_mbs_common, kvmap );
-		setter = setter_mbs_common;
 	}
 	void SetupWCString( const string & tochars, bool variant = false ){
 		map<string,string> kvmap;
@@ -884,6 +932,7 @@ CDaoVariable::CDaoVariable( CDaoModule *mod, const VarDecl *decl )
 	readonly = false;
 	ispixels = false;
 	isbuffer = false;
+	useLength = false;
 	isMBS = false;
 	isWCS = false;
 	isNew = false;
@@ -947,7 +996,7 @@ void CDaoVariable::SetHints( const string & hints )
 			if( pos2 > pos ) userWrapper = hints2.substr( pos+1, pos2 - pos - 1 );
 			pos = pos2;
 			if( userWrapper == "" ) errs() << "Warning: need function name for \"userwrapper\" hint!\n";
-		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "macro2" || hint == "refcount" || hint == "extuse" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" || hint == "unithread" ){
+		}else if( hint == "array" || hint == "qname" || hint == "pixels" || hint == "daotype" || hint == "buffer" || hint == "int" || hint == "float" || hint == "double" || hint == "mbstring" || hint == "wcstring" || hint == "length" || hint == "base" || hint == "wraptype" || hint == "codeblock" || hint == "delete" || hint == "new" || hint == "cxxtype" || hint == "macro" || hint == "macro2" || hint == "refcount" || hint == "extuse" || hint == "cxxbase" || hint == "implicit" || hint == "fieldcb" || hint == "unithread" ){
 			bool hasMacro = false;
 			size_t pos2 = hints2.find( "_hint_", pos );
 			vector<string> *parts = & names;
@@ -974,6 +1023,8 @@ void CDaoVariable::SetHints( const string & hints )
 				isMBS = true;
 			}else if( hint == "wcstring" ){
 				isWCS = true;
+			}else if( hint == "length" ){
+				useLength = true;
 			}else if( hint == "new" ){
 				isNew = true;
 			}else if( hint == "base" ){
@@ -1044,6 +1095,9 @@ void CDaoVariable::SetHints( const string & hints )
 				}else if( s == "FIELD" ){
 					converted = "=>";
 					concat = 1;
+				}else if( s == "ASSIGN" ){
+					converted = "=";
+					concat = 1;
 				}else if( concat ){
 					parts->back() += s;
 					concat = 0;
@@ -1062,6 +1116,15 @@ void CDaoVariable::SetHints( const string & hints )
 			}
 			if( hintype == "daotype" ){
 				hintDaoType = names[0];
+				names.clear();
+			}else if( (hintype == "int" or hintype == "float" or hintype == "double") && names.size() ){
+				hintGetValue = names[0];
+				names.clear();
+			}else if( (hintype == "mbstring" or hintype == "wcstring") && names.size() ){
+				hintGetValue = names[0];
+				names.clear();
+			}else if( hintype == "length" && names.size() ){
+				hintGetLength = names[0];
 				names.clear();
 			}else if( hintype == "codeblock" && names.size() ){
 				hintCodeBlock = names[0];
@@ -1232,7 +1295,7 @@ int CDaoVariable::Generate2( int daopar_index, int cxxpar_index )
 		cxxcall = name;
 //		if( daopar_index >= 0 ){
 			if( hostype != UT and UT->isMBString ){
-				tpl.SetupMBString( UT->toValue, module->UseVariantString() );
+				tpl.SetupMBString( UT->toValue, module->UseVariantString(), UT->toLength );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){
@@ -1768,7 +1831,7 @@ int CDaoVariable::GenerateForReference( int daopar_index, int cxxpar_index )
 		cxxcall = name;
 //		if( daopar_index >= 0 ){
 			if( hostype != UT and UT->isMBString ){
-				tpl.SetupMBString( UT->toValue, module->UseVariantString() );
+				tpl.SetupMBString( UT->toValue, module->UseVariantString(), UT->toLength );
 				tpl.Generate( this, kvmap, daopar_index, cxxpar_index );
 				daotype = "string";
 				if( qualtype.getCVRQualifiers() & Qualifiers::Const ){

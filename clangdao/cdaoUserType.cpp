@@ -940,6 +940,7 @@ CDaoUserType::CDaoUserType( CDaoModule *mod, const RecordDecl *decl )
 	dummyTemplate = false;
 	isQObject = isQObjectBase = false;
 	isMBString = isWCString = false;
+	useLength = false;
 	isNumber  = 0;
 	wrapCount = 0;
 	wrapType = CDAO_WRAP_TYPE_NONE;
@@ -995,9 +996,11 @@ void CDaoUserType::SearchHints()
 		useTypeTag = var.useTypeTag;
 		isMBString = var.isMBS;
 		isWCString = var.isWCS;
+		useLength = var.useLength;
 		isNumber = var.isNumber;
 		userFieldOper = var.userFieldCB;
-		if( isMBString or isWCString or isNumber ) toValue = var.names[0];
+		if( isMBString or isWCString or isNumber ) toValue = var.hintGetValue;
+		if( useLength ) toLength = var.hintGetLength;
 		if( var.hasBaseHint ) baseFromHint = var.names;
 		if( var.hasMacroHint ) hintMacro = var.hintMacro;
 		if( var.hasMacro2Hint ) hintMacro2 = var.hintMacro2;

@@ -83,6 +83,7 @@ struct CDaoUserType
 	bool   useTypeTag;
 	bool   useUniThread;
 	bool   used;
+	bool   useLength;
 	bool   isMBString;
 	bool   isWCString;
 	short  isNumber;
@@ -94,6 +95,7 @@ struct CDaoUserType
 
 	string  macroHeader;
 	string  toValue;
+	string  toLength;
 	string  gcfields;
 	string  hintMacro;
 	string  hintMacro2;

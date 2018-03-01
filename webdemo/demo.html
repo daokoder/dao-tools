@@ -46,13 +46,15 @@
       position: relative;
     }
   </style>
+  <script src="src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="jquery-1.9.1.min.js"></script>
   <script src="demo_events.js"></script>
   <script src="dao.js"></script>
   <script src="dao.js.mem"></script>
 </head>
 
-<body style="margin-left:20pt; margin-right:20pt">
+<body style="margin-left:20pt; margin-right:20pt" onload="document.getElementById('loading_indicator').style.display = 'none';">
+  <img id="loading_indicator" src="loading_indicator.gif"/>
   <div id="code-form">
   	<table width="100%">
 	<tr><td>
@@ -121,13 +123,11 @@
 	</table>
   </div>
   </div>
-  <script src="src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/ruby");
   </script>
-  <script src="src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var terminal = ace.edit("terminal");
 	terminal.setReadOnly(true);
